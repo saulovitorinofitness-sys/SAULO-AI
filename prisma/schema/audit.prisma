@@ -1,0 +1,52 @@
+model AuditEvent {
+  id              String      @id @default(uuid()) @db.Uuid
+  entityType      String
+  entityId        String      @db.Uuid
+  moduleId        String      @db.Uuid
+  action          AuditAction
+  createdByUserId String      @db.Uuid
+  changedByUserId String      @db.Uuid
+  occurredAt      DateTime    @default(now())
+  reason          String?
+
+  module    SystemModule  @relation(fields: [moduleId], references: [id], onDelete: Restrict)
+  createdBy User          @relation("AuditRecordCreator", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  changedBy User          @relation("AuditEventActor", fields: [changedByUserId], references: [id], onDelete: Restrict)
+  changes   AuditChange[]
+
+  @@index([entityType, entityId, occurredAt])
+  @@index([moduleId, occurredAt])
+  @@index([changedByUserId, occurredAt])
+}
+
+model AuditChange {
+  id            String @id @default(uuid()) @db.Uuid
+  auditEventId  String @db.Uuid
+  fieldPath     String
+  previousValue Json?
+  newValue      Json?
+
+  auditEvent AuditEvent @relation(fields: [auditEventId], references: [id], onDelete: Restrict)
+
+  @@index([auditEventId])
+}
+
+model RecordVersion {
+  id                String   @id @default(uuid()) @db.Uuid
+  entityType        String
+  entityId          String   @db.Uuid
+  moduleId          String   @db.Uuid
+  responsibleUserId String   @db.Uuid
+  version           Int
+  status            String
+  snapshot          Json
+  reason            String?
+  createdAt         DateTime @default(now())
+
+  module      SystemModule @relation(fields: [moduleId], references: [id], onDelete: Restrict)
+  responsible User         @relation("RecordVersionResponsible", fields: [responsibleUserId], references: [id], onDelete: Restrict)
+
+  @@unique([entityType, entityId, version])
+  @@index([moduleId, createdAt])
+  @@index([responsibleUserId, createdAt])
+}

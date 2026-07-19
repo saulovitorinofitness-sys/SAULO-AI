@@ -1,0 +1,402 @@
+enum UserStatus {
+  INVITED
+  ACTIVE
+  SUSPENDED
+  INACTIVE
+}
+
+enum ProfileType {
+  SYSTEM_OWNER
+  PROFESSIONAL
+  ADMINISTRATIVE
+}
+
+enum IdentityProvider {
+  CREDENTIALS
+  OIDC
+}
+
+enum AccessAction {
+  READ
+  CREATE
+  UPDATE
+  DELETE
+  EXPORT
+  MANAGE
+}
+
+enum PermissionEffect {
+  ALLOW
+  DENY
+}
+
+enum PatientStatus {
+  ACTIVE
+  INACTIVE
+  ARCHIVED
+}
+
+enum PatientDataStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+enum PatientSex {
+  FEMALE
+  MALE
+  INTERSEX
+  NOT_INFORMED
+}
+
+enum MaritalStatus {
+  SINGLE
+  MARRIED
+  DIVORCED
+  WIDOWED
+  SEPARATED
+  DOMESTIC_PARTNERSHIP
+  NOT_INFORMED
+}
+
+enum PhoneType {
+  MOBILE
+  HOME
+  WORK
+  OTHER
+}
+
+enum MasterRecordStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+enum RecordEntryStatus {
+  DRAFT
+  FINALIZED
+  SUPERSEDED
+  VOIDED
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum AttendanceStatus {
+  DRAFT
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum ConsultationType {
+  INITIAL
+  FOLLOW_UP
+  PHYSICAL_ASSESSMENT
+  POSTURAL_ASSESSMENT
+  TRAINING
+  NUTRITION
+}
+
+enum AttendanceStage {
+  RECEPTION
+  MASTER_RECORD_LOADING
+  PENDING_CHECK
+  CLINICAL_SUMMARY
+  CONSULTATION_TYPE
+  READY
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum AttendanceTimelineEventType {
+  PATIENT_RECEIVED
+  MASTER_RECORD_LOADED
+  PENDENCIES_VERIFIED
+  CLINICAL_SUMMARY_PREPARED
+  CONSULTATION_TYPE_RECORDED
+  ATTENDANCE_STARTED
+  ACTIVITY_RECORDED
+  ATTENDANCE_COMPLETED
+  ATTENDANCE_CANCELLED
+}
+
+enum AttendanceTimelineStatus {
+  RECORDED
+  VOIDED
+}
+
+enum AttendancePreparationStatus {
+  READY
+  STALE
+  VOIDED
+}
+
+enum ClinicalReasoningStatus {
+  DRAFT
+  ACTIVE
+  COMPLETED
+  ARCHIVED
+}
+
+enum ClinicalFindingCategory {
+  CONDITION
+  NUTRITION
+  BEHAVIOR
+  LIFESTYLE
+  LABORATORY
+  FUNCTIONAL
+  OTHER
+}
+
+enum ClinicalFindingStatus {
+  ACTIVE
+  RESOLVED
+  DISMISSED
+}
+
+enum ClinicalPriorityLevel {
+  URGENT
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum PriorityClassificationSource {
+  AUTOMATED_SERVICE
+  PROFESSIONAL_OVERRIDE
+}
+
+enum ClinicalPriorityStatus {
+  ACTIVE
+  SUPERSEDED
+}
+
+enum ClinicalObjectiveType {
+  PRIMARY
+  SECONDARY
+}
+
+enum ClinicalObjectiveStatus {
+  PLANNED
+  ACTIVE
+  ACHIEVED
+  CANCELLED
+}
+
+enum ClinicalDecisionStatus {
+  PROPOSED
+  ACCEPTED
+  REVISED
+  CANCELLED
+}
+
+enum TherapeuticStrategyStatus {
+  DRAFT
+  ACTIVE
+  REVISED
+  COMPLETED
+  CANCELLED
+}
+
+enum EvidenceLevel {
+  HIGH
+  MODERATE
+  LOW
+  VERY_LOW
+  NOT_GRADED
+}
+
+enum EvidenceType {
+  GUIDELINE
+  SYSTEMATIC_REVIEW
+  CLINICAL_TRIAL
+  OBSERVATIONAL_STUDY
+  CONSENSUS
+  OTHER
+}
+
+enum ClinicalEvidenceStatus {
+  ACTIVE
+  RETIRED
+}
+
+enum ClinicalAlertStatus {
+  ACTIVE
+  ACKNOWLEDGED
+  RESOLVED
+  DISMISSED
+}
+
+enum ClinicalEvolutionStatus {
+  DRAFT
+  ACTIVE
+  COMPLETED
+  ARCHIVED
+}
+
+enum EvolutionClassification {
+  PROGRESS
+  PARTIAL_PROGRESS
+  STABLE
+  REGRESSION
+  PLATEAU
+  INSUFFICIENT_DATA
+}
+
+enum EvolutionDimension {
+  WEIGHT
+  BODY_COMPOSITION
+  PERIMETRY
+  BIOIMPEDANCE
+  PHYSICAL_ASSESSMENT
+  POSTURAL_ASSESSMENT
+  SYMPTOMS
+  LABORATORY_EXAMS
+  TRAINING_PERFORMANCE
+  DIETARY_ADHERENCE
+  TRAINING_ADHERENCE
+  HYDRATION
+  SLEEP
+  SUPPLEMENTATION
+}
+
+enum AdherenceCategory {
+  DIETARY
+  TRAINING
+  CARDIO
+  HYDRATION
+  SLEEP
+  SUPPLEMENTATION
+  OVERALL
+}
+
+enum AdherenceClassification {
+  EXCELLENT
+  GOOD
+  PARTIAL
+  LOW
+  NONE
+  NOT_EVALUATED
+}
+
+enum ProtocolType {
+  NUTRITION
+  TRAINING
+  CARDIO
+  RECOVERY
+  MULTIDISCIPLINARY
+  OTHER
+}
+
+enum ProtocolStatus {
+  PLANNED
+  ACTIVE
+  PAUSED
+  COMPLETED
+  CANCELLED
+  REPLACED
+}
+
+enum ProtocolDecisionType {
+  MAINTAIN
+  MINOR_ADJUSTMENT
+  PARTIAL_CHANGE
+  COMPLETE_CHANGE
+  PAUSE
+  REQUEST_MORE_DATA
+  REFER_TO_ANOTHER_PROFESSIONAL
+}
+
+enum EvolutionFactorType {
+  INSUFFICIENT_ADHERENCE
+  INADEQUATE_ENERGY_INTAKE
+  INADEQUATE_ENERGY_EXPENDITURE
+  ROUTINE_CHANGE
+  INADEQUATE_SLEEP
+  STRESS
+  MEDICATION_USE
+  FLUID_RETENTION
+  MUSCLE_MASS_CHANGE
+  CLINICAL_CONDITION
+  ALTERED_EXAMS
+  PHYSICAL_LIMITATION
+  OTHER
+}
+
+enum EvolutionFactorStatus {
+  REPORTED
+  OBSERVED
+  UNDER_REVIEW
+  DISMISSED
+}
+
+enum AthleteProfileStatus {
+  ACTIVE
+  INACTIVE
+  ARCHIVED
+}
+
+enum AthleteProgressReferenceType {
+  PREPARATION_PHASE
+  COMPETITIVE_PERIOD
+  PERFORMANCE
+  TRAINING_VOLUME_INTENSITY
+  RECOVERY
+  BODY_COMPOSITION
+  PROTOCOL_RESPONSE
+  PROGRESSION
+  REGRESSION
+}
+
+enum ReportStatus {
+  DRAFT
+  GENERATING
+  READY
+  FAILED
+  ARCHIVED
+}
+
+enum DeliverableStatus {
+  DRAFT
+  READY
+  PUBLISHED
+  ARCHIVED
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  STATUS_CHANGE
+  ARCHIVE
+  RESTORE
+}
+
+enum CanonicalDataCategory {
+  ANTHROPOMETRIC
+  CLINICAL
+  FUNCTIONAL
+}
+
+enum ContinuityStatus {
+  ACTIVE
+  PAUSED
+  COMPLETED
+}
+
+enum ContinuityStepStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  SKIPPED
+  BLOCKED
+}
+
+enum ContinuitySuggestionSource {
+  MANUAL
+  WORKFLOW
+}

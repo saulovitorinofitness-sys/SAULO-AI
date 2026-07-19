@@ -1,0 +1,8 @@
+import { Card, CardContent, CardDescription, CardTitle, Divider, StatusBadge } from "@/components/ui";
+import type { MealPlanView } from "@/features/meal-plan";
+
+const date = new Intl.DateTimeFormat("pt-BR", { dateStyle: "medium", timeStyle: "short" });
+export function MealPlanSidebar({ plan }: { plan: MealPlanView }) {
+  const foodCount = plan.meals.reduce((total, meal) => total + meal.foods.length, 0); const optionCount = plan.meals.reduce((total, meal) => total + meal.optionCount, 0);
+  return <aside aria-label="Resumo lateral do plano" className="xl:sticky xl:top-24 xl:self-start"><Card className="p-4" variant="muted"><CardTitle>Resumo do plano</CardTitle><CardDescription>Dados estruturais do mock atual.</CardDescription><Divider className="my-4" /><CardContent><dl className="space-y-3 text-sm"><div><dt className="text-xs font-bold text-[var(--muted)]">Refeições</dt><dd className="mt-1 font-black">{plan.meals.length}</dd></div><div><dt className="text-xs font-bold text-[var(--muted)]">Alimentos</dt><dd className="mt-1 font-black">{foodCount}</dd></div><div><dt className="text-xs font-bold text-[var(--muted)]">Opções</dt><dd className="mt-1 font-black">{optionCount}</dd></div><div><dt className="text-xs font-bold text-[var(--muted)]">Última edição</dt><dd className="mt-1 font-black">{date.format(new Date(plan.updatedAt))}</dd></div><div><dt className="text-xs font-bold text-[var(--muted)]">Profissional responsável</dt><dd className="mt-1 font-black">{plan.responsibleProfessional}</dd></div></dl><div className="mt-5"><StatusBadge label="Rascunho" status="in_progress" /></div></CardContent></Card></aside>;
+}

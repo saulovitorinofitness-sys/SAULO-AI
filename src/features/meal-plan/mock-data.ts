@@ -1,0 +1,17 @@
+import { CLINICAL_DEMO_PATIENT_ID } from "@/features/clinical-collection/mock-data";
+import type { MealPlanView } from "./contracts";
+
+export const mealPlanMock: Omit<MealPlanView, "scenario"> = {
+  id: "mock-meal-plan-001", patientId: CLINICAL_DEMO_PATIENT_ID, patientName: "Paciente de demonstração", masterRecordId: "demo-master-record-001", status: "DRAFT", responsibleProfessional: "Saulo Xavier Vitorino", updatedAt: "2026-07-16T14:30:00-03:00",
+  summary: {
+    primaryObjective: "Saúde", strategy: "Deficit calórico de aproximadamente 20%, priorizando alta ingestão proteica, alimento in natura e distribuição em 6 refeições diárias.", plannedCalories: "2150 kcl", protein: "165 g", carbohydrates: "240 g", fats: "65 g", mealCount: 6, restrictions: ["Registro demonstrativo — requer confirmação profissional"], supplementation: "Registro mockado para revisão", observations: "Estrutura em rascunho. Nenhum cálculo ou geração automática foi realizado.",
+  },
+  meals: [
+    { id: "meal-breakfast", name: "Café da manhã", time: "07:00", objective: "Objetivo registrado pelo nutricionista", optionCount: 2, observations: "Revisar com o paciente antes da ativação.", supplements: "Nenhum suplemento confirmado", hydration: "Orientação ainda não confirmada", foods: [{ id: "food-breakfast-1", name: "Alimento demonstrativo A", quantity: "Quantidade registrada", householdMeasure: "Medida caseira registrada", substitutions: ["Substituição demonstrativa A"] }] },
+    { id: "meal-morning", name: "Lanche da manhã", time: "10:00", objective: "Organização da rotina alimentar", optionCount: 1, observations: "Rascunho mockado.", supplements: "Não informado", hydration: "Não informado", foods: [{ id: "food-morning-1", name: "Alimento demonstrativo B", quantity: "Quantidade registrada", householdMeasure: "Medida caseira registrada", substitutions: [] }] },
+    { id: "meal-lunch", name: "Almoço", time: "12:30", objective: "Estrutura nutricional em revisão", optionCount: 3, observations: "Dados apenas para validação visual.", supplements: "Não informado", hydration: "Registro mockado", foods: [{ id: "food-lunch-1", name: "Alimento demonstrativo C", quantity: "Quantidade registrada", householdMeasure: "Medida caseira registrada", substitutions: ["Substituição demonstrativa B", "Substituição demonstrativa C"] }] },
+    { id: "meal-afternoon", name: "Lanche da tarde", time: "16:00", objective: "Organização da rotina alimentar", optionCount: 2, observations: "Rascunho mockado.", supplements: "Não informado", hydration: "Não informado", foods: [{ id: "food-afternoon-1", name: "Alimento demonstrativo D", quantity: "Quantidade registrada", householdMeasure: "Medida caseira registrada", substitutions: [] }] },
+    { id: "meal-dinner", name: "Jantar", time: "20:00", objective: "Estrutura nutricional em revisão", optionCount: 2, observations: "Requer validação profissional.", supplements: "Não informado", hydration: "Não informado", foods: [{ id: "food-dinner-1", name: "Alimento demonstrativo E", quantity: "Quantidade registrada", householdMeasure: "Medida caseira registrada", substitutions: ["Substituição demonstrativa D"] }] },
+    { id: "meal-supper", name: "Ceia", time: "22:00", objective: "Rotina registrada pelo nutricionista", optionCount: 1, observations: "Rascunho mockado.", supplements: "Registro mockado para revisão", hydration: "Não informado", foods: [{ id: "food-supper-1", name: "Alimento demonstrativo F", quantity: "Quantidade registrada", householdMeasure: "Medida caseira registrada", substitutions: [] }] },
+  ],
+};

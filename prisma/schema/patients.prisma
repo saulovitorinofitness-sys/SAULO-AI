@@ -1,0 +1,143 @@
+model Patient {
+  id                 String        @id @default(uuid()) @db.Uuid
+  fullName           String
+  preferredName      String?
+  cpf                String        @unique @db.VarChar(11)
+  sex                PatientSex
+  birthDate          DateTime      @db.Date
+  email              String
+  maritalStatus      MaritalStatus
+  profession         String
+  status             PatientStatus @default(ACTIVE)
+  moduleId           String        @db.Uuid
+  registeredByUserId String        @db.Uuid
+  updatedByUserId    String        @db.Uuid
+  version            Int           @default(1)
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  deletedAt          DateTime?
+
+  registeredBy              User                       @relation("PatientRegisteredBy", fields: [registeredByUserId], references: [id], onDelete: Restrict)
+  updatedBy                 User                       @relation("PatientUpdatedBy", fields: [updatedByUserId], references: [id], onDelete: Restrict)
+  module                    SystemModule               @relation(fields: [moduleId], references: [id], onDelete: Restrict)
+  masterRecord              MasterRecord?
+  address                   PatientAddress?
+  phones                    PatientPhone[]
+  insurance                 PatientInsurance?
+  emergencyContacts         PatientEmergencyContact[]
+  clinicalEvolutionSessions ClinicalEvolutionSession[]
+
+  @@index([fullName])
+  @@index([status])
+  @@index([registeredByUserId])
+  @@index([updatedByUserId])
+  @@index([moduleId])
+}
+
+model PatientAddress {
+  id              String            @id @default(uuid()) @db.Uuid
+  patientId       String            @unique @db.Uuid
+  moduleId        String            @db.Uuid
+  createdByUserId String            @db.Uuid
+  updatedByUserId String            @db.Uuid
+  street          String
+  number          String
+  complement      String?
+  neighborhood    String
+  city            String
+  state           String            @db.VarChar(2)
+  postalCode      String            @db.VarChar(8)
+  countryCode     String            @default("BR") @db.VarChar(2)
+  status          PatientDataStatus @default(ACTIVE)
+  version         Int               @default(1)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  patient   Patient      @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  module    SystemModule @relation(fields: [moduleId], references: [id], onDelete: Restrict)
+  createdBy User         @relation("PatientAddressCreator", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  updatedBy User         @relation("PatientAddressUpdater", fields: [updatedByUserId], references: [id], onDelete: Restrict)
+
+  @@index([moduleId])
+  @@index([createdByUserId])
+  @@index([updatedByUserId])
+}
+
+model PatientPhone {
+  id              String            @id @default(uuid()) @db.Uuid
+  patientId       String            @db.Uuid
+  moduleId        String            @db.Uuid
+  createdByUserId String            @db.Uuid
+  updatedByUserId String            @db.Uuid
+  type            PhoneType
+  countryCode     String            @default("55") @db.VarChar(3)
+  areaCode        String            @db.VarChar(3)
+  number          String            @db.VarChar(11)
+  isPrimary       Boolean           @default(false)
+  status          PatientDataStatus @default(ACTIVE)
+  version         Int               @default(1)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  patient   Patient      @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  module    SystemModule @relation(fields: [moduleId], references: [id], onDelete: Restrict)
+  createdBy User         @relation("PatientPhoneCreator", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  updatedBy User         @relation("PatientPhoneUpdater", fields: [updatedByUserId], references: [id], onDelete: Restrict)
+
+  @@unique([patientId, countryCode, areaCode, number])
+  @@index([moduleId])
+  @@index([createdByUserId])
+  @@index([updatedByUserId])
+}
+
+model PatientInsurance {
+  id              String            @id @default(uuid()) @db.Uuid
+  patientId       String            @unique @db.Uuid
+  moduleId        String            @db.Uuid
+  createdByUserId String            @db.Uuid
+  updatedByUserId String            @db.Uuid
+  providerName    String
+  planName        String
+  memberNumber    String
+  validUntil      DateTime?         @db.Date
+  status          PatientDataStatus @default(ACTIVE)
+  version         Int               @default(1)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  patient   Patient      @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  module    SystemModule @relation(fields: [moduleId], references: [id], onDelete: Restrict)
+  createdBy User         @relation("PatientInsuranceCreator", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  updatedBy User         @relation("PatientInsuranceUpdater", fields: [updatedByUserId], references: [id], onDelete: Restrict)
+
+  @@index([moduleId])
+  @@index([createdByUserId])
+  @@index([updatedByUserId])
+}
+
+model PatientEmergencyContact {
+  id              String            @id @default(uuid()) @db.Uuid
+  patientId       String            @db.Uuid
+  moduleId        String            @db.Uuid
+  createdByUserId String            @db.Uuid
+  updatedByUserId String            @db.Uuid
+  fullName        String
+  relationship    String
+  phone           String
+  email           String?
+  isPrimary       Boolean           @default(false)
+  status          PatientDataStatus @default(ACTIVE)
+  version         Int               @default(1)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  patient   Patient      @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  module    SystemModule @relation(fields: [moduleId], references: [id], onDelete: Restrict)
+  createdBy User         @relation("PatientEmergencyCreator", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  updatedBy User         @relation("PatientEmergencyUpdater", fields: [updatedByUserId], references: [id], onDelete: Restrict)
+
+  @@index([patientId, isPrimary])
+  @@index([moduleId])
+  @@index([createdByUserId])
+  @@index([updatedByUserId])
+}

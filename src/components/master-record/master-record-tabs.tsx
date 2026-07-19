@@ -1,0 +1,11 @@
+import Link from "next/link";
+import { Badge } from "@/components/ui";
+import { MASTER_RECORD_CATEGORY_LABELS, MASTER_RECORD_CATEGORY_ORDER, resolveMasterRecordModules, type MasterRecordModuleId } from "@/features/master-record-navigation";
+import type { PatientHubView } from "@/features/patient-hub";
+
+export type MasterRecordTab = MasterRecordModuleId;
+export function MasterRecordTabs({ hub, active }: { hub: PatientHubView; active: MasterRecordModuleId }) {
+  const modules = resolveMasterRecordModules({ ...hub, patientId: hub.header.patientId });
+  return <nav aria-label="Módulos do Prontuário Mestre" className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">{MASTER_RECORD_CATEGORY_ORDER.map((category) => { const items = modules.filter((module) => module.visible && module.category === category); if (!items.length) return null; return <details className="group rounded-[var(--radius-large)] border border-[var(--line)] bg-[var(--surface)] p-2 shadow-[var(--shadow-subtle)]" key={category} open><summary className="cursor-pointer list-none rounded-lg px-2 py-2 text-xs font-black uppercase tracking-[0.12em] text-[var(--primary)] focus-visible:outline-none">{MASTER_RECORD_CATEGORY_LABELS[category]} <span aria-hidden="true" className="float-right group-open:rotate-180">⌄</span></summary><div className="grid gap-1 pt-1">{items.map((item) => item.href ? <Link aria-current={active === item.id ? "page" : undefined} className={`flex min-h-10 items-center justify-between gap-2 rounded-[var(--radius-medium)] px-3 text-sm font-black transition ${active === item.id ? "bg-[var(--primary)] text-white" : "text-[var(--text-secondary)] hover:bg-[var(--surface-elevated)]"}`} href={item.href} key={item.id}><span>{item.label}</span>{item.id === "PERFORMANCE_ENDURANCE" ? <Badge tone="info">Atleta</Badge> : null}</Link> : <span aria-disabled="true" className="flex min-h-10 items-center justify-between gap-2 rounded-[var(--radius-medium)] bg-slate-50 px-3 text-sm font-bold text-[var(--muted)]" key={item.id} title={item.blockedReason}><span>{item.label}</span><Badge tone={item.status === "future" ? "neutral" : "warning"}>{item.status === "future" ? "Futuro" : "Bloqueado"}</Badge><span className="sr-only">. {item.blockedReason}</span></span>)}</div></details>; })}</nav>;
+}
+

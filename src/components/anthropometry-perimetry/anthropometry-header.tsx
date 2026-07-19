@@ -1,0 +1,9 @@
+import type { AnthropometryAssessment, AnthropometryPerimetryView } from "@/features/anthropometry-perimetry";
+import { AssessmentStatusBadge } from "./assessment-status-badge";
+
+const date = new Intl.DateTimeFormat("pt-BR", { dateStyle: "medium", timeZone: "UTC" });
+
+export function AnthropometryHeader({ view, assessment }: { view: AnthropometryPerimetryView; assessment: AnthropometryAssessment }) {
+  return <section className="rounded-2xl bg-[#103f32] p-5 text-white shadow-[0_16px_38px_rgb(10_73_56/0.14)] sm:p-6"><div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between"><div><p className="text-[11px] font-black uppercase tracking-[0.16em] text-emerald-200">Antropometria e Perimetria · mock</p><h2 className="mt-1 text-xl font-black sm:text-2xl">{view.patientName}</h2><p className="mt-2 text-xs font-semibold text-emerald-100">{view.patientCode} · mesmo Prontuário Mestre · versão {assessment.version}</p></div><div className="grid gap-2 sm:grid-cols-3"><div className="rounded-xl bg-white/10 p-3"><span className="text-[11px] text-emerald-100">Avaliação</span><strong className="mt-1 block text-sm">{assessment.type === "INITIAL" ? "Inicial" : "Reavaliação"}</strong></div><div className="rounded-xl bg-white/10 p-3"><span className="text-[11px] text-emerald-100">Data</span><strong className="mt-1 block text-sm">{date.format(new Date(`${assessment.assessmentDate}T00:00:00Z`))}</strong></div><div className="rounded-xl bg-white/10 p-3"><span className="text-[11px] text-emerald-100">Status</span><span className="mt-1 block"><AssessmentStatusBadge status={assessment.status} /></span></div></div></div><p className="mt-4 text-xs text-emerald-100">Responsável: <strong className="text-white">{assessment.professionalName}</strong> · última avaliação anterior em {view.assessments[1] ? date.format(new Date(`${view.assessments[1].assessmentDate}T00:00:00Z`)) : "data não disponível"}</p></section>;
+}
+

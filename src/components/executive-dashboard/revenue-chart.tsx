@@ -1,0 +1,10 @@
+import { Card, SectionHeader } from "@/components/ui";
+import type { FinancialPeriod } from "@/features/executive-dashboard";
+
+const format = (value: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }).format(value);
+
+export function RevenueChart({ periods }: { periods: readonly FinancialPeriod[] }) {
+  const max = Math.max(...periods.flatMap((period) => [period.revenue, period.expenses, period.profit]));
+  return <Card className="p-5 md:p-6"><SectionHeader description="Fluxo semanal comparativo, sem conexão contábil real." eyebrow="Financeiro" title="Receitas, despesas e lucro" /><div aria-label="Gráfico financeiro demonstrativo" className="mt-6" role="img"><div className="flex flex-wrap gap-4 text-xs font-bold text-[var(--text-secondary)]"><span><i className="mr-1.5 inline-block size-2.5 rounded-full bg-emerald-600" />Receitas</span><span><i className="mr-1.5 inline-block size-2.5 rounded-full bg-amber-500" />Despesas</span><span><i className="mr-1.5 inline-block size-2.5 rounded-full bg-sky-600" />Lucro</span></div><div className="mt-5 grid grid-cols-4 gap-3 border-b border-[var(--line)] pb-3">{periods.map((period) => <div className="flex min-w-0 flex-col items-center" key={period.label}><div className="flex h-44 w-full items-end justify-center gap-1" title={`${period.label}: receitas ${format(period.revenue)}, despesas ${format(period.expenses)}, lucro ${format(period.profit)}`}><span className="w-1/4 max-w-7 rounded-t bg-emerald-600" style={{ height: `${Math.max(8, period.revenue / max * 100)}%` }} /><span className="w-1/4 max-w-7 rounded-t bg-amber-500" style={{ height: `${Math.max(8, period.expenses / max * 100)}%` }} /><span className="w-1/4 max-w-7 rounded-t bg-sky-600" style={{ height: `${Math.max(8, period.profit / max * 100)}%` }} /></div><span className="mt-2 text-xs font-bold text-[var(--muted)]">{period.label}</span></div>)}</div><div className="sr-only">{periods.map((period) => `${period.label}: receitas ${format(period.revenue)}, despesas ${format(period.expenses)}, lucro ${format(period.profit)}.`).join(" ")}</div></div></Card>;
+}
+

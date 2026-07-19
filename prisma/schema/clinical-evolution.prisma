@@ -1,0 +1,300 @@
+model ClinicalEvolutionSession {
+  id                 String                   @id @default(uuid()) @db.Uuid
+  patientId          String                   @db.Uuid
+  masterRecordId     String                   @db.Uuid
+  attendanceId       String                   @unique @db.Uuid
+  professionalUserId String                   @db.Uuid
+  updatedByUserId    String                   @db.Uuid
+  moduleId           String                   @db.Uuid
+  previousSessionId  String?                  @unique @db.Uuid
+  classification     EvolutionClassification?
+  status             ClinicalEvolutionStatus  @default(ACTIVE)
+  evaluatedAt        DateTime                 @default(now())
+  completedAt        DateTime?
+  version            Int                      @default(1)
+  createdAt          DateTime                 @default(now())
+  updatedAt          DateTime                 @updatedAt
+
+  patient           Patient                     @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  masterRecord      MasterRecord                @relation(fields: [masterRecordId], references: [id], onDelete: Restrict)
+  attendance        Attendance                  @relation(fields: [attendanceId], references: [id], onDelete: Restrict)
+  professional      User                        @relation("ClinicalEvolutionProfessional", fields: [professionalUserId], references: [id], onDelete: Restrict)
+  updatedBy         User                        @relation("ClinicalEvolutionUpdater", fields: [updatedByUserId], references: [id], onDelete: Restrict)
+  module            SystemModule                @relation(fields: [moduleId], references: [id], onDelete: Restrict)
+  previousSession   ClinicalEvolutionSession?   @relation("ClinicalEvolutionSequence", fields: [previousSessionId], references: [id], onDelete: Restrict)
+  nextSession       ClinicalEvolutionSession?   @relation("ClinicalEvolutionSequence")
+  comparisons       EvolutionComparison[]
+  adherence         TreatmentAdherence?
+  protocolHistories ProtocolHistory[]           @relation("ProtocolOriginEvolution")
+  responseProtocols ProtocolHistory[]           @relation("ProtocolResponseEvolution")
+  protocolDecisions ProtocolDecision[]
+  associatedFactors EvolutionAssociatedFactor[]
+
+  @@index([patientId, evaluatedAt])
+  @@index([masterRecordId, evaluatedAt])
+  @@index([professionalUserId, evaluatedAt])
+  @@index([moduleId])
+  @@index([status])
+}
+
+model EvolutionComparison {
+  id                 String                  @id @default(uuid()) @db.Uuid
+  sessionId          String                  @db.Uuid
+  moduleId           String                  @db.Uuid
+  professionalUserId String                  @db.Uuid
+  currentEntryId     String?                 @db.Uuid
+  previousEntryId    String?                 @db.Uuid
+  dimension          EvolutionDimension
+  comparisonKey      String
+  classification     EvolutionClassification @default(INSUFFICIENT_DATA)
+  classifiedAt       DateTime                @default(now())
+  status             ClinicalEvolutionStatus @default(ACTIVE)
+  version            Int                     @default(1)
+  createdAt          DateTime                @default(now())
+  updatedAt          DateTime                @updatedAt
+
+  session       ClinicalEvolutionSession @relation(fields: [sessionId], references: [id], onDelete: Restrict)
+  module        SystemModule             @relation(fields: [moduleId], references: [id], onDelete: Restrict)
+  professional  User                     @relation("EvolutionComparisonProfessional", fields: [professionalUserId], references: [id], onDelete: Restrict)
+  currentEntry  MasterRecordEntry?       @relation("EvolutionCurrentEntry", fields: [currentEntryId], references: [id], onDelete: Restrict)
+  previousEntry MasterRecordEntry?       @relation("EvolutionPreviousEntry", fields: [previousEntryId], references: [id], onDelete: Restrict)
+
+  @@unique([sessionId, comparisonKey])
+  @@index([moduleId])
+  @@index([professionalUserId])
+  @@index([currentEntryId])
+  @@index([previousEntryId])
+  @@index([dimension, classification])
+}
+
+model TreatmentAdherence {
+  id                 String                  @id @default(uuid()) @db.Uuid
+  sessionId          String                  @unique @db.Uuid
+  moduleId           String                  @db.Uuid
+  professionalUserId String                  @db.Uuid
+  updatedByUserId    String                  @db.Uuid
+  status             ClinicalEvolutionStatus @default(ACTIVE)
+  recordedAt         DateTime                @default(now())
+  version            Int                     @default(1)
+  createdAt          DateTime                @default(now())
+  updatedAt          DateTime                @updatedAt
+
+  session      ClinicalEvolutionSession @relation(fields: [sessionId], references: [id], onDelete: Restrict)
+  module       SystemModule             @relation(fields: [moduleId], references: [id], onDelete: Restrict)
+  professional User                     @relation("TreatmentAdherenceProfessional", fields: [professionalUserId], references: [id], onDelete: Restrict)
+  updatedBy    User                     @relation("TreatmentAdherenceUpdater", fields: [updatedByUserId], references: [id], onDelete: Restrict)
+  items        TreatmentAdherenceItem[]
+
+  @@index([moduleId])
+  @@index([professionalUserId, recordedAt])
+}
+
+model TreatmentAdherenceItem {
+  id             String                  @id @default(uuid()) @db.Uuid
+  adherenceId    String                  @db.Uuid
+  moduleId       String                  @db.Uuid
+  sourceEntryId  String?                 @db.Uuid
+  category       AdherenceCategory
+  percentage     Decimal?                @db.Decimal(5, 2)
+  classification AdherenceClassification @default(NOT_EVALUATED)
+  observations   String?
+  status         ClinicalEvolutionStatus @default(ACTIVE)
+  version        Int                     @default(1)
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
+
+  adherence   TreatmentAdherence @relation(fields: [adherenceId], references: [id], onDelete: Restrict)
+  module      SystemModule       @relation(fields: [moduleId], references: [id], onDelete: Restrict)
+  sourceEntry MasterRecordEntry? @relation("AdherenceSourceEntry", fields: [sourceEntryId], references: [id], onDelete: Restrict)
+
+  @@unique([adherenceId, category])
+  @@index([moduleId])
+  @@index([sourceEntryId])
+}
+
+model ProtocolHistory {
+  id                         String         @id @default(uuid()) @db.Uuid
+  masterRecordId             String         @db.Uuid
+  evolutionSessionId         String         @db.Uuid
+  responseEvolutionSessionId String?        @db.Uuid
+  strategyId                 String?        @db.Uuid
+  responseEntryId            String?        @db.Uuid
+  moduleId                   String         @db.Uuid
+  professionalUserId         String         @db.Uuid
+  updatedByUserId            String         @db.Uuid
+  protocolKey                String
+  name                       String
+  type                       ProtocolType
+  startedAt                  DateTime       @db.Date
+  endedAt                    DateTime?      @db.Date
+  choiceReason               String
+  responseNotes              String?
+  status                     ProtocolStatus @default(PLANNED)
+  version                    Int            @default(1)
+  createdAt                  DateTime       @default(now())
+  updatedAt                  DateTime       @updatedAt
+
+  masterRecord             MasterRecord              @relation(fields: [masterRecordId], references: [id], onDelete: Restrict)
+  evolutionSession         ClinicalEvolutionSession  @relation("ProtocolOriginEvolution", fields: [evolutionSessionId], references: [id], onDelete: Restrict)
+  responseEvolutionSession ClinicalEvolutionSession? @relation("ProtocolResponseEvolution", fields: [responseEvolutionSessionId], references: [id], onDelete: Restrict)
+  strategy                 TherapeuticStrategy?      @relation(fields: [strategyId], references: [id], onDelete: Restrict)
+  responseEntry            MasterRecordEntry?        @relation("ProtocolResponseEntry", fields: [responseEntryId], references: [id], onDelete: Restrict)
+  module                   SystemModule              @relation(fields: [moduleId], references: [id], onDelete: Restrict)
+  professional             User                      @relation("ProtocolHistoryProfessional", fields: [professionalUserId], references: [id], onDelete: Restrict)
+  updatedBy                User                      @relation("ProtocolHistoryUpdater", fields: [updatedByUserId], references: [id], onDelete: Restrict)
+  changes                  ProtocolChange[]
+  decisions                ProtocolDecision[]
+
+  @@unique([masterRecordId, protocolKey])
+  @@index([evolutionSessionId])
+  @@index([responseEvolutionSessionId])
+  @@index([strategyId])
+  @@index([responseEntryId])
+  @@index([moduleId])
+  @@index([professionalUserId, startedAt])
+  @@index([type, status])
+}
+
+model ProtocolChange {
+  id                 String            @id @default(uuid()) @db.Uuid
+  protocolHistoryId  String            @db.Uuid
+  moduleId           String            @db.Uuid
+  professionalUserId String            @db.Uuid
+  responseEntryId    String?           @db.Uuid
+  description        String
+  reason             String
+  changedAt          DateTime          @default(now())
+  status             PatientDataStatus @default(ACTIVE)
+  version            Int               @default(1)
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  protocolHistory ProtocolHistory    @relation(fields: [protocolHistoryId], references: [id], onDelete: Restrict)
+  module          SystemModule       @relation(fields: [moduleId], references: [id], onDelete: Restrict)
+  professional    User               @relation("ProtocolChangeProfessional", fields: [professionalUserId], references: [id], onDelete: Restrict)
+  responseEntry   MasterRecordEntry? @relation("ProtocolChangeResponseEntry", fields: [responseEntryId], references: [id], onDelete: Restrict)
+
+  @@index([protocolHistoryId, changedAt])
+  @@index([moduleId])
+  @@index([professionalUserId])
+  @@index([responseEntryId])
+}
+
+model ProtocolDecision {
+  id                 String                  @id @default(uuid()) @db.Uuid
+  evolutionSessionId String                  @db.Uuid
+  protocolHistoryId  String?                 @db.Uuid
+  moduleId           String                  @db.Uuid
+  professionalUserId String                  @db.Uuid
+  updatedByUserId    String                  @db.Uuid
+  type               ProtocolDecisionType
+  decidedAt          DateTime                @default(now())
+  justification      String
+  nutritionExclusive Boolean                 @default(false)
+  idempotencyKey     String
+  status             ClinicalEvolutionStatus @default(ACTIVE)
+  version            Int                     @default(1)
+  createdAt          DateTime                @default(now())
+  updatedAt          DateTime                @updatedAt
+
+  evolutionSession ClinicalEvolutionSession   @relation(fields: [evolutionSessionId], references: [id], onDelete: Restrict)
+  protocolHistory  ProtocolHistory?           @relation(fields: [protocolHistoryId], references: [id], onDelete: Restrict)
+  module           SystemModule               @relation(fields: [moduleId], references: [id], onDelete: Restrict)
+  professional     User                       @relation("ProtocolDecisionProfessional", fields: [professionalUserId], references: [id], onDelete: Restrict)
+  updatedBy        User                       @relation("ProtocolDecisionUpdater", fields: [updatedByUserId], references: [id], onDelete: Restrict)
+  evidence         ProtocolDecisionEvidence[]
+
+  @@unique([evolutionSessionId, idempotencyKey])
+  @@index([protocolHistoryId])
+  @@index([moduleId])
+  @@index([professionalUserId, decidedAt])
+  @@index([type, status])
+}
+
+model ProtocolDecisionEvidence {
+  id                 String   @id @default(uuid()) @db.Uuid
+  protocolDecisionId String   @db.Uuid
+  evidenceId         String   @db.Uuid
+  createdAt          DateTime @default(now())
+
+  protocolDecision ProtocolDecision @relation(fields: [protocolDecisionId], references: [id], onDelete: Restrict)
+  evidence         ClinicalEvidence @relation(fields: [evidenceId], references: [id], onDelete: Restrict)
+
+  @@unique([protocolDecisionId, evidenceId])
+  @@index([evidenceId])
+}
+
+model EvolutionAssociatedFactor {
+  id                 String                @id @default(uuid()) @db.Uuid
+  evolutionSessionId String                @db.Uuid
+  moduleId           String                @db.Uuid
+  professionalUserId String                @db.Uuid
+  updatedByUserId    String                @db.Uuid
+  sourceEntryId      String?               @db.Uuid
+  type               EvolutionFactorType
+  status             EvolutionFactorStatus @default(UNDER_REVIEW)
+  notes              String?
+  deduplicationKey   String
+  recordedAt         DateTime              @default(now())
+  version            Int                   @default(1)
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+
+  evolutionSession ClinicalEvolutionSession @relation(fields: [evolutionSessionId], references: [id], onDelete: Restrict)
+  module           SystemModule             @relation(fields: [moduleId], references: [id], onDelete: Restrict)
+  professional     User                     @relation("EvolutionFactorProfessional", fields: [professionalUserId], references: [id], onDelete: Restrict)
+  updatedBy        User                     @relation("EvolutionFactorUpdater", fields: [updatedByUserId], references: [id], onDelete: Restrict)
+  sourceEntry      MasterRecordEntry?       @relation("EvolutionFactorSourceEntry", fields: [sourceEntryId], references: [id], onDelete: Restrict)
+
+  @@unique([evolutionSessionId, deduplicationKey])
+  @@index([moduleId])
+  @@index([professionalUserId, recordedAt])
+  @@index([sourceEntryId])
+  @@index([type, status])
+}
+
+model AthleteProgressProfile {
+  id                 String               @id @default(uuid()) @db.Uuid
+  masterRecordId     String               @unique @db.Uuid
+  moduleId           String               @db.Uuid
+  professionalUserId String               @db.Uuid
+  updatedByUserId    String               @db.Uuid
+  status             AthleteProfileStatus @default(ACTIVE)
+  version            Int                  @default(1)
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+
+  masterRecord MasterRecord               @relation(fields: [masterRecordId], references: [id], onDelete: Restrict)
+  module       SystemModule               @relation(fields: [moduleId], references: [id], onDelete: Restrict)
+  professional User                       @relation("AthleteProfileProfessional", fields: [professionalUserId], references: [id], onDelete: Restrict)
+  updatedBy    User                       @relation("AthleteProfileUpdater", fields: [updatedByUserId], references: [id], onDelete: Restrict)
+  references   AthleteProgressReference[]
+
+  @@index([moduleId])
+  @@index([professionalUserId])
+  @@index([status])
+}
+
+model AthleteProgressReference {
+  id                 String                       @id @default(uuid()) @db.Uuid
+  profileId          String                       @db.Uuid
+  moduleId           String                       @db.Uuid
+  professionalUserId String                       @db.Uuid
+  sourceEntryId      String                       @db.Uuid
+  type               AthleteProgressReferenceType
+  recordedAt         DateTime                     @default(now())
+  status             PatientDataStatus            @default(ACTIVE)
+  version            Int                          @default(1)
+  createdAt          DateTime                     @default(now())
+  updatedAt          DateTime                     @updatedAt
+
+  profile      AthleteProgressProfile @relation(fields: [profileId], references: [id], onDelete: Restrict)
+  module       SystemModule           @relation(fields: [moduleId], references: [id], onDelete: Restrict)
+  professional User                   @relation("AthleteReferenceProfessional", fields: [professionalUserId], references: [id], onDelete: Restrict)
+  sourceEntry  MasterRecordEntry      @relation("AthleteProgressSourceEntry", fields: [sourceEntryId], references: [id], onDelete: Restrict)
+
+  @@unique([profileId, type, sourceEntryId])
+  @@index([moduleId])
+  @@index([professionalUserId, recordedAt])
+  @@index([sourceEntryId])
+}

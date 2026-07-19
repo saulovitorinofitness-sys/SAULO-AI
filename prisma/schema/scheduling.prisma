@@ -1,0 +1,164 @@
+model Appointment {
+  id                 String            @id @default(uuid()) @db.Uuid
+  masterRecordId     String            @db.Uuid
+  professionalUserId String            @db.Uuid
+  createdByUserId    String            @db.Uuid
+  updatedByUserId    String            @db.Uuid
+  moduleId           String            @db.Uuid
+  startsAt           DateTime
+  endsAt             DateTime
+  status             AppointmentStatus @default(SCHEDULED)
+  version            Int               @default(1)
+  notes              String?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  deletedAt          DateTime?
+
+  masterRecord MasterRecord @relation(fields: [masterRecordId], references: [id], onDelete: Restrict)
+  professional User         @relation("AppointmentProfessional", fields: [professionalUserId], references: [id], onDelete: Restrict)
+  createdBy    User         @relation("AppointmentCreator", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  updatedBy    User         @relation("AppointmentUpdater", fields: [updatedByUserId], references: [id], onDelete: Restrict)
+  module       SystemModule @relation(fields: [moduleId], references: [id], onDelete: Restrict)
+  attendance   Attendance?
+
+  @@index([masterRecordId, startsAt])
+  @@index([professionalUserId, startsAt])
+  @@index([status])
+  @@index([updatedByUserId])
+  @@index([moduleId])
+}
+
+model Attendance {
+  id                 String           @id @default(uuid()) @db.Uuid
+  masterRecordId     String           @db.Uuid
+  appointmentId      String?          @unique @db.Uuid
+  professionalUserId String           @db.Uuid
+  createdByUserId    String           @db.Uuid
+  updatedByUserId    String           @db.Uuid
+  moduleId           String           @db.Uuid
+  consultationType   ConsultationType
+  currentStage       AttendanceStage  @default(RECEPTION)
+  idempotencyKey     String           @unique
+  status             AttendanceStatus @default(DRAFT)
+  version            Int              @default(1)
+  receivedAt         DateTime
+  startedAt          DateTime?
+  endedAt            DateTime?
+  context            Json?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  deletedAt          DateTime?
+
+  masterRecord             MasterRecord               @relation(fields: [masterRecordId], references: [id], onDelete: Restrict)
+  appointment              Appointment?               @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+  professional             User                       @relation("AttendanceProfessional", fields: [professionalUserId], references: [id], onDelete: Restrict)
+  createdBy                User                       @relation("AttendanceCreator", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  updatedBy                User                       @relation("AttendanceUpdater", fields: [updatedByUserId], references: [id], onDelete: Restrict)
+  module                   SystemModule               @relation(fields: [moduleId], references: [id], onDelete: Restrict)
+  entries                  MasterRecordEntry[]
+  timelineEvents           AttendanceTimelineEvent[]
+  pendingCheck             AttendancePendingCheck?
+  clinicalSummary          AttendanceClinicalSummary?
+  clinicalReasoningSession ClinicalReasoningSession?
+  clinicalEvolutionSession ClinicalEvolutionSession?
+
+  @@index([masterRecordId, createdAt])
+  @@index([professionalUserId, createdAt])
+  @@index([status])
+  @@index([createdByUserId])
+  @@index([updatedByUserId])
+  @@index([moduleId])
+}
+
+model AttendanceTimelineEvent {
+  id           String                      @id @default(uuid()) @db.Uuid
+  attendanceId String                      @db.Uuid
+  moduleId     String                      @db.Uuid
+  actorUserId  String                      @db.Uuid
+  type         AttendanceTimelineEventType
+  status       AttendanceTimelineStatus    @default(RECORDED)
+  sequence     Int
+  occurredAt   DateTime                    @default(now())
+  payload      Json?
+  version      Int                         @default(1)
+  createdAt    DateTime                    @default(now())
+  updatedAt    DateTime                    @updatedAt
+
+  attendance Attendance   @relation(fields: [attendanceId], references: [id], onDelete: Restrict)
+  module     SystemModule @relation(fields: [moduleId], references: [id], onDelete: Restrict)
+  actor      User         @relation("AttendanceTimelineActor", fields: [actorUserId], references: [id], onDelete: Restrict)
+
+  @@unique([attendanceId, sequence])
+  @@index([moduleId])
+  @@index([actorUserId, occurredAt])
+}
+
+model AttendancePendingCheck {
+  id                String                      @id @default(uuid()) @db.Uuid
+  attendanceId      String                      @unique @db.Uuid
+  continuityId      String                      @db.Uuid
+  moduleId          String                      @db.Uuid
+  performedByUserId String                      @db.Uuid
+  continuityVersion Int
+  status            AttendancePreparationStatus @default(READY)
+  version           Int                         @default(1)
+  createdAt         DateTime                    @default(now())
+  updatedAt         DateTime                    @updatedAt
+
+  attendance  Attendance                   @relation(fields: [attendanceId], references: [id], onDelete: Restrict)
+  continuity  MasterRecordContinuity       @relation(fields: [continuityId], references: [id], onDelete: Restrict)
+  module      SystemModule                 @relation(fields: [moduleId], references: [id], onDelete: Restrict)
+  performedBy User                         @relation("AttendancePendingCheckActor", fields: [performedByUserId], references: [id], onDelete: Restrict)
+  items       AttendancePendingCheckItem[]
+
+  @@index([continuityId])
+  @@index([moduleId])
+  @@index([performedByUserId])
+}
+
+model AttendancePendingCheckItem {
+  id               String   @id @default(uuid()) @db.Uuid
+  pendingCheckId   String   @db.Uuid
+  continuityStepId String   @db.Uuid
+  createdAt        DateTime @default(now())
+
+  pendingCheck   AttendancePendingCheck @relation(fields: [pendingCheckId], references: [id], onDelete: Restrict)
+  continuityStep ContinuityStep         @relation(fields: [continuityStepId], references: [id], onDelete: Restrict)
+
+  @@unique([pendingCheckId, continuityStepId])
+  @@index([continuityStepId])
+}
+
+model AttendanceClinicalSummary {
+  id                  String                      @id @default(uuid()) @db.Uuid
+  attendanceId        String                      @unique @db.Uuid
+  moduleId            String                      @db.Uuid
+  generatedByUserId   String                      @db.Uuid
+  masterRecordVersion Int
+  status              AttendancePreparationStatus @default(READY)
+  version             Int                         @default(1)
+  createdAt           DateTime                    @default(now())
+  updatedAt           DateTime                    @updatedAt
+
+  attendance  Attendance                      @relation(fields: [attendanceId], references: [id], onDelete: Restrict)
+  module      SystemModule                    @relation(fields: [moduleId], references: [id], onDelete: Restrict)
+  generatedBy User                            @relation("AttendanceSummaryGenerator", fields: [generatedByUserId], references: [id], onDelete: Restrict)
+  items       AttendanceClinicalSummaryItem[]
+
+  @@index([moduleId])
+  @@index([generatedByUserId])
+}
+
+model AttendanceClinicalSummaryItem {
+  id        String   @id @default(uuid()) @db.Uuid
+  summaryId String   @db.Uuid
+  entryId   String   @db.Uuid
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  summary AttendanceClinicalSummary @relation(fields: [summaryId], references: [id], onDelete: Restrict)
+  entry   MasterRecordEntry         @relation(fields: [entryId], references: [id], onDelete: Restrict)
+
+  @@unique([summaryId, entryId])
+  @@index([entryId])
+}

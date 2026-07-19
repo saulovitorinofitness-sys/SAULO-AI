@@ -1,0 +1,82 @@
+model MasterRecordDataReference {
+  id                String                @id @default(uuid()) @db.Uuid
+  masterRecordId    String                @db.Uuid
+  currentEntryId    String                @unique @db.Uuid
+  moduleId          String                @db.Uuid
+  responsibleUserId String                @db.Uuid
+  category          CanonicalDataCategory
+  key               String
+  status            RecordEntryStatus     @default(DRAFT)
+  version           Int                   @default(1)
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
+
+  masterRecord MasterRecord      @relation(fields: [masterRecordId], references: [id], onDelete: Restrict)
+  currentEntry MasterRecordEntry @relation(fields: [currentEntryId], references: [id], onDelete: Restrict)
+  module       SystemModule      @relation(fields: [moduleId], references: [id], onDelete: Restrict)
+  responsible  User              @relation("CanonicalDataResponsible", fields: [responsibleUserId], references: [id], onDelete: Restrict)
+
+  @@unique([masterRecordId, category, key])
+  @@index([moduleId])
+  @@index([responsibleUserId])
+}
+
+model MasterRecordContinuity {
+  id                   String                      @id @default(uuid()) @db.Uuid
+  masterRecordId       String                      @unique @db.Uuid
+  moduleId             String                      @db.Uuid
+  status               ContinuityStatus            @default(ACTIVE)
+  lastCompletedStepKey String?
+  responsibleUserId    String?                     @db.Uuid
+  lastActivityAt       DateTime?
+  nextSuggestedStepKey String?
+  suggestionSource     ContinuitySuggestionSource?
+  version              Int                         @default(1)
+  createdByUserId      String                      @db.Uuid
+  updatedByUserId      String                      @db.Uuid
+  createdAt            DateTime                    @default(now())
+  updatedAt            DateTime                    @updatedAt
+
+  masterRecord            MasterRecord             @relation(fields: [masterRecordId], references: [id], onDelete: Restrict)
+  module                  SystemModule             @relation(fields: [moduleId], references: [id], onDelete: Restrict)
+  responsible             User?                    @relation("ContinuityResponsible", fields: [responsibleUserId], references: [id], onDelete: Restrict)
+  createdBy               User                     @relation("ContinuityCreator", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  updatedBy               User                     @relation("ContinuityUpdater", fields: [updatedByUserId], references: [id], onDelete: Restrict)
+  steps                   ContinuityStep[]
+  attendancePendingChecks AttendancePendingCheck[]
+
+  @@index([moduleId])
+  @@index([responsibleUserId])
+  @@index([lastActivityAt])
+}
+
+model ContinuityStep {
+  id                String               @id @default(uuid()) @db.Uuid
+  continuityId      String               @db.Uuid
+  moduleId          String               @db.Uuid
+  key               String
+  title             String
+  status            ContinuityStepStatus @default(PENDING)
+  responsibleUserId String?              @db.Uuid
+  completedByUserId String?              @db.Uuid
+  completedAt       DateTime?
+  sortOrder         Int                  @default(0)
+  version           Int                  @default(1)
+  createdByUserId   String               @db.Uuid
+  updatedByUserId   String               @db.Uuid
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+
+  continuity                  MasterRecordContinuity       @relation(fields: [continuityId], references: [id], onDelete: Restrict)
+  module                      SystemModule                 @relation(fields: [moduleId], references: [id], onDelete: Restrict)
+  responsible                 User?                        @relation("ContinuityStepResponsible", fields: [responsibleUserId], references: [id], onDelete: Restrict)
+  completedBy                 User?                        @relation("ContinuityStepCompleter", fields: [completedByUserId], references: [id], onDelete: Restrict)
+  createdBy                   User                         @relation("ContinuityStepCreator", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  updatedBy                   User                         @relation("ContinuityStepUpdater", fields: [updatedByUserId], references: [id], onDelete: Restrict)
+  attendancePendingCheckItems AttendancePendingCheckItem[]
+
+  @@unique([continuityId, key])
+  @@index([moduleId])
+  @@index([status, sortOrder])
+  @@index([responsibleUserId])
+}

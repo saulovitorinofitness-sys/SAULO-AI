@@ -1,0 +1,16 @@
+export type EnduranceSport = "ROAD_RUNNING" | "SPEED_CYCLING" | "MTB" | "DUATHLON" | "TRIATHLON";
+export type EnduranceStatus = "ACTIVE" | "PLANNED" | "COMPLETED" | "RECOVERY" | "REVIEW";
+export type TrainingType = "RUNNING" | "SPEED" | "MTB" | "STRENGTH" | "RECOVERY" | "MOBILITY";
+
+export interface EnduranceAthlete { readonly id: string; readonly name: string; readonly initials: string; readonly sport: EnduranceSport; readonly objective: string; readonly nextCompetition: string; readonly coach: string; readonly nutritionist: string; readonly lastTraining: string; readonly status: EnduranceStatus; }
+export interface PlanningCycle { readonly id: string; readonly level: "MACROCYCLE" | "MESOCYCLE" | "MICROCYCLE" | "WEEK" | "SESSION"; readonly name: string; readonly period: string; readonly objective: string; readonly status: EnduranceStatus; }
+export interface EnduranceTraining { readonly id: string; readonly type: TrainingType; readonly title: string; readonly scheduledAt: string; readonly duration: string; readonly distance?: string; readonly status: EnduranceStatus; }
+export interface PerformanceMetric { readonly id: string; readonly label: string; readonly value: string; readonly context: string; readonly availableFor: readonly EnduranceSport[]; }
+export interface AthleteEquipment { readonly id: string; readonly category: "WATCH" | "BIKE" | "SHOE" | "SENSOR" | "POWER_METER" | "STRAP"; readonly name: string; readonly detail: string; readonly status: "ACTIVE" | "MAINTENANCE" | "REPLACE_SOON"; }
+export interface EnduranceCompetition { readonly id: string; readonly name: string; readonly date: string; readonly distance: string; readonly objective: string; readonly result?: string; readonly status: "UPCOMING" | "COMPLETED"; }
+export interface SportsNutritionStrategy { readonly preTraining: string; readonly duringTraining: string; readonly postTraining: string; readonly hydration: string; readonly carbohydrate: string; readonly electrolytes: string; readonly caffeine: string; readonly supplementation: string; }
+export interface RecoverySnapshot { readonly sleep: string; readonly hrv: string; readonly pain: string; readonly fatigue: string; readonly rpe: string; readonly weight: string; readonly mood: string; readonly recordedAt: string; }
+export interface EnduranceTimelineEvent { readonly id: string; readonly date: string; readonly title: string; readonly description: string; readonly domain: "TRAINING" | "CONSULTATION" | "ASSESSMENT" | "LABORATORY" | "BIOIMPEDANCE" | "WEIGHT"; }
+export interface FutureIntegration { readonly id: string; readonly name: string; readonly format: "PLATFORM" | "FIT" | "TCX" | "GPX" | "CSV"; readonly status: "IN_DEVELOPMENT"; }
+export interface PerformanceEnduranceView { readonly athlete: EnduranceAthlete; readonly planning: readonly PlanningCycle[]; readonly trainings: readonly EnduranceTraining[]; readonly metrics: readonly PerformanceMetric[]; readonly equipment: readonly AthleteEquipment[]; readonly competitions: readonly EnduranceCompetition[]; readonly nutrition: SportsNutritionStrategy; readonly recovery: RecoverySnapshot; readonly timeline: readonly EnduranceTimelineEvent[]; readonly futureIntegrations: readonly FutureIntegration[]; readonly updatedAt: string; }
+

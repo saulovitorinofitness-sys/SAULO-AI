@@ -1,0 +1,54 @@
+model Report {
+  id                String       @id @default(uuid()) @db.Uuid
+  masterRecordId    String       @db.Uuid
+  requestedByUserId String       @db.Uuid
+  updatedByUserId   String       @db.Uuid
+  moduleId          String       @db.Uuid
+  kind              String
+  parameters        Json?
+  status            ReportStatus @default(DRAFT)
+  version           Int          @default(1)
+  storageKey        String?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  deletedAt         DateTime?
+
+  masterRecord MasterRecord @relation(fields: [masterRecordId], references: [id], onDelete: Restrict)
+  requestedBy  User         @relation("ReportRequester", fields: [requestedByUserId], references: [id], onDelete: Restrict)
+  updatedBy    User         @relation("ReportUpdater", fields: [updatedByUserId], references: [id], onDelete: Restrict)
+  module       SystemModule @relation(fields: [moduleId], references: [id], onDelete: Restrict)
+
+  @@index([masterRecordId, createdAt])
+  @@index([requestedByUserId])
+  @@index([status])
+  @@index([updatedByUserId])
+  @@index([moduleId])
+}
+
+model Deliverable {
+  id              String            @id @default(uuid()) @db.Uuid
+  masterRecordId  String            @db.Uuid
+  createdByUserId String            @db.Uuid
+  updatedByUserId String            @db.Uuid
+  moduleId        String            @db.Uuid
+  kind            String
+  title           String
+  version         Int               @default(1)
+  status          DeliverableStatus @default(DRAFT)
+  storageKey      String?
+  metadata        Json?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  deletedAt       DateTime?
+
+  masterRecord MasterRecord @relation(fields: [masterRecordId], references: [id], onDelete: Restrict)
+  createdBy    User         @relation("DeliverableCreator", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  updatedBy    User         @relation("DeliverableUpdater", fields: [updatedByUserId], references: [id], onDelete: Restrict)
+  module       SystemModule @relation(fields: [moduleId], references: [id], onDelete: Restrict)
+
+  @@unique([masterRecordId, kind, version])
+  @@index([createdByUserId])
+  @@index([status])
+  @@index([updatedByUserId])
+  @@index([moduleId])
+}

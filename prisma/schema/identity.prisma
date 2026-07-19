@@ -1,0 +1,127 @@
+model User {
+  id        String     @id @default(uuid()) @db.Uuid
+  fullName  String
+  email     String?    @unique
+  status    UserStatus @default(INVITED)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  deletedAt DateTime?
+
+  profile                   UserProfile?
+  identities                AuthIdentity[]
+  sessions                  AuthSession[]
+  roles                     UserRole[]
+  permissionOverrides       UserPermission[]
+  registeredPatients        Patient[]                   @relation("PatientRegisteredBy")
+  updatedPatients           Patient[]                   @relation("PatientUpdatedBy")
+  createdPatientAddresses   PatientAddress[]            @relation("PatientAddressCreator")
+  updatedPatientAddresses   PatientAddress[]            @relation("PatientAddressUpdater")
+  createdPatientPhones      PatientPhone[]              @relation("PatientPhoneCreator")
+  updatedPatientPhones      PatientPhone[]              @relation("PatientPhoneUpdater")
+  createdPatientInsurances  PatientInsurance[]          @relation("PatientInsuranceCreator")
+  updatedPatientInsurances  PatientInsurance[]          @relation("PatientInsuranceUpdater")
+  createdEmergencyContacts  PatientEmergencyContact[]   @relation("PatientEmergencyCreator")
+  updatedEmergencyContacts  PatientEmergencyContact[]   @relation("PatientEmergencyUpdater")
+  responsibleMasterRecords  MasterRecord[]              @relation("MasterRecordResponsible")
+  createdMasterRecords      MasterRecord[]              @relation("MasterRecordCreator")
+  updatedMasterRecords      MasterRecord[]              @relation("MasterRecordUpdater")
+  professionalAppointments  Appointment[]               @relation("AppointmentProfessional")
+  createdAppointments       Appointment[]               @relation("AppointmentCreator")
+  updatedAppointments       Appointment[]               @relation("AppointmentUpdater")
+  professionalAttendances   Attendance[]                @relation("AttendanceProfessional")
+  createdAttendances        Attendance[]                @relation("AttendanceCreator")
+  updatedAttendances        Attendance[]                @relation("AttendanceUpdater")
+  attendanceTimelineEvents  AttendanceTimelineEvent[]   @relation("AttendanceTimelineActor")
+  attendancePendingChecks   AttendancePendingCheck[]    @relation("AttendancePendingCheckActor")
+  attendanceSummaries       AttendanceClinicalSummary[] @relation("AttendanceSummaryGenerator")
+  authoredRecordEntries     MasterRecordEntry[]         @relation("RecordEntryAuthor")
+  updatedRecordEntries      MasterRecordEntry[]         @relation("RecordEntryUpdater")
+  requestedReports          Report[]                    @relation("ReportRequester")
+  updatedReports            Report[]                    @relation("ReportUpdater")
+  createdDeliverables       Deliverable[]               @relation("DeliverableCreator")
+  updatedDeliverables       Deliverable[]               @relation("DeliverableUpdater")
+  canonicalDataReferences   MasterRecordDataReference[] @relation("CanonicalDataResponsible")
+  responsibleContinuities   MasterRecordContinuity[]    @relation("ContinuityResponsible")
+  createdContinuities       MasterRecordContinuity[]    @relation("ContinuityCreator")
+  updatedContinuities       MasterRecordContinuity[]    @relation("ContinuityUpdater")
+  responsibleSteps          ContinuityStep[]            @relation("ContinuityStepResponsible")
+  completedSteps            ContinuityStep[]            @relation("ContinuityStepCompleter")
+  createdSteps              ContinuityStep[]            @relation("ContinuityStepCreator")
+  updatedSteps              ContinuityStep[]            @relation("ContinuityStepUpdater")
+  createdAuditRecords       AuditEvent[]                @relation("AuditRecordCreator")
+  changedAuditEvents        AuditEvent[]                @relation("AuditEventActor")
+  recordVersions            RecordVersion[]             @relation("RecordVersionResponsible")
+  clinicalSessions          ClinicalReasoningSession[]  @relation("ClinicalSessionProfessional")
+  updatedClinicalSessions   ClinicalReasoningSession[]  @relation("ClinicalSessionUpdater")
+  clinicalFindings          ClinicalFinding[]           @relation("ClinicalFindingProfessional")
+  updatedClinicalFindings   ClinicalFinding[]           @relation("ClinicalFindingUpdater")
+  clinicalPriorities        ClinicalPriority[]          @relation("ClinicalPriorityProfessional")
+  clinicalObjectives        ClinicalObjective[]         @relation("ClinicalObjectiveProfessional")
+  updatedClinicalObjectives ClinicalObjective[]         @relation("ClinicalObjectiveUpdater")
+  clinicalDecisions         ClinicalDecision[]          @relation("ClinicalDecisionProfessional")
+  updatedClinicalDecisions  ClinicalDecision[]          @relation("ClinicalDecisionUpdater")
+  therapeuticStrategies     TherapeuticStrategy[]       @relation("TherapeuticStrategyProfessional")
+  updatedStrategies         TherapeuticStrategy[]       @relation("TherapeuticStrategyUpdater")
+  registeredEvidence        ClinicalEvidence[]          @relation("ClinicalEvidenceRegistrar")
+  updatedEvidence           ClinicalEvidence[]          @relation("ClinicalEvidenceUpdater")
+  raisedClinicalAlerts      ClinicalAlert[]             @relation("ClinicalAlertRaiser")
+  updatedClinicalAlerts     ClinicalAlert[]             @relation("ClinicalAlertUpdater")
+  clinicalEvolutionSessions ClinicalEvolutionSession[]  @relation("ClinicalEvolutionProfessional")
+  updatedEvolutionSessions  ClinicalEvolutionSession[]  @relation("ClinicalEvolutionUpdater")
+  evolutionComparisons      EvolutionComparison[]       @relation("EvolutionComparisonProfessional")
+  treatmentAdherences       TreatmentAdherence[]        @relation("TreatmentAdherenceProfessional")
+  updatedAdherences         TreatmentAdherence[]        @relation("TreatmentAdherenceUpdater")
+  protocolHistories         ProtocolHistory[]           @relation("ProtocolHistoryProfessional")
+  updatedProtocolHistories  ProtocolHistory[]           @relation("ProtocolHistoryUpdater")
+  protocolChanges           ProtocolChange[]            @relation("ProtocolChangeProfessional")
+  protocolDecisions         ProtocolDecision[]          @relation("ProtocolDecisionProfessional")
+  updatedProtocolDecisions  ProtocolDecision[]          @relation("ProtocolDecisionUpdater")
+  evolutionFactors          EvolutionAssociatedFactor[] @relation("EvolutionFactorProfessional")
+  updatedEvolutionFactors   EvolutionAssociatedFactor[] @relation("EvolutionFactorUpdater")
+  athleteProfiles           AthleteProgressProfile[]    @relation("AthleteProfileProfessional")
+  updatedAthleteProfiles    AthleteProgressProfile[]    @relation("AthleteProfileUpdater")
+  athleteReferences         AthleteProgressReference[]  @relation("AthleteReferenceProfessional")
+
+  @@index([status])
+}
+
+model AuthIdentity {
+  id              String           @id @default(uuid()) @db.Uuid
+  userId          String           @db.Uuid
+  provider        IdentityProvider
+  providerSubject String
+  credentialHash  String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerSubject])
+  @@index([userId])
+}
+
+model AuthSession {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+}
+
+model UserProfile {
+  id                       String      @id @default(uuid()) @db.Uuid
+  userId                   String      @unique @db.Uuid
+  type                     ProfileType
+  professionalRegistration String?
+  metadata                 Json?
+  createdAt                DateTime    @default(now())
+  updatedAt                DateTime    @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

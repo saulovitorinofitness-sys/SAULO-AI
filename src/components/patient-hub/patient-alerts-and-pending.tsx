@@ -1,0 +1,8 @@
+import type { PatientHubOperationalItem } from "@/features/patient-hub";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+const styles = { INFORMATION: "border-sky-200 bg-sky-50 text-sky-950", ATTENTION: "border-amber-200 bg-amber-50 text-amber-950", PRIORITY: "border-rose-200 bg-rose-50 text-rose-950" } as const;
+const labels = { INFORMATION: "Informação", ATTENTION: "Atenção", PRIORITY: "Prioridade" } as const;
+const tones = { INFORMATION: "info", ATTENTION: "warning", PRIORITY: "danger" } as const;
+function Panel({ title, items }: { title: string; items: readonly PatientHubOperationalItem[] }) { return <Card className="p-4 sm:p-5"><h2 className="text-base font-black text-[var(--text-primary)]">{title}</h2>{items.length ? <ul className="mt-4 space-y-3">{items.map((item) => <li className={`rounded-[var(--radius-medium)] border p-3 ${styles[item.level]}`} key={item.id}><div className="flex flex-wrap items-center justify-between gap-2"><strong className="text-sm">{item.title}</strong><Badge tone={tones[item.level]}>{labels[item.level]}</Badge></div><p className="mt-1 text-xs leading-5">{item.description}</p><p className="mt-2 text-[11px] font-semibold opacity-75">Origem: {item.module}</p></li>)}</ul> : <p className="mt-4 rounded-[var(--radius-medium)] bg-slate-50 p-4 text-sm text-[var(--muted)]">Nenhum item operacional neste cenário.</p>}</Card>; }
+export function PatientAlertsAndPending({ alerts, pendingItems }: { alerts: readonly PatientHubOperationalItem[]; pendingItems: readonly PatientHubOperationalItem[] }) { return <div className="grid gap-4 lg:grid-cols-2"><Panel items={alerts} title="Alertas" /><Panel items={pendingItems} title="Pendências" /></div>; }

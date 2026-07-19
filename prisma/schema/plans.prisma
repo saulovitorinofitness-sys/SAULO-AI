@@ -1,0 +1,25 @@
+model MealPlanRecord {
+  entryId    String    @id @db.Uuid
+  title      String
+  validFrom  DateTime? @db.Date
+  validUntil DateTime? @db.Date
+  content    Json
+  notes      String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  entry MasterRecordEntry @relation(fields: [entryId], references: [id], onDelete: Restrict)
+}
+
+model WorkoutPlanRecord {
+  entryId    String    @id @db.Uuid
+  title      String
+  validFrom  DateTime? @db.Date
+  validUntil DateTime? @db.Date
+  content    Json
+  notes      String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  entry MasterRecordEntry @relation(fields: [entryId], references: [id], onDelete: Restrict)
+}

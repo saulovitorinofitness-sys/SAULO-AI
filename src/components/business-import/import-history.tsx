@@ -1,0 +1,8 @@
+import { Button, Card, SectionHeader } from "@/components/ui";
+import { reportTypeLabels, type BusinessDataImport } from "@/features/business-import";
+import { ImportStatusBadge } from "./import-status-badge";
+
+export function ImportHistory({ history, onRepeat, onRemove, onInspect }: { history: readonly BusinessDataImport[]; onRepeat: (item: BusinessDataImport) => void; onRemove: (id: string) => void; onInspect: (item: BusinessDataImport) => void }) {
+  return <Card className="p-5 md:p-6"><SectionHeader description="Histórico exclusivamente demonstrativo e removível localmente." title="Histórico de importações" /><div className="mt-5 grid gap-3">{history.map((item) => <article className="rounded-xl border border-[var(--line)] p-4" key={item.id}><div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between"><div><div className="flex flex-wrap items-center gap-2"><h3 className="font-black text-[var(--text-primary)]">{item.fileName}</h3><ImportStatusBadge status={item.status} /></div><p className="mt-2 text-sm text-[var(--text-secondary)]">Next Fit · {reportTypeLabels[item.reportType]} · {item.period}</p><p className="mt-1 text-xs text-[var(--muted)]">{item.totalRows} processados · {item.validRows} aceitos · {item.warningRows + item.invalidRows} inconsistências · {item.importedBy}</p></div><div className="flex flex-wrap gap-2"><Button onClick={() => onInspect(item)} size="small" variant="outline">Visualizar resumo</Button><Button onClick={() => onRepeat(item)} size="small" variant="ghost">Repetir</Button><Button onClick={() => onInspect(item)} size="small" variant="ghost">Inconsistências</Button><Button onClick={() => onRemove(item.id)} size="small" variant="ghost">Remover</Button></div></div></article>)}</div></Card>;
+}
+

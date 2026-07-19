@@ -1,0 +1,124 @@
+@import "tailwindcss";
+
+:root {
+  /* Design System SAULO AI — tokens semânticos */
+  --background: #f3f6f4;
+  --foreground: #183029;
+  --surface: #ffffff;
+  --surface-elevated: #f7faf8;
+  --brand: #12664f;
+  --brand-strong: #0a4938;
+  --brand-soft: #e7f2ed;
+  --line: #dce5e0;
+  --line-strong: #b8cec5;
+  --text-primary: #183029;
+  --text-secondary: #475c55;
+  --muted: #64766f;
+  --primary: #12664f;
+  --primary-hover: #0a4938;
+  --primary-foreground: #ffffff;
+  --secondary: #e7f2ed;
+  --success: #167a58;
+  --warning: #9a6410;
+  --danger: #b4233d;
+  --info: #176b87;
+  --focus: #3b9b7d;
+  --disabled: #cbd5d1;
+  --overlay: rgb(15 23 42 / 38%);
+
+  --font-page-title: 1.875rem;
+  --font-page-subtitle: 1rem;
+  --font-section-title: 1.125rem;
+  --font-card-title: 1rem;
+  --font-body: 0.875rem;
+  --font-body-small: 0.8125rem;
+  --font-caption: 0.75rem;
+  --font-button: 0.875rem;
+  --font-badge: 0.75rem;
+  --font-form-label: 0.875rem;
+  --font-form-help: 0.75rem;
+  --font-form-error: 0.75rem;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+
+  --radius-small: 0.5rem;
+  --radius-medium: 0.75rem;
+  --radius-large: 1rem;
+  --radius-full: 9999px;
+
+  --shadow-subtle: 0 8px 24px rgb(20 55 44 / 3%);
+  --shadow-medium: 0 10px 28px rgb(20 55 44 / 7%);
+  --shadow-elevated: 0 16px 38px rgb(10 73 56 / 14%);
+
+  --transition-fast: 120ms;
+  --transition-normal: 200ms;
+  --transition-slow: 320ms;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--background);
+  overflow-x: clip;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  background:
+    radial-gradient(circle at 90% 5%, rgb(198 222 211 / 45%), transparent 28rem),
+    var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+  text-rendering: optimizeLegibility;
+  overflow-x: clip;
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: #bde3d4;
+  color: #092f24;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

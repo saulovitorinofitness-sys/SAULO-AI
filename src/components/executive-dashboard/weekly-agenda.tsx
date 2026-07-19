@@ -1,0 +1,6 @@
+import { Card, SectionHeader } from "@/components/ui";
+import type { WeeklyAgendaDay } from "@/features/executive-dashboard";
+
+export function WeeklyAgenda({ days }: { days: readonly WeeklyAgendaDay[] }) {
+  return <Card className="p-5 md:p-6"><SectionHeader description="Clínica e academia em visão semanal demonstrativa." title="Agenda da semana" /><div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">{days.map((day) => <article className={`rounded-xl border p-3.5 ${day.highlight === "Hoje" ? "border-[var(--primary)] bg-[var(--secondary)]" : "border-[var(--line)] bg-[var(--surface-elevated)]"}`} key={day.day}><div className="flex items-center justify-between gap-2"><h3 className="text-sm font-black text-[var(--text-primary)]">{day.day}</h3><span className="text-xs text-[var(--muted)]">{day.date}</span></div><dl className="mt-4 space-y-2 text-xs"><div className="flex justify-between gap-2"><dt>Consultas</dt><dd className="font-black">{day.clinicAppointments}</dd></div><div className="flex justify-between gap-2"><dt>Academia</dt><dd className="font-black">{day.academyActivities}</dd></div></dl>{day.highlight ? <p className="mt-3 border-t border-current/10 pt-2 text-xs font-bold text-[var(--primary-hover)]">{day.highlight}</p> : null}</article>)}</div></Card>;
+}

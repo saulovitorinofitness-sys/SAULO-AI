@@ -1,0 +1,233 @@
+model ClinicalReasoningSession {
+  id                            String                  @id @default(uuid()) @db.Uuid
+  attendanceId                  String                  @unique @db.Uuid
+  moduleId                      String                  @db.Uuid
+  responsibleProfessionalUserId String                  @db.Uuid
+  updatedByUserId               String                  @db.Uuid
+  status                        ClinicalReasoningStatus @default(ACTIVE)
+  version                       Int                     @default(1)
+  openedAt                      DateTime                @default(now())
+  closedAt                      DateTime?
+  createdAt                     DateTime                @default(now())
+  updatedAt                     DateTime                @updatedAt
+
+  attendance              Attendance            @relation(fields: [attendanceId], references: [id], onDelete: Restrict)
+  module                  SystemModule          @relation(fields: [moduleId], references: [id], onDelete: Restrict)
+  responsibleProfessional User                  @relation("ClinicalSessionProfessional", fields: [responsibleProfessionalUserId], references: [id], onDelete: Restrict)
+  updatedBy               User                  @relation("ClinicalSessionUpdater", fields: [updatedByUserId], references: [id], onDelete: Restrict)
+  findings                ClinicalFinding[]
+  objectives              ClinicalObjective[]
+  decisions               ClinicalDecision[]
+  strategies              TherapeuticStrategy[]
+  alerts                  ClinicalAlert[]
+
+  @@index([moduleId])
+  @@index([responsibleProfessionalUserId])
+  @@index([status])
+}
+
+model ClinicalFinding {
+  id                 String                  @id @default(uuid()) @db.Uuid
+  sessionId          String                  @db.Uuid
+  moduleId           String                  @db.Uuid
+  professionalUserId String                  @db.Uuid
+  updatedByUserId    String                  @db.Uuid
+  code               String
+  label              String
+  description        String?
+  category           ClinicalFindingCategory
+  status             ClinicalFindingStatus   @default(ACTIVE)
+  deduplicationKey   String
+  sourceReference    Json?
+  observedAt         DateTime                @default(now())
+  version            Int                     @default(1)
+  createdAt          DateTime                @default(now())
+  updatedAt          DateTime                @updatedAt
+
+  session      ClinicalReasoningSession @relation(fields: [sessionId], references: [id], onDelete: Restrict)
+  module       SystemModule             @relation(fields: [moduleId], references: [id], onDelete: Restrict)
+  professional User                     @relation("ClinicalFindingProfessional", fields: [professionalUserId], references: [id], onDelete: Restrict)
+  updatedBy    User                     @relation("ClinicalFindingUpdater", fields: [updatedByUserId], references: [id], onDelete: Restrict)
+  priority     ClinicalPriority?
+  alerts       ClinicalAlert[]
+
+  @@unique([sessionId, deduplicationKey])
+  @@index([moduleId])
+  @@index([professionalUserId])
+  @@index([category, status])
+}
+
+model ClinicalPriority {
+  id                  String                       @id @default(uuid()) @db.Uuid
+  findingId           String                       @unique @db.Uuid
+  moduleId            String                       @db.Uuid
+  classifiedForUserId String                       @db.Uuid
+  level               ClinicalPriorityLevel
+  source              PriorityClassificationSource @default(AUTOMATED_SERVICE)
+  status              ClinicalPriorityStatus       @default(ACTIVE)
+  classifiedAt        DateTime                     @default(now())
+  version             Int                          @default(1)
+  createdAt           DateTime                     @default(now())
+  updatedAt           DateTime                     @updatedAt
+
+  finding       ClinicalFinding @relation(fields: [findingId], references: [id], onDelete: Restrict)
+  module        SystemModule    @relation(fields: [moduleId], references: [id], onDelete: Restrict)
+  classifiedFor User            @relation("ClinicalPriorityProfessional", fields: [classifiedForUserId], references: [id], onDelete: Restrict)
+
+  @@index([moduleId])
+  @@index([classifiedForUserId])
+  @@index([level, status])
+}
+
+model ClinicalObjective {
+  id                 String                  @id @default(uuid()) @db.Uuid
+  sessionId          String                  @db.Uuid
+  moduleId           String                  @db.Uuid
+  professionalUserId String                  @db.Uuid
+  updatedByUserId    String                  @db.Uuid
+  type               ClinicalObjectiveType
+  title              String
+  description        String?
+  sequence           Int                     @default(0)
+  status             ClinicalObjectiveStatus @default(PLANNED)
+  deduplicationKey   String
+  version            Int                     @default(1)
+  createdAt          DateTime                @default(now())
+  updatedAt          DateTime                @updatedAt
+
+  session      ClinicalReasoningSession @relation(fields: [sessionId], references: [id], onDelete: Restrict)
+  module       SystemModule             @relation(fields: [moduleId], references: [id], onDelete: Restrict)
+  professional User                     @relation("ClinicalObjectiveProfessional", fields: [professionalUserId], references: [id], onDelete: Restrict)
+  updatedBy    User                     @relation("ClinicalObjectiveUpdater", fields: [updatedByUserId], references: [id], onDelete: Restrict)
+
+  @@unique([sessionId, deduplicationKey])
+  @@unique([sessionId, type, sequence])
+  @@index([moduleId])
+  @@index([professionalUserId])
+  @@index([status])
+}
+
+model ClinicalDecision {
+  id                 String                 @id @default(uuid()) @db.Uuid
+  sessionId          String                 @db.Uuid
+  moduleId           String                 @db.Uuid
+  professionalUserId String                 @db.Uuid
+  updatedByUserId    String                 @db.Uuid
+  statement          String
+  reason             String
+  madeAt             DateTime               @default(now())
+  status             ClinicalDecisionStatus @default(ACCEPTED)
+  idempotencyKey     String
+  version            Int                    @default(1)
+  createdAt          DateTime               @default(now())
+  updatedAt          DateTime               @updatedAt
+
+  session      ClinicalReasoningSession   @relation(fields: [sessionId], references: [id], onDelete: Restrict)
+  module       SystemModule               @relation(fields: [moduleId], references: [id], onDelete: Restrict)
+  professional User                       @relation("ClinicalDecisionProfessional", fields: [professionalUserId], references: [id], onDelete: Restrict)
+  updatedBy    User                       @relation("ClinicalDecisionUpdater", fields: [updatedByUserId], references: [id], onDelete: Restrict)
+  evidence     ClinicalDecisionEvidence[]
+
+  @@unique([sessionId, idempotencyKey])
+  @@index([moduleId])
+  @@index([professionalUserId, madeAt])
+  @@index([status])
+}
+
+model TherapeuticStrategy {
+  id                 String                    @id @default(uuid()) @db.Uuid
+  sessionId          String                    @db.Uuid
+  moduleId           String                    @db.Uuid
+  professionalUserId String                    @db.Uuid
+  updatedByUserId    String                    @db.Uuid
+  title              String
+  description        String
+  definedAt          DateTime                  @default(now())
+  status             TherapeuticStrategyStatus @default(DRAFT)
+  idempotencyKey     String
+  version            Int                       @default(1)
+  createdAt          DateTime                  @default(now())
+  updatedAt          DateTime                  @updatedAt
+
+  session           ClinicalReasoningSession @relation(fields: [sessionId], references: [id], onDelete: Restrict)
+  module            SystemModule             @relation(fields: [moduleId], references: [id], onDelete: Restrict)
+  professional      User                     @relation("TherapeuticStrategyProfessional", fields: [professionalUserId], references: [id], onDelete: Restrict)
+  updatedBy         User                     @relation("TherapeuticStrategyUpdater", fields: [updatedByUserId], references: [id], onDelete: Restrict)
+  protocolHistories ProtocolHistory[]
+
+  @@unique([sessionId, idempotencyKey])
+  @@index([moduleId])
+  @@index([professionalUserId, definedAt])
+  @@index([status])
+}
+
+model ClinicalEvidence {
+  id                 String                 @id @default(uuid()) @db.Uuid
+  moduleId           String                 @db.Uuid
+  registeredByUserId String                 @db.Uuid
+  updatedByUserId    String                 @db.Uuid
+  key                String                 @unique
+  title              String
+  reference          String
+  type               EvidenceType
+  level              EvidenceLevel
+  status             ClinicalEvidenceStatus @default(ACTIVE)
+  version            Int                    @default(1)
+  createdAt          DateTime               @default(now())
+  updatedAt          DateTime               @updatedAt
+
+  module            SystemModule               @relation(fields: [moduleId], references: [id], onDelete: Restrict)
+  registeredBy      User                       @relation("ClinicalEvidenceRegistrar", fields: [registeredByUserId], references: [id], onDelete: Restrict)
+  updatedBy         User                       @relation("ClinicalEvidenceUpdater", fields: [updatedByUserId], references: [id], onDelete: Restrict)
+  decisions         ClinicalDecisionEvidence[]
+  protocolDecisions ProtocolDecisionEvidence[]
+
+  @@index([moduleId])
+  @@index([registeredByUserId])
+  @@index([level, status])
+}
+
+model ClinicalDecisionEvidence {
+  id         String   @id @default(uuid()) @db.Uuid
+  decisionId String   @db.Uuid
+  evidenceId String   @db.Uuid
+  relevance  String?
+  createdAt  DateTime @default(now())
+
+  decision ClinicalDecision @relation(fields: [decisionId], references: [id], onDelete: Restrict)
+  evidence ClinicalEvidence @relation(fields: [evidenceId], references: [id], onDelete: Restrict)
+
+  @@unique([decisionId, evidenceId])
+  @@index([evidenceId])
+}
+
+model ClinicalAlert {
+  id               String                @id @default(uuid()) @db.Uuid
+  sessionId        String                @db.Uuid
+  findingId        String?               @db.Uuid
+  moduleId         String                @db.Uuid
+  raisedByUserId   String                @db.Uuid
+  updatedByUserId  String                @db.Uuid
+  code             String
+  message          String
+  level            ClinicalPriorityLevel
+  status           ClinicalAlertStatus   @default(ACTIVE)
+  deduplicationKey String
+  raisedAt         DateTime              @default(now())
+  resolvedAt       DateTime?
+  version          Int                   @default(1)
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+
+  session   ClinicalReasoningSession @relation(fields: [sessionId], references: [id], onDelete: Restrict)
+  finding   ClinicalFinding?         @relation(fields: [findingId], references: [id], onDelete: Restrict)
+  module    SystemModule             @relation(fields: [moduleId], references: [id], onDelete: Restrict)
+  raisedBy  User                     @relation("ClinicalAlertRaiser", fields: [raisedByUserId], references: [id], onDelete: Restrict)
+  updatedBy User                     @relation("ClinicalAlertUpdater", fields: [updatedByUserId], references: [id], onDelete: Restrict)
+
+  @@unique([sessionId, deduplicationKey])
+  @@index([findingId])
+  @@index([moduleId])
+  @@index([raisedByUserId, raisedAt])
+  @@index([level, status])
+}

@@ -1,0 +1,110 @@
+model SystemModule {
+  id                  String   @id @default(uuid()) @db.Uuid
+  key                 String   @unique
+  name                String
+  description         String?
+  nutritionRestricted Boolean  @default(false)
+  active              Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  rolePermissions           RolePermission[]
+  userPermissions           UserPermission[]
+  recordEntries             MasterRecordEntry[]
+  patients                  Patient[]
+  patientAddresses          PatientAddress[]
+  patientPhones             PatientPhone[]
+  patientInsurances         PatientInsurance[]
+  patientEmergencyContacts  PatientEmergencyContact[]
+  masterRecords             MasterRecord[]
+  appointments              Appointment[]
+  attendances               Attendance[]
+  attendanceTimelineEvents  AttendanceTimelineEvent[]
+  attendancePendingChecks   AttendancePendingCheck[]
+  attendanceSummaries       AttendanceClinicalSummary[]
+  reports                   Report[]
+  deliverables              Deliverable[]
+  dataReferences            MasterRecordDataReference[]
+  continuities              MasterRecordContinuity[]
+  continuitySteps           ContinuityStep[]
+  auditEvents               AuditEvent[]
+  recordVersions            RecordVersion[]
+  clinicalReasoningSessions ClinicalReasoningSession[]
+  clinicalFindings          ClinicalFinding[]
+  clinicalPriorities        ClinicalPriority[]
+  clinicalObjectives        ClinicalObjective[]
+  clinicalDecisions         ClinicalDecision[]
+  therapeuticStrategies     TherapeuticStrategy[]
+  clinicalEvidence          ClinicalEvidence[]
+  clinicalAlerts            ClinicalAlert[]
+  clinicalEvolutionSessions ClinicalEvolutionSession[]
+  evolutionComparisons      EvolutionComparison[]
+  treatmentAdherences       TreatmentAdherence[]
+  treatmentAdherenceItems   TreatmentAdherenceItem[]
+  protocolHistories         ProtocolHistory[]
+  protocolChanges           ProtocolChange[]
+  protocolDecisions         ProtocolDecision[]
+  evolutionFactors          EvolutionAssociatedFactor[]
+  athleteProfiles           AthleteProgressProfile[]
+  athleteReferences         AthleteProgressReference[]
+}
+
+model Role {
+  id                     String   @id @default(uuid()) @db.Uuid
+  key                    String   @unique
+  name                   String
+  description            String?
+  isSystem               Boolean  @default(false)
+  grantsAllModules       Boolean  @default(false)
+  allowsNutritionModules Boolean  @default(false)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  users       UserRole[]
+  permissions RolePermission[]
+}
+
+model RolePermission {
+  id        String           @id @default(uuid()) @db.Uuid
+  roleId    String           @db.Uuid
+  moduleId  String           @db.Uuid
+  action    AccessAction
+  effect    PermissionEffect @default(ALLOW)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  role   Role         @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  module SystemModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, moduleId, action])
+  @@index([moduleId])
+}
+
+model UserRole {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  roleId    String   @db.Uuid
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId])
+  @@index([roleId])
+}
+
+model UserPermission {
+  id        String           @id @default(uuid()) @db.Uuid
+  userId    String           @db.Uuid
+  moduleId  String           @db.Uuid
+  action    AccessAction
+  effect    PermissionEffect
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  user   User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  module SystemModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, moduleId, action])
+  @@index([moduleId])
+}

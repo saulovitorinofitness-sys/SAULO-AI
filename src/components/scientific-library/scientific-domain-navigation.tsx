@@ -1,0 +1,7 @@
+import type { ScientificLibraryDomain } from "@/features/scientific-library";
+import { scientificLibraryDomainLabels } from "@/features/scientific-library";
+
+export function ScientificDomainNavigation({ domains, selected, counts, onSelect }: { domains: readonly ScientificLibraryDomain[]; selected: "ALL" | ScientificLibraryDomain; counts: Readonly<Record<ScientificLibraryDomain, number>>; onSelect: (domain: "ALL" | ScientificLibraryDomain) => void }) {
+  return <nav aria-label="Domínios da Biblioteca Científica" className="rounded-[var(--radius-large)] border border-[var(--line)] bg-[var(--surface)] p-3"><div className="flex flex-wrap gap-2"><button aria-pressed={selected === "ALL"} className={`min-h-10 rounded-[var(--radius-full)] border px-3 text-xs font-black ${selected === "ALL" ? "border-[var(--primary)] bg-[var(--secondary)] text-[var(--primary-hover)]" : "border-[var(--line)] text-[var(--text-secondary)] hover:bg-[var(--surface-elevated)]"}`} onClick={() => onSelect("ALL")} type="button">Todos</button>{domains.map((domain) => <button aria-pressed={selected === domain} className={`min-h-10 rounded-[var(--radius-full)] border px-3 text-xs font-black ${selected === domain ? "border-[var(--primary)] bg-[var(--secondary)] text-[var(--primary-hover)]" : "border-[var(--line)] text-[var(--text-secondary)] hover:bg-[var(--surface-elevated)]"}`} key={domain} onClick={() => onSelect(domain)} type="button">{scientificLibraryDomainLabels[domain]} <span className="font-medium">({counts[domain]})</span></button>)}</div></nav>;
+}
+

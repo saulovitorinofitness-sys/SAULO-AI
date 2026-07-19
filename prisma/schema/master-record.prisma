@@ -1,0 +1,82 @@
+model MasterRecord {
+  id                String             @id @default(uuid()) @db.Uuid
+  patientId         String             @unique @db.Uuid
+  moduleId          String             @db.Uuid
+  responsibleUserId String             @db.Uuid
+  createdByUserId   String             @db.Uuid
+  updatedByUserId   String             @db.Uuid
+  status            MasterRecordStatus @default(ACTIVE)
+  version           Int                @default(1)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  archivedAt        DateTime?
+
+  patient                   Patient                     @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  module                    SystemModule                @relation(fields: [moduleId], references: [id], onDelete: Restrict)
+  responsible               User                        @relation("MasterRecordResponsible", fields: [responsibleUserId], references: [id], onDelete: Restrict)
+  createdBy                 User                        @relation("MasterRecordCreator", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  updatedBy                 User                        @relation("MasterRecordUpdater", fields: [updatedByUserId], references: [id], onDelete: Restrict)
+  entries                   MasterRecordEntry[]
+  dataReferences            MasterRecordDataReference[]
+  continuity                MasterRecordContinuity?
+  attendances               Attendance[]
+  appointments              Appointment[]
+  reports                   Report[]
+  deliverables              Deliverable[]
+  clinicalEvolutionSessions ClinicalEvolutionSession[]
+  protocolHistories         ProtocolHistory[]
+  athleteProgressProfile    AthleteProgressProfile?
+
+  @@index([moduleId])
+  @@index([responsibleUserId])
+}
+
+model MasterRecordEntry {
+  id              String            @id @default(uuid()) @db.Uuid
+  masterRecordId  String            @db.Uuid
+  moduleId        String            @db.Uuid
+  authorUserId    String            @db.Uuid
+  updatedByUserId String            @db.Uuid
+  attendanceId    String?           @db.Uuid
+  aggregateId     String            @db.Uuid
+  previousEntryId String?           @db.Uuid
+  type            String
+  status          RecordEntryStatus @default(DRAFT)
+  occurredAt      DateTime
+  revision        Int               @default(1)
+  payload         Json?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  deletedAt       DateTime?
+
+  masterRecord  MasterRecord        @relation(fields: [masterRecordId], references: [id], onDelete: Restrict)
+  module        SystemModule        @relation(fields: [moduleId], references: [id], onDelete: Restrict)
+  author        User                @relation("RecordEntryAuthor", fields: [authorUserId], references: [id], onDelete: Restrict)
+  updatedBy     User                @relation("RecordEntryUpdater", fields: [updatedByUserId], references: [id], onDelete: Restrict)
+  attendance    Attendance?         @relation(fields: [attendanceId], references: [id], onDelete: SetNull)
+  previousEntry MasterRecordEntry?  @relation("RecordEntryRevisions", fields: [previousEntryId], references: [id], onDelete: SetNull)
+  revisions     MasterRecordEntry[] @relation("RecordEntryRevisions")
+
+  bioimpedance                 BioimpedanceRecord?
+  perimetry                    PerimetryRecord?
+  physicalAssessment           PhysicalAssessmentRecord?
+  posturalAssessment           PosturalAssessmentRecord?
+  mealPlan                     MealPlanRecord?
+  workoutPlan                  WorkoutPlanRecord?
+  canonicalReference           MasterRecordDataReference?
+  attendanceSummaryItems       AttendanceClinicalSummaryItem[]
+  currentEvolutionComparisons  EvolutionComparison[]           @relation("EvolutionCurrentEntry")
+  previousEvolutionComparisons EvolutionComparison[]           @relation("EvolutionPreviousEntry")
+  adherenceSourceItems         TreatmentAdherenceItem[]        @relation("AdherenceSourceEntry")
+  protocolResponseHistories    ProtocolHistory[]               @relation("ProtocolResponseEntry")
+  protocolChangeResponses      ProtocolChange[]                @relation("ProtocolChangeResponseEntry")
+  evolutionFactorSources       EvolutionAssociatedFactor[]     @relation("EvolutionFactorSourceEntry")
+  athleteProgressReferences    AthleteProgressReference[]      @relation("AthleteProgressSourceEntry")
+
+  @@unique([aggregateId, revision])
+  @@index([masterRecordId, occurredAt])
+  @@index([moduleId])
+  @@index([authorUserId])
+  @@index([updatedByUserId])
+  @@index([attendanceId])
+}

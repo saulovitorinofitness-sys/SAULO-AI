@@ -1,0 +1,8 @@
+import { Card, FormField, Select, SectionHeader } from "@/components/ui";
+import { reportTypeLabels, type ImportReportType, type ImportSource } from "@/features/business-import";
+
+const sources: readonly [ImportSource, string, boolean][] = [["nextfit", "Next Fit", true], ["custom", "Arquivo personalizado", true], ["internal_finance", "Financeiro interno — futuro", false], ["clinic", "Clínica SV — futuro", false], ["instagram", "Instagram — futuro", false], ["meta_ads", "Meta Ads — futuro", false], ["google", "Google — futuro", false]];
+export function ImportSelectors({ source, reportType, onSource, onReportType }: { source: ImportSource; reportType: ImportReportType; onSource: (value: ImportSource) => void; onReportType: (value: ImportReportType) => void }) {
+  return <Card className="p-5 md:p-6"><SectionHeader description="Next Fit e arquivos personalizados estão disponíveis neste MVP." title="1. Origem e relatório" /><div className="mt-5 grid gap-4 md:grid-cols-2"><FormField id="import-source" label="Origem"><Select className="mt-2" id="import-source" onChange={(event) => onSource(event.target.value as ImportSource)} value={source}>{sources.map(([value, label, enabled]) => <option disabled={!enabled} key={value} value={value}>{label}</option>)}</Select></FormField><FormField id="report-type" label="Tipo de relatório"><Select className="mt-2" id="report-type" onChange={(event) => onReportType(event.target.value as ImportReportType)} value={reportType}>{Object.entries(reportTypeLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</Select></FormField></div></Card>;
+}
+

@@ -1,0 +1,8 @@
+import { SectionCard } from "@/components/clinical-collection/section-card";
+import { bilateralPairs, type PerimetryMeasurement } from "@/features/anthropometry-perimetry";
+
+export function BilateralComparisonCard({ measurements }: { measurements: readonly PerimetryMeasurement[] }) {
+  const find = (key: string) => measurements.find((item) => item.key === key)?.valueCm;
+  return <SectionCard description="Comparação matemática entre lados, sem classificação clínica." title="4. Assimetrias"><div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{bilateralPairs.map(([label, rightKey, leftKey]) => { const right = find(rightKey); const left = find(leftKey); const difference = right !== undefined && left !== undefined ? Math.abs(right - left) : undefined; return <article className="rounded-xl border border-slate-200 bg-slate-50 p-4" key={label}><h3 className="text-sm font-black text-slate-900">{label}</h3><dl className="mt-3 grid grid-cols-2 gap-2 text-xs"><div><dt className="text-slate-500">Direito</dt><dd className="mt-1 font-black">{right ?? "—"} {right !== undefined ? "cm" : ""}</dd></div><div><dt className="text-slate-500">Esquerdo</dt><dd className="mt-1 font-black">{left ?? "—"} {left !== undefined ? "cm" : ""}</dd></div></dl><p className="mt-3 border-t border-slate-200 pt-3 text-xs font-bold text-slate-600">Diferença absoluta: {difference !== undefined ? `${difference.toFixed(1)} cm` : "sem dados suficientes"}</p>{difference !== undefined && difference > 0 ? <p className="mt-2 text-xs font-semibold text-amber-800">Diferença entre lados — necessita revisão profissional.</p> : null}</article>; })}</div></SectionCard>;
+}
+

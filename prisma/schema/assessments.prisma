@@ -1,0 +1,43 @@
+model BioimpedanceRecord {
+  entryId      String   @id @db.Uuid
+  measuredAt   DateTime
+  measurements Json
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  entry MasterRecordEntry @relation(fields: [entryId], references: [id], onDelete: Restrict)
+}
+
+model PerimetryRecord {
+  entryId      String   @id @db.Uuid
+  measuredAt   DateTime
+  measurements Json
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  entry MasterRecordEntry @relation(fields: [entryId], references: [id], onDelete: Restrict)
+}
+
+model PhysicalAssessmentRecord {
+  entryId      String   @id @db.Uuid
+  assessedAt   DateTime
+  observations Json
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  entry MasterRecordEntry @relation(fields: [entryId], references: [id], onDelete: Restrict)
+}
+
+model PosturalAssessmentRecord {
+  entryId      String   @id @db.Uuid
+  assessedAt   DateTime
+  observations Json
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  entry MasterRecordEntry @relation(fields: [entryId], references: [id], onDelete: Restrict)
+}

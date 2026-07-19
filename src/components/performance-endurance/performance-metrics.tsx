@@ -1,0 +1,4 @@
+import { Card, SectionHeader } from "@/components/ui";
+import type { PerformanceMetric } from "@/features/performance-endurance";
+export function PerformanceMetrics({ metrics }: { metrics: readonly PerformanceMetric[] }) { return <Card className="p-5 md:p-6" id="metricas"><SectionHeader description="Valores demonstrativos organizados sem cálculo ou interpretação definitiva." title="Métricas de performance" /><dl className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">{metrics.map((metric) => <div className="rounded-xl border border-[var(--line)] bg-[var(--surface-elevated)] p-3.5" key={metric.id}><dt className="text-xs font-bold text-[var(--muted)]">{metric.label}</dt><dd className="mt-1 text-lg font-black text-[var(--text-primary)]">{metric.value}</dd><p className="mt-1 text-xs text-[var(--text-secondary)]">{metric.context}</p></div>)}</dl></Card>; }
+
