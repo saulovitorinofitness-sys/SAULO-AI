@@ -9,7 +9,6 @@ import type { NutritionPrescriptionView } from "@/features/nutrition-prescriptio
 
 import { MealCard } from "./meal-card";
 import { MealEditor } from "./meal-editor";
-import { MealPlanSidebar } from "./meal-plan-sidebar";
 import { NutritionSummary } from "./nutrition-summary";
 
 interface MealPlanWorkspaceProps {
@@ -21,22 +20,20 @@ export function MealPlanWorkspace({
   initialPlan,
   prescription,
 }: MealPlanWorkspaceProps) {
-  const [plan, setPlan] = useState(initialPlan);
+  const [plan, setPlan] = useState<MealPlanView>(() => {
+    if (typeof window === "undefined") return initialPlan;
+
+    const savedPlan = localStorage.getItem("saulo-ai-meal-plan");
+
+    return savedPlan ? JSON.parse(savedPlan) : initialPlan;
+  });
 
   useEffect(() => {
-  const savedPlan = localStorage.getItem("saulo-ai-meal-plan");
-
-  if (savedPlan) {
-    setPlan(JSON.parse(savedPlan));
-  }
-}, []);
-
-useEffect(() => {
-  localStorage.setItem(
-    "saulo-ai-meal-plan",
-    JSON.stringify(plan)
-  );
-}, [plan]);
+    localStorage.setItem(
+      "saulo-ai-meal-plan",
+      JSON.stringify(plan),
+    );
+  }, [plan]);
   const [selectedId, setSelectedId] = useState<string>();
   const [editing, setEditing] = useState(false);
   const [message, setMessage] = useState(
@@ -113,10 +110,15 @@ useEffect(() => {
     );
   }
 
+  function savePlan() {
+    localStorage.setItem("saulo-ai-meal-plan", JSON.stringify(plan));
+    setMessage("Plano demonstrativo salvo localmente.");
+  }
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-4">
       <Card
-        className="flex flex-col gap-4 p-5 lg:flex-row lg:items-center lg:justify-between"
+        className="flex flex-col gap-2 p-3 sm:flex-row sm:items-center sm:justify-between"
         variant="info"
       >
         <div>
@@ -137,69 +139,21 @@ useEffect(() => {
         </Badge>
       </Card>
 
-      <section
-        aria-labelledby="meal-plan-operational-summary"
-        className="grid gap-4 sm:grid-cols-3"
-      >
-        <Card className="p-4">
-          <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
-            Refeições
-          </p>
+      <NutritionSummary onSave={savePlan} plan={plan} />
 
-          <p className="mt-2 text-2xl font-black text-slate-950">
-            {plan.meals.length}
-          </p>
+      <NutritionPrescriptionEngine
+        dailySummary={plan.summary}
+        view={prescription}
+      />
 
-          <p className="mt-1 text-sm text-slate-600">
-            cadastradas no plano atual
-          </p>
-        </Card>
+      <details className="rounded-2xl border border-[var(--line)] bg-white">
+        <summary className="cursor-pointer px-4 py-3 text-sm font-black text-[var(--text-primary)]">
+          Gerenciar estrutura do plano
+        </summary>
 
-        <Card className="p-4">
-          <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
-            Seleção atual
-          </p>
-
-          <p className="mt-2 font-black text-slate-950">
-            {selected?.name ?? "Nenhuma refeição"}
-          </p>
-
-          <p className="mt-1 text-sm text-slate-600">
-            {selected
-              ? editing
-                ? "Modo de edição"
-                : "Modo de visualização"
-              : "Selecione uma refeição abaixo"}
-          </p>
-        </Card>
-
-        <Card className="p-4">
-          <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
-            Situação
-          </p>
-
-          <p className="mt-2 font-black text-emerald-700">
-            Plano em elaboração
-          </p>
-
-          <p className="mt-1 text-sm text-slate-600">
-            aguardando validação profissional
-          </p>
-        </Card>
-      </section>
-
-      <span className="sr-only" id="meal-plan-operational-summary">
-        Resumo operacional do plano alimentar
-      </span>
-
-      <NutritionSummary plan={plan} />
-
-      <NutritionPrescriptionEngine view={prescription} />
-
-      <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1fr)_18rem]">
         <section
           aria-labelledby="meal-plan-structure"
-          className="min-w-0 space-y-5"
+          className="min-w-0 space-y-5 border-t border-[var(--line)] p-4"
         >
           <SectionHeader
             action={
@@ -262,10 +216,7 @@ useEffect(() => {
             />
           ) : null}
         </section>
-
-        <MealPlanSidebar plan={plan} />
-      </div>
+      </details>
     </div>
   );
 }
-
