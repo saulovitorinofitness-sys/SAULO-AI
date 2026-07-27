@@ -21,6 +21,13 @@ const nutritionDenyOverrides = [
   { moduleKey: "NUTRITION_EVOLUTION", action: "MANAGE", effect: "DENY" },
 ] as const;
 
+const posturalOperationalDenyOverrides = [
+  { moduleKey: "POSTURAL_ASSESSMENT", action: "CREATE", effect: "DENY" },
+  { moduleKey: "POSTURAL_ASSESSMENT", action: "UPDATE", effect: "DENY" },
+  { moduleKey: "POSTURAL_ASSESSMENT", action: "DELETE", effect: "DENY" },
+  { moduleKey: "POSTURAL_ASSESSMENT", action: "MANAGE", effect: "DENY" },
+] as const;
+
 export const BUILT_IN_IDS = {
   users: {
     sauloXavierVitorino: "00000000-0000-4000-8000-000000000001",
@@ -36,7 +43,7 @@ export const BUILT_IN_ACCESS_POLICIES = {
   sauloXavierVitorino: {
     userId: BUILT_IN_IDS.users.sauloXavierVitorino,
     roleKeys: ["SYSTEM_OWNER"],
-    overrides: [],
+    overrides: posturalOperationalDenyOverrides,
   },
   mariaDeLourdesGomes: {
     userId: BUILT_IN_IDS.users.mariaDeLourdesGomes,

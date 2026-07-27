@@ -28,6 +28,7 @@ const moduleDefinitions = [
   ["00000000-0000-4000-8000-000000000210", "PERIMETRY", "Perimetria", false],
   ["00000000-0000-4000-8000-000000000211", "PHYSICAL_ASSESSMENT", "Avaliação Física", false],
   ["00000000-0000-4000-8000-000000000212", "POSTURAL_ASSESSMENT", "Avaliação Postural", false],
+  ["00000000-0000-4000-8000-000000000221", "NUTRITION_STRATEGY", "Estratégia Nutricional", true],
   ["00000000-0000-4000-8000-000000000213", "MEAL_PLAN", "Plano Alimentar", true],
   ["00000000-0000-4000-8000-000000000214", "WORKOUT_PLAN", "Plano de Treino", false],
   ["00000000-0000-4000-8000-000000000215", "REPORTS", "Relatórios", false],
@@ -38,10 +39,71 @@ const moduleDefinitions = [
   ["00000000-0000-4000-8000-000000000220", "NUTRITION_EVOLUTION", "Evolução Nutricional", true],
 ] as const;
 
-const nutritionDeniedModuleKeys = ["MEAL_PLAN", "NUTRITION_EVOLUTION"] as const;
+const nutritionDeniedModuleKeys = [
+  "NUTRITION_STRATEGY",
+  "MEAL_PLAN",
+  "NUTRITION_EVOLUTION",
+] as const;
 const nutritionDeniedActions = ["READ", "CREATE", "UPDATE", "DELETE", "EXPORT", "MANAGE"] as const;
+const posturalOperationalDeniedActions = ["CREATE", "UPDATE", "DELETE", "MANAGE"] as const;
+
+async function ensurePatientClinicalCodeSequence() {
+  await prisma.$executeRaw`
+    CREATE SEQUENCE IF NOT EXISTS "Patient_clinicalCode_seq"
+      AS BIGINT
+      MINVALUE 1
+      MAXVALUE 999999
+      START WITH 1
+      INCREMENT BY 1
+      NO CYCLE
+  `;
+
+  await prisma.$executeRaw`
+    DO $$
+    DECLARE
+      "highestClinicalCode" BIGINT;
+      "sequenceLastValue" BIGINT;
+      "sequenceIsCalled" BOOLEAN;
+      "nextSequenceValue" BIGINT;
+    BEGIN
+      SELECT COALESCE(
+        MAX(SUBSTRING("clinicalCode" FROM 3)::BIGINT),
+        0
+      )
+      INTO "highestClinicalCode"
+      FROM "Patient"
+      WHERE "clinicalCode" ~ '^SV[0-9]{6}$';
+
+      IF "highestClinicalCode" >= 999999 THEN
+        RAISE EXCEPTION
+          'A sequência de códigos clínicos SV atingiu o limite de SV999999.';
+      END IF;
+
+      SELECT "last_value", "is_called"
+      INTO "sequenceLastValue", "sequenceIsCalled"
+      FROM "Patient_clinicalCode_seq";
+
+      "nextSequenceValue" := GREATEST(
+        CASE
+          WHEN "sequenceIsCalled" THEN "sequenceLastValue" + 1
+          ELSE "sequenceLastValue"
+        END,
+        "highestClinicalCode" + 1
+      );
+
+      PERFORM SETVAL(
+        '"Patient_clinicalCode_seq"',
+        "nextSequenceValue",
+        FALSE
+      );
+    END
+    $$
+  `;
+}
 
 async function main() {
+  await ensurePatientClinicalCodeSequence();
+
   for (const [id, key, name, nutritionRestricted] of moduleDefinitions) {
     await prisma.systemModule.upsert({
       where: { key },
@@ -114,8 +176,21 @@ async function main() {
 
   await prisma.userProfile.upsert({
     where: { userId: BUILT_IN_IDS.users.mariaDeLourdesGomes },
-    update: { type: "PROFESSIONAL" },
-    create: { userId: BUILT_IN_IDS.users.mariaDeLourdesGomes, type: "PROFESSIONAL" },
+    update: {
+      type: "PROFESSIONAL",
+      professionalRegistration: "CREF 019480-G",
+      professionalTitle: "Profissional de Educação Física",
+      professionalPhone: "(88) 99606-6757",
+      professionalInstagram: "@lurdinhapersonal",
+    },
+    create: {
+      userId: BUILT_IN_IDS.users.mariaDeLourdesGomes,
+      type: "PROFESSIONAL",
+      professionalRegistration: "CREF 019480-G",
+      professionalTitle: "Profissional de Educação Física",
+      professionalPhone: "(88) 99606-6757",
+      professionalInstagram: "@lurdinhapersonal",
+    },
   });
 
   await prisma.userRole.upsert({
@@ -169,6 +244,28 @@ async function main() {
         },
       });
     }
+  }
+
+  const posturalModule = await prisma.systemModule.findUniqueOrThrow({
+    where: { key: "POSTURAL_ASSESSMENT" },
+  });
+  for (const action of posturalOperationalDeniedActions) {
+    await prisma.userPermission.upsert({
+      where: {
+        userId_moduleId_action: {
+          userId: BUILT_IN_IDS.users.sauloXavierVitorino,
+          moduleId: posturalModule.id,
+          action,
+        },
+      },
+      update: { effect: "DENY" },
+      create: {
+        userId: BUILT_IN_IDS.users.sauloXavierVitorino,
+        moduleId: posturalModule.id,
+        action,
+        effect: "DENY",
+      },
+    });
   }
 }
 

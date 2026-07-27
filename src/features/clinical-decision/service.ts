@@ -61,8 +61,8 @@ export const clinicalDecisionService: ClinicalDecisionGateway = {
       reviewPoints.push({ id: "review-lab", title: "Verificar disponibilidade e atualidade dos exames", rationale: "A verificação considera somente existência e data, sem interpretar resultados.", evidenceIds: ["ev-lab"], area: "LABORATORY", relevance: "INFORMATIVE", status: "PENDING" });
     }
     if (!posturalCompleted) {
-      alerts.push({ id: "alert-postural", title: "Avaliação Postural obrigatória pendente", description: "O Atendimento Completo SV ainda não possui Avaliação Postural concluída.", level: "PRIORITY", area: "POSTURAL_ASSESSMENT", source: "Coleta clínica", status: "PENDING", createdAt: "2026-07-16T10:24:00-03:00", actionLabel: "Concluir avaliação" });
-      pendingItems.push({ id: "pending-postural", description: "Avaliação Postural obrigatória ainda não concluída.", area: "POSTURAL_ASSESSMENT", priority: "PRIORITY", reason: "Etapa estrutural obrigatória do Atendimento Completo SV.", possibleResponsible: "Saulo Xavier Vitorino ou Maria de Lourdes Gomes", suggestedAction: "Concluir a etapa na coleta clínica", status: "PENDING" });
+      alerts.push({ id: "alert-postural", title: "Avaliação Postural pendente", description: "O módulo especializado permanece disponível e não bloqueia o fluxo nutricional.", level: "INFORMATIVE", area: "POSTURAL_ASSESSMENT", source: "Coleta clínica", status: "PENDING", createdAt: "2026-07-16T10:24:00-03:00", actionLabel: "Abrir avaliação" });
+      pendingItems.push({ id: "pending-postural", description: "Avaliação Postural ainda não concluída.", area: "POSTURAL_ASSESSMENT", priority: "INFORMATIVE", reason: "Pendência independente dos módulos clínicos de Nutrição.", possibleResponsible: "Saulo Xavier Vitorino ou Maria de Lourdes Gomes", suggestedAction: "Concluir quando o profissional decidir realizar o módulo", status: "PENDING" });
     }
     if (isMaria) {
       const visible = (area: ClinicalDecisionArea) => area !== "NUTRITION" && mariaAreas.includes(area);
@@ -71,7 +71,7 @@ export const clinicalDecisionService: ClinicalDecisionGateway = {
     const workspace: ClinicalDecisionWorkspace = {
       patientId: collection.patientId, attendanceId: collection.attendanceId, masterRecordId: collection.masterRecordId, collectionScenario: collection.scenario, scenario,
       patient: { fullName: collection.patientName, code: collection.patientCode, age: 34 }, consultationTypeLabel: scenario === "POSTURAL_PENDING" ? "Atendimento Completo SV" : "Consulta inicial",
-      responsibleProfessional: isMaria ? { professionalUserId: BUILT_IN_IDS.users.mariaDeLourdesGomes, professionalName: "Maria de Lourdes Gomes", updatedAt: "2026-07-16T10:30:00-03:00", version: 1 } : collection.connectedProfessional, updatedAt: collection.connectedProfessional.updatedAt, attendanceStatus: posturalCompleted ? "Em análise profissional" : "Pendente de coleta",
+      responsibleProfessional: isMaria ? { professionalUserId: BUILT_IN_IDS.users.mariaDeLourdesGomes, professionalName: "Maria de Lourdes Gomes", updatedAt: "2026-07-16T10:30:00-03:00", version: 1 } : collection.connectedProfessional, updatedAt: collection.connectedProfessional.updatedAt, attendanceStatus: posturalCompleted ? "Em análise profissional" : "Em análise profissional · Avaliação Postural pendente",
       evidences, alerts, pendingItems, reviewPoints, history: scenario === "COMPLETE" ? [previousDecisionSeed] : [],
       permissions: { canRead: true, canWrite: true, canViewNutrition: !isMaria, allowedDecisionAreas: isMaria ? mariaAreas : allAreas },
       posturalAssessmentRequired: true, posturalAssessmentCompleted: posturalCompleted,

@@ -96,8 +96,8 @@ export function MealAssemblyPanel({
             Salvar montagem mockada
           </Button>
         }
-        description="Edição manual com dados demonstrativos; nenhuma prescrição é gerada automaticamente."
-        eyebrow="Montagem rápida"
+        description="Edição manual secundária com dados demonstrativos e revisão profissional."
+        eyebrow="Edição manual"
         title="Itens da refeição"
       />
 
@@ -303,12 +303,59 @@ export function MealAssemblyPanel({
                     >
                       Excluir
                     </Button>
+
+                    {entry.kind === "FOOD" ? (
+                      <Select
+                        aria-label={`Substituir ${entry.name}`}
+                        onChange={(event) => {
+                          const selectedFood = foods.find(
+                            (food) => food.id === event.target.value,
+                          );
+
+                          if (!selectedFood || selectedFood.domain !== "FOOD") {
+                            return;
+                          }
+
+                          onChangeEntry({
+                            ...entry,
+                            name: selectedFood.name,
+                            scientificLibraryItemId: selectedFood.id,
+                            group: selectedFood.category,
+                          });
+
+                          event.target.value = "";
+                        }}
+                        value=""
+                      >
+                        <option value="">Substituir</option>
+                        {foods
+                          .filter((food) => {
+                            const currentFood = foods.find(
+                              (item) =>
+                                item.id === entry.scientificLibraryItemId,
+                            );
+
+                            return (
+                              food.id !== entry.scientificLibraryItemId &&
+                              food.domain === "FOOD" &&
+                              currentFood?.domain === "FOOD" &&
+                              food.attributes.foodGroup ===
+                                currentFood.attributes.foodGroup
+                            );
+                          })
+                          .map((food) => (
+                            <option key={food.id} value={food.id}>
+                              {food.name}
+                            </option>
+                          ))}
+                      </Select>
+                    ) : null}
                   </div>
 
-                  <details className="rounded-lg border border-[var(--line)] bg-white lg:col-span-9">
-                    <summary className="cursor-pointer px-3 py-2 text-xs font-black text-[var(--text-primary)]">
-                      Detalhes e substituições
-                    </summary>
+                  <div className="rounded-lg border border-[var(--line)] bg-[var(--surface)]">
+                    <div className="px-3 py-2 text-xs font-bold">
+                      Substituir alimento
+                    </div>
                     <div className="grid gap-3 border-t border-[var(--line)] p-3 sm:grid-cols-2">
                       <FormField
                         id={`entry-group-${entry.id}`}
@@ -364,15 +411,27 @@ export function MealAssemblyPanel({
                               Selecionar alimento para revisão profissional
                             </option>
                             {foods
-                              .filter(
-                                (food) =>
-                                  food.id !== entry.scientificLibraryItemId &&
+                              .filter((food) => {
+                                const currentFood = foods.find(
+                                  (item) =>
+                                    item.id ===
+                                    entry.scientificLibraryItemId,
+                                );
+
+                                return (
+                                  food.id !==
+                                    entry.scientificLibraryItemId &&
+                                  food.domain === "FOOD" &&
+                                  currentFood?.domain === "FOOD" &&
+                                  food.attributes.foodGroup ===
+                                    currentFood.attributes.foodGroup &&
                                   !entry.substitutions.some(
                                     (substitution) =>
                                       substitution.scientificLibraryItemId ===
                                       food.id,
-                                  ),
-                              )
+                                  )
+                                );
+                              })
                               .map((food) => (
                                 <option key={food.id} value={food.id}>
                                   {food.name} · {food.category}
@@ -416,7 +475,7 @@ export function MealAssemblyPanel({
                         </div>
                       ) : null}
                     </div>
-                  </details>
+                  </div>
                 </div>
               );
             })}

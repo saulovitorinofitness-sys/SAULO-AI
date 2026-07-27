@@ -41,3 +41,30 @@ model PosturalAssessmentRecord {
 
   entry MasterRecordEntry @relation(fields: [entryId], references: [id], onDelete: Restrict)
 }
+
+model PosturalEvolutionComparison {
+  id                 String   @id @default(uuid()) @db.Uuid
+  previousEntryId    String   @db.Uuid
+  currentEntryId     String   @db.Uuid
+  professionalUserId String   @db.Uuid
+  updatedByUserId    String   @db.Uuid
+  classifications    Json
+  visualSettings     Json?
+  generatedSummary   String?
+  editedSummary      String?
+  evaluatorConclusion String?
+  generatedAt        DateTime?
+  comparedAt         DateTime @default(now())
+  version            Int      @default(1)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  previousEntry MasterRecordEntry @relation("PosturalEvolutionPreviousEntry", fields: [previousEntryId], references: [id], onDelete: Restrict)
+  currentEntry  MasterRecordEntry @relation("PosturalEvolutionCurrentEntry", fields: [currentEntryId], references: [id], onDelete: Restrict)
+  professional  User              @relation("PosturalEvolutionProfessional", fields: [professionalUserId], references: [id], onDelete: Restrict)
+  updatedBy     User              @relation("PosturalEvolutionUpdater", fields: [updatedByUserId], references: [id], onDelete: Restrict)
+
+  @@unique([previousEntryId, currentEntryId])
+  @@index([currentEntryId, comparedAt])
+  @@index([professionalUserId, comparedAt])
+}

@@ -1,4 +1,5 @@
 import { clinicalAnamnesisService, objectiveOptions, clinicalHistoryOptions } from "@/features/clinical-anamnesis";
+import { clinicalCollectionService } from "@/features/clinical-collection";
 import { clinicalDecisionService } from "@/features/clinical-decision";
 import { mealPlanService } from "@/features/meal-plan";
 import { scientificLibraryService } from "@/features/scientific-library";
@@ -6,7 +7,8 @@ import { BUILT_IN_IDS } from "@/modules/permissions";
 import type { SessionUser } from "@/features/mvp";
 import { CLINICAL_DEMO_ATTENDANCE_ID } from "@/features/clinical-collection/mock-data";
 import type { GetNutritionStrategyInput, NutritionStrategyScientificReference, NutritionStrategySupplementationItem, NutritionStrategyView } from "./contracts";
-import { nutritionStrategyMockPatient, nutritionStrategyScenarioSeeds, nutritionStrategyTypeOptions } from "./mock-data";
+import { calculateMacroTarget, MACRONUTRIENT_KCAL_PER_GRAM } from "./calculations";
+import { nutritionGoalsMockSeed, nutritionStrategyMockPatient, nutritionStrategyScenarioSeeds, nutritionStrategyTypeOptions } from "./mock-data";
 
 function splitLines(value: string): readonly string[] {
   return value.trim() ? value.split(/[,;\n]/).map((item) => item.trim()).filter(Boolean) : ["Dado ainda não registrado no Prontuário Mestre."];
@@ -25,6 +27,11 @@ function historySummary(historyCount: number, reviewPointsCount: number) {
   return `Motor de Decisão com ${reviewPointsCount} pontos de revisão e decisão profissional disponível.`;
 }
 
+function numericMockValue(value: string) {
+  const match = value.replace(",", ".").match(/\d+(?:\.\d+)?/);
+  return match ? Number(match[0]) : 0;
+}
+
 export const nutritionStrategyService = {
   canAccess(user: SessionUser) {
     return user.id === BUILT_IN_IDS.users.sauloXavierVitorino;
@@ -33,14 +40,16 @@ export const nutritionStrategyService = {
   async get(input: GetNutritionStrategyInput): Promise<NutritionStrategyView | null> {
     if (!this.canAccess(input.user)) return null;
 
-    const [anamnesis, decision, mealPlan, scientificLibrary] = await Promise.all([
+    const [anamnesis, collection, decision, mealPlan, scientificLibrary] = await Promise.all([
       clinicalAnamnesisService.get({ patientId: input.patientId, scenario: input.scenario }),
+      clinicalCollectionService.getCollection({ patientId: input.patientId, attendanceId: CLINICAL_DEMO_ATTENDANCE_ID, scenario: input.scenario }),
       clinicalDecisionService.getWorkspace({ patientId: input.patientId, attendanceId: CLINICAL_DEMO_ATTENDANCE_ID, collectionScenario: input.scenario }),
       mealPlanService.get({ patientId: input.patientId, scenario: input.scenario }),
       scientificLibraryService.getView(input.user),
     ]);
 
-    if (!anamnesis || !decision || !mealPlan || !scientificLibrary || !anamnesis.canViewNutrition) return null;
+    if (!anamnesis || !collection || !decision || !scientificLibrary || !anamnesis.canViewNutrition) return null;
+    if (mealPlan && collection.masterRecordId !== mealPlan.masterRecordId) return null;
 
     const seed = nutritionStrategyScenarioSeeds[input.scenario];
     const scientificReferences: NutritionStrategyScientificReference[] = scientificLibrary.items
@@ -60,8 +69,12 @@ export const nutritionStrategyService = {
         observations: "Item demonstrativo reutilizado da Biblioteca Científica.",
       }));
 
-    const mealTimes = mealPlan.meals.map((meal) => meal.time);
+    const mealTimes = mealPlan?.meals.map((meal) => meal.time) ?? [];
     const strategyType = strategyTypeLabel(seed.strategyType);
+    const basalMetabolicRateKcal = collection.records.bioimpedance.data.basalMetabolicRateKcal;
+    const targetCalories = nutritionGoalsMockSeed.energyMode === "BMR" && basalMetabolicRateKcal
+      ? basalMetabolicRateKcal
+      : nutritionGoalsMockSeed.targetCalories;
     const statusLabel = seed.status === "ACTIVE" ? "Estratégia registrada" : "Rascunho em revisão";
 
     return {
@@ -86,8 +99,24 @@ export const nutritionStrategyService = {
       objectiveMain: objectiveLabel(anamnesis.data.primaryObjective),
       secondaryObjectives: anamnesis.data.secondaryObjectives.length ? anamnesis.data.secondaryObjectives.map((item) => objectiveLabel(item)) : seed.secondaryObjectives,
       strategyType,
+      nutritionGoals: {
+        method: nutritionGoalsMockSeed.method,
+        energyMode: nutritionGoalsMockSeed.energyMode,
+        targetCalories,
+        basalMetabolicRateKcal,
+        carbohydrates: calculateMacroTarget(targetCalories, nutritionGoalsMockSeed.carbohydratesPercentage, MACRONUTRIENT_KCAL_PER_GRAM.carbohydrates),
+        protein: calculateMacroTarget(targetCalories, nutritionGoalsMockSeed.proteinPercentage, MACRONUTRIENT_KCAL_PER_GRAM.protein),
+        fats: calculateMacroTarget(targetCalories, nutritionGoalsMockSeed.fatsPercentage, MACRONUTRIENT_KCAL_PER_GRAM.fats),
+      },
+      assembledDiet: {
+        calories: numericMockValue(mealPlan?.summary.plannedCalories ?? ""),
+        carbohydratesGrams: numericMockValue(mealPlan?.summary.carbohydrates ?? ""),
+        proteinGrams: numericMockValue(mealPlan?.summary.protein ?? ""),
+        fatsGrams: numericMockValue(mealPlan?.summary.fats ?? ""),
+        demonstrative: true,
+      },
       mealDistribution: {
-        mealCount: mealPlan.meals.length,
+        mealCount: mealPlan?.meals.length ?? 0,
         mealTimes,
         window: mealTimes.length ? `${mealTimes[0]} às ${mealTimes.at(-1)}` : "Janela ainda não registrada",
         preTraining: "Estratégia demonstrativa para o pré-treino",
@@ -100,19 +129,23 @@ export const nutritionStrategyService = {
       summary: {
         primaryObjective: objectiveLabel(anamnesis.data.primaryObjective),
         strategyType,
-        mealCount: mealPlan.meals.length,
+        mealCount: mealPlan?.meals.length ?? 0,
         supplementationCount: supplementation.length,
         statusLabel,
-        lastUpdatedAt: mealPlan.updatedAt,
-        responsibleProfessional: mealPlan.responsibleProfessional,
+        lastUpdatedAt: mealPlan?.updatedAt ?? collection.connectedProfessional.updatedAt,
+        responsibleProfessional: mealPlan?.responsibleProfessional ?? collection.connectedProfessional.professionalName,
       },
       scientificReferences,
-      updatedAt: mealPlan.updatedAt,
-      responsibleProfessional: mealPlan.responsibleProfessional,
+      updatedAt: mealPlan?.updatedAt ?? collection.connectedProfessional.updatedAt,
+      responsibleProfessional: mealPlan?.responsibleProfessional ?? collection.connectedProfessional.professionalName,
       canOpenMealPlan: seed.status === "ACTIVE",
       mealPlanHref: `/pacientes/${input.patientId}/plano-alimentar?scenario=${input.scenario}`,
       decisionContext: historySummary(decision.history.length, decision.reviewPoints.length),
-      planContext: seed.status === "ACTIVE" ? "Plano alimentar liberado após a estratégia registrada." : "Plano alimentar bloqueado até a estratégia ser registrada.",
+      planContext: seed.status === "ACTIVE"
+        ? mealPlan
+          ? "Plano alimentar liberado após a estratégia registrada."
+          : "Estratégia registrada; nenhum Plano Alimentar foi localizado."
+        : "Plano alimentar bloqueado até a estratégia ser registrada.",
     };
   },
 };

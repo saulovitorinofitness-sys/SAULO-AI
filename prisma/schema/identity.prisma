@@ -69,6 +69,8 @@ model User {
   clinicalEvolutionSessions ClinicalEvolutionSession[]  @relation("ClinicalEvolutionProfessional")
   updatedEvolutionSessions  ClinicalEvolutionSession[]  @relation("ClinicalEvolutionUpdater")
   evolutionComparisons      EvolutionComparison[]       @relation("EvolutionComparisonProfessional")
+  posturalEvolutionComparisons PosturalEvolutionComparison[] @relation("PosturalEvolutionProfessional")
+  updatedPosturalEvolutionComparisons PosturalEvolutionComparison[] @relation("PosturalEvolutionUpdater")
   treatmentAdherences       TreatmentAdherence[]        @relation("TreatmentAdherenceProfessional")
   updatedAdherences         TreatmentAdherence[]        @relation("TreatmentAdherenceUpdater")
   protocolHistories         ProtocolHistory[]           @relation("ProtocolHistoryProfessional")
@@ -119,6 +121,9 @@ model UserProfile {
   userId                   String      @unique @db.Uuid
   type                     ProfileType
   professionalRegistration String?
+  professionalTitle        String?
+  professionalPhone        String?
+  professionalInstagram    String?
   metadata                 Json?
   createdAt                DateTime    @default(now())
   updatedAt                DateTime    @updatedAt

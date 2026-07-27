@@ -4,7 +4,6 @@ import type {
   FrontendAccessSnapshot,
   MasterRecordSummaryView,
   PatientListItem,
-  PatientRegistrationDraft,
   PatientSearchInput,
   SaveActivityInput,
   SaveActivityResult,
@@ -15,7 +14,6 @@ export interface MvpFrontendGateway {
   searchPatients(input: PatientSearchInput): Promise<readonly PatientListItem[]>;
   getPatientMasterRecord(patientId: EntityId): Promise<MasterRecordSummaryView | null>;
   getAttendanceContinuity(patientId: EntityId): Promise<AttendanceContinuityView | null>;
-  registerPatient(input: PatientRegistrationDraft): Promise<{ patientId: EntityId; persisted: boolean }>;
   saveAttendanceActivity(input: SaveActivityInput): Promise<SaveActivityResult>;
 }
 

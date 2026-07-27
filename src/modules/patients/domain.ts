@@ -7,27 +7,29 @@ export type MaritalStatus = "SINGLE" | "MARRIED" | "DIVORCED" | "WIDOWED" | "SEP
 export type PhoneType = "MOBILE" | "HOME" | "WORK" | "OTHER";
 
 export interface Patient extends AuditableRecord {
+  readonly clinicalCode: string;
   readonly fullName: string;
   readonly preferredName?: string;
-  readonly cpf: string;
+  readonly cpf?: string;
   readonly sex: PatientSex;
   readonly birthDate: ISODate;
-  readonly email: string;
-  readonly maritalStatus: MaritalStatus;
-  readonly profession: string;
+  readonly email?: string;
+  readonly maritalStatus?: MaritalStatus;
+  readonly profession?: string;
+  readonly observations?: string;
   readonly status: PatientStatus;
   readonly registeredByUserId: EntityId;
 }
 
 export interface PatientAddress extends AuditableRecord {
   readonly patientId: EntityId;
-  readonly street: string;
-  readonly number: string;
+  readonly street?: string;
+  readonly number?: string;
   readonly complement?: string;
-  readonly neighborhood: string;
-  readonly city: string;
-  readonly state: string;
-  readonly postalCode: string;
+  readonly neighborhood?: string;
+  readonly city?: string;
+  readonly state?: string;
+  readonly postalCode?: string;
   readonly countryCode: string;
   readonly status: PatientDataStatus;
 }
@@ -44,18 +46,18 @@ export interface PatientPhone extends AuditableRecord {
 
 export interface PatientInsurance extends AuditableRecord {
   readonly patientId: EntityId;
-  readonly providerName: string;
-  readonly planName: string;
-  readonly memberNumber: string;
+  readonly providerName?: string;
+  readonly planName?: string;
+  readonly memberNumber?: string;
   readonly validUntil?: ISODate;
   readonly status: PatientDataStatus;
 }
 
 export interface EmergencyContact extends AuditableRecord {
   readonly patientId: EntityId;
-  readonly fullName: string;
-  readonly relationship: string;
-  readonly phone: string;
+  readonly fullName?: string;
+  readonly relationship?: string;
+  readonly phone?: string;
   readonly email?: string;
   readonly isPrimary: boolean;
   readonly status: PatientDataStatus;
@@ -63,10 +65,10 @@ export interface EmergencyContact extends AuditableRecord {
 
 export interface PatientAggregate {
   readonly patient: Patient;
-  readonly address: PatientAddress;
+  readonly address?: PatientAddress;
   readonly phones: readonly [PatientPhone, ...PatientPhone[]];
-  readonly insurance: PatientInsurance;
-  readonly emergencyContacts: readonly [EmergencyContact, ...EmergencyContact[]];
+  readonly insurance?: PatientInsurance;
+  readonly emergencyContacts: readonly EmergencyContact[];
   readonly masterRecordId: EntityId;
 }
 

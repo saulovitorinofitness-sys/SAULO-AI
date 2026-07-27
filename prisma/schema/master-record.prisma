@@ -72,6 +72,8 @@ model MasterRecordEntry {
   protocolChangeResponses      ProtocolChange[]                @relation("ProtocolChangeResponseEntry")
   evolutionFactorSources       EvolutionAssociatedFactor[]     @relation("EvolutionFactorSourceEntry")
   athleteProgressReferences    AthleteProgressReference[]      @relation("AthleteProgressSourceEntry")
+  previousPosturalComparisons  PosturalEvolutionComparison[]   @relation("PosturalEvolutionPreviousEntry")
+  currentPosturalComparisons   PosturalEvolutionComparison[]   @relation("PosturalEvolutionCurrentEntry")
 
   @@unique([aggregateId, revision])
   @@index([masterRecordId, occurredAt])

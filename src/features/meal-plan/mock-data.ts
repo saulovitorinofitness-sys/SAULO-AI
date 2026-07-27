@@ -1,8 +1,9 @@
 import { CLINICAL_DEMO_PATIENT_ID } from "@/features/clinical-collection/mock-data";
+import { BUILT_IN_IDS } from "@/modules/permissions";
 import type { MealPlanView } from "./contracts";
 
 export const mealPlanMock: Omit<MealPlanView, "scenario"> = {
-  id: "mock-meal-plan-001", patientId: CLINICAL_DEMO_PATIENT_ID, patientName: "Paciente de demonstração", masterRecordId: "demo-master-record-001", status: "DRAFT", responsibleProfessional: "Saulo Xavier Vitorino", updatedAt: "2026-07-16T14:30:00-03:00",
+  id: "mock-meal-plan-001", patientId: CLINICAL_DEMO_PATIENT_ID, patientName: "Paciente de demonstração", masterRecordId: "demo-master-record-001", status: "DRAFT", responsibleUserId: BUILT_IN_IDS.users.sauloXavierVitorino, responsibleProfessional: "Saulo Xavier Vitorino", updatedAt: "2026-07-16T14:30:00-03:00",
   summary: {
     primaryObjective: "Saúde", strategy: "Deficit calórico de aproximadamente 20%, priorizando alta ingestão proteica, alimento in natura e distribuição em 6 refeições diárias.", plannedCalories: "2150 kcl", protein: "165 g", carbohydrates: "240 g", fats: "65 g", mealCount: 6, restrictions: ["Registro demonstrativo — requer confirmação profissional"], supplementation: "Registro mockado para revisão", observations: "Estrutura em rascunho. Nenhum cálculo ou geração automática foi realizado.",
   },

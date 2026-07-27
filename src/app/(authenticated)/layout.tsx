@@ -2,14 +2,24 @@ import type { ReactNode } from "react";
 
 import { AuthenticatedShell } from "@/components/auth/authenticated-shell";
 import { MockNotice } from "@/components/ui/mock-notice";
+import { DevelopmentSessionProvider } from "@/features/development-session";
 import { mvpService } from "@/features/mvp";
 
-export default async function AuthenticatedLayout({ children }: { children: ReactNode }) {
+type LayoutProps = {
+  children: ReactNode;
+};
+
+export default async function AuthenticatedLayout({
+  children,
+}: LayoutProps) {
   const access = await mvpService.getSession();
+
   return (
     <>
       <MockNotice />
-      <AuthenticatedShell user={access.user}>{children}</AuthenticatedShell>
+      <DevelopmentSessionProvider initialUser={access.user}>
+        <AuthenticatedShell>{children}</AuthenticatedShell>
+      </DevelopmentSessionProvider>
     </>
   );
 }

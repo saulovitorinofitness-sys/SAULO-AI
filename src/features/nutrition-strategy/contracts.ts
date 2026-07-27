@@ -3,6 +3,61 @@ import type { SessionUser } from "@/features/mvp";
 import type { EntityId, ISODateTime } from "@/modules/shared";
 
 export type NutritionStrategyStatus = "DRAFT" | "ACTIVE";
+export type NutritionMethod = "STANDARD" | "LOW_CARB" | "CARB_CYCLING";
+export type EnergyTargetMode = "CALORIES" | "BMR";
+
+export interface MacronutrientTarget {
+  readonly percentage: number;
+  readonly grams: number;
+}
+
+export interface NutritionGoals {
+  readonly method: NutritionMethod;
+  readonly energyMode: EnergyTargetMode;
+  readonly targetCalories: number;
+  readonly basalMetabolicRateKcal?: number;
+  readonly carbohydrates: MacronutrientTarget;
+  readonly protein: MacronutrientTarget;
+  readonly fats: MacronutrientTarget;
+}
+
+export interface AssembledDietNutrition {
+  readonly calories: number;
+  readonly carbohydratesGrams: number;
+  readonly proteinGrams: number;
+  readonly fatsGrams: number;
+  readonly demonstrative: true;
+}
+
+export interface NutritionStrategySelection {
+  readonly patientId: EntityId;
+  readonly masterRecordId: EntityId;
+  readonly scenario: ClinicalCollectionScenarioKey;
+  readonly objectiveMain: string;
+  readonly method: NutritionMethod;
+  readonly energyMode: EnergyTargetMode;
+  readonly targetCalories: number;
+  readonly carbohydrates: MacronutrientTarget;
+  readonly protein: MacronutrientTarget;
+  readonly fats: MacronutrientTarget;
+  readonly mealCount: number;
+  readonly mealTimes: readonly string[];
+  readonly complementaryStrategies: readonly string[];
+  readonly updatedAt: ISODateTime;
+  readonly demonstrative: true;
+}
+
+export interface NutritionStrategyDraftSnapshot {
+  readonly selection: NutritionStrategySelection;
+  readonly secondaryObjectives: readonly string[];
+  readonly strategyType: string;
+  readonly window: string;
+  readonly preTraining: string;
+  readonly postTraining: string;
+  readonly supper: string;
+  readonly supplementationNotes: string;
+  readonly observations: string;
+}
 
 export interface NutritionStrategyPatientContext {
   readonly patientId: EntityId;
@@ -63,6 +118,8 @@ export interface NutritionStrategyView {
   readonly objectiveMain: string;
   readonly secondaryObjectives: readonly string[];
   readonly strategyType: string;
+  readonly nutritionGoals: NutritionGoals;
+  readonly assembledDiet: AssembledDietNutrition;
   readonly mealDistribution: NutritionStrategyMealDistribution;
   readonly complementaryStrategies: readonly string[];
   readonly supplementation: readonly NutritionStrategySupplementationItem[];

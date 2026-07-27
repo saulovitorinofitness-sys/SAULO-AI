@@ -281,7 +281,7 @@ export function NutritionPrescriptionEngine({
               className="font-black text-slate-950"
               id="nutrition-engine-title"
             >
-              Montagem das refeições
+              Adicionar alimento manualmente
             </p>
             <p aria-live="polite" className="mt-0.5 text-xs text-slate-600">
               {message}

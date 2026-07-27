@@ -4,9 +4,11 @@ import type { MealPlanView } from "@/features/meal-plan";
 export function NutritionSummary({
   plan,
   onSave,
+  saveDisabled = false,
 }: {
   plan: MealPlanView;
   onSave: () => void;
+  saveDisabled?: boolean;
 }) {
   const highlights = [
     ["Calorias planejadas", plan.summary.plannedCalories],
@@ -44,8 +46,15 @@ export function NutritionSummary({
           </dl>
 
           <div className="flex shrink-0 flex-wrap items-center gap-2">
-            <StatusBadge label="Em elaboração · mock" status="in_progress" />
-            <Button onClick={onSave} size="small" type="button">
+            <StatusBadge
+              label={
+                plan.strategyStatus === "APPROVED"
+                  ? "Rascunho · estratégia aprovada"
+                  : "Em elaboração · mock"
+              }
+              status="in_progress"
+            />
+            <Button disabled={saveDisabled} onClick={onSave} size="small" type="button">
               Salvar
             </Button>
           </div>
@@ -57,8 +66,9 @@ export function NutritionSummary({
           </summary>
 
           <p className="mt-2 text-xs text-[var(--muted)]">
-            Dados demonstrativos transcritos no mock, sem cálculo ou
-            interpretação automática.
+            {plan.strategyStatus === "APPROVED"
+              ? "Metas herdadas da Estratégia Nutricional aprovada. O Plano Alimentar não recalcula estes valores."
+              : "Dados demonstrativos sincronizados com a Estratégia Nutricional. Conversões locais não substituem revisão ou decisão profissional."}
           </p>
 
           <dl className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">

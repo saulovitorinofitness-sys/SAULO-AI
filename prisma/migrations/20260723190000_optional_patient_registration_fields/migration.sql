@@ -1,0 +1,23 @@
+ALTER TABLE "Patient"
+  ALTER COLUMN "cpf" DROP NOT NULL,
+  ALTER COLUMN "email" DROP NOT NULL,
+  ALTER COLUMN "maritalStatus" DROP NOT NULL,
+  ALTER COLUMN "profession" DROP NOT NULL;
+
+ALTER TABLE "PatientAddress"
+  ALTER COLUMN "street" DROP NOT NULL,
+  ALTER COLUMN "number" DROP NOT NULL,
+  ALTER COLUMN "neighborhood" DROP NOT NULL,
+  ALTER COLUMN "city" DROP NOT NULL,
+  ALTER COLUMN "state" DROP NOT NULL,
+  ALTER COLUMN "postalCode" DROP NOT NULL;
+
+ALTER TABLE "PatientInsurance"
+  ALTER COLUMN "providerName" DROP NOT NULL,
+  ALTER COLUMN "planName" DROP NOT NULL,
+  ALTER COLUMN "memberNumber" DROP NOT NULL;
+
+ALTER TABLE "PatientEmergencyContact"
+  ALTER COLUMN "fullName" DROP NOT NULL,
+  ALTER COLUMN "relationship" DROP NOT NULL,
+  ALTER COLUMN "phone" DROP NOT NULL;

@@ -11,4 +11,4 @@ export function ClinicalField({ id, label, required = false, hint, children }: {
   );
 }
 
-export const clinicalInputClass = `mt-1.5 ${fieldControlStyles}`;
+export const clinicalInputClass = `mt-1.5 ${fieldControlStyles} invalid:border-rose-500 invalid:ring-2 invalid:ring-rose-500/15`;

@@ -1,12 +1,15 @@
 ﻿"use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { NutritionPrescriptionEngine } from "@/components/nutrition-prescription";
 import { Badge, Button, Card, SectionHeader } from "@/components/ui";
-import type { MealPlanMeal, MealPlanView } from "@/features/meal-plan";
+import { createAssistedMealPreview, createAssistedMealReferences, mockAssistedPreviewAdapter, temporaryMealPlanDraftAdapter, type AssistedMealPreview, type MealPlanMeal, type MealPlanView } from "@/features/meal-plan";
+import { mockNutritionStrategySelectionAdapter, nutritionMethodOptions, nutritionStrategySelectionFingerprint, nutritionStrategySelectionFromView, type NutritionStrategySelection, type NutritionStrategyView } from "@/features/nutrition-strategy";
 import type { NutritionPrescriptionView } from "@/features/nutrition-prescription";
 
+import { AssistedMealPreviewPanel } from "./assisted-meal-preview";
+import { FinalNutritionAnalysis } from "./final-nutrition-analysis";
 import { MealCard } from "./meal-card";
 import { MealEditor } from "./meal-editor";
 import { NutritionSummary } from "./nutrition-summary";
@@ -14,33 +17,83 @@ import { NutritionSummary } from "./nutrition-summary";
 interface MealPlanWorkspaceProps {
   initialPlan: MealPlanView;
   prescription: NutritionPrescriptionView;
+  strategy: NutritionStrategyView;
 }
 
 export function MealPlanWorkspace({
   initialPlan,
   prescription,
+  strategy,
 }: MealPlanWorkspaceProps) {
-  const [plan, setPlan] = useState<MealPlanView>(() => {
-    if (typeof window === "undefined") return initialPlan;
-
-    const savedPlan = localStorage.getItem("saulo-ai-meal-plan");
-
-    return savedPlan ? JSON.parse(savedPlan) : initialPlan;
-  });
-
-  useEffect(() => {
-    localStorage.setItem(
-      "saulo-ai-meal-plan",
-      JSON.stringify(plan),
-    );
-  }, [plan]);
+  const serverStrategySelection = useMemo(() => nutritionStrategySelectionFromView(strategy), [strategy]);
+  const serverMealReferences = useMemo(() => createAssistedMealReferences(serverStrategySelection, initialPlan.meals), [initialPlan.meals, serverStrategySelection]);
+  const serverPreview = useMemo(() => createAssistedMealPreview(serverStrategySelection, serverMealReferences, prescription.foods), [prescription.foods, serverMealReferences, serverStrategySelection]);
+  const [plan, setPlan] = useState<MealPlanView>(initialPlan);
+  const [browserStateLoaded, setBrowserStateLoaded] = useState(false);
   const [selectedId, setSelectedId] = useState<string>();
+  const [strategySelection, setStrategySelection] = useState<NutritionStrategySelection>(serverStrategySelection);
+  const [assistedPreview, setAssistedPreview] = useState<AssistedMealPreview>(serverPreview);
   const [editing, setEditing] = useState(false);
   const [message, setMessage] = useState(
-    "Dados demonstrativos. Nenhuma dieta foi gerada automaticamente.",
+    "Prévia assistida demonstrativa disponível para revisão profissional.",
   );
 
   const selected = plan.meals.find((meal) => meal.id === selectedId);
+  const selectedMethod = nutritionMethodOptions.find(([value]) => value === strategySelection.method)?.[1] ?? strategySelection.method;
+  const currentStrategyFingerprint =
+    nutritionStrategySelectionFingerprint(strategySelection);
+  const effectiveAssistedPreview: AssistedMealPreview =
+    assistedPreview.status === "APPROVED" &&
+    assistedPreview.strategyFingerprint !== currentStrategyFingerprint
+      ? {
+          ...assistedPreview,
+          status: "NEEDS_UPDATE",
+          approvedAt: undefined,
+          approvedBy: undefined,
+        }
+      : assistedPreview;
+  const synchronizedPlan: MealPlanView = {
+    ...plan,
+    status: effectiveAssistedPreview.status,
+    summary: {
+      ...plan.summary,
+      primaryObjective: strategySelection.objectiveMain,
+      strategy: `${selectedMethod}${strategySelection.complementaryStrategies.length ? ` · ${strategySelection.complementaryStrategies.join(" · ")}` : ""}`,
+      plannedCalories: `${strategySelection.targetCalories} kcal`,
+      protein: `${strategySelection.protein.grams} g`,
+      carbohydrates: `${strategySelection.carbohydrates.grams} g`,
+      fats: `${strategySelection.fats.grams} g`,
+      mealCount: strategySelection.mealCount,
+    },
+  };
+
+  useEffect(() => {
+    const hydrationTimer = setTimeout(() => {
+      const savedPlan = temporaryMealPlanDraftAdapter.read(initialPlan);
+
+      const locallySavedStrategy = mockNutritionStrategySelectionAdapter.read(strategy.patientId, strategy.scenario);
+      const savedStrategy = locallySavedStrategy?.masterRecordId === initialPlan.masterRecordId ? locallySavedStrategy : serverStrategySelection;
+      const savedMealReferences = createAssistedMealReferences(savedStrategy, savedPlan.meals);
+      const savedPreview = mockAssistedPreviewAdapter.read(savedStrategy) ?? createAssistedMealPreview(savedStrategy, savedMealReferences, prescription.foods);
+
+      setPlan(savedPlan);
+      setStrategySelection(savedStrategy);
+      setAssistedPreview(savedPreview);
+      setBrowserStateLoaded(true);
+    }, 0);
+
+    return () => clearTimeout(hydrationTimer);
+  }, [initialPlan, prescription.foods, serverStrategySelection, strategy.patientId, strategy.scenario]);
+
+  useEffect(() => {
+    if (!browserStateLoaded) return;
+    temporaryMealPlanDraftAdapter.store(plan);
+  }, [browserStateLoaded, plan]);
+
+  useEffect(() => {
+    if (!browserStateLoaded) return;
+    mockAssistedPreviewAdapter.store(strategySelection, assistedPreview);
+  }, [assistedPreview, browserStateLoaded, strategySelection]);
 
   function select(meal: MealPlanMeal, shouldEdit: boolean) {
     setSelectedId(meal.id);
@@ -111,8 +164,8 @@ export function MealPlanWorkspace({
   }
 
   function savePlan() {
-    localStorage.setItem("saulo-ai-meal-plan", JSON.stringify(plan));
-    setMessage("Plano demonstrativo salvo localmente.");
+    temporaryMealPlanDraftAdapter.store(synchronizedPlan);
+    setMessage("Rascunho demonstrativo salvo no suporte local temporário.");
   }
 
   return (
@@ -139,10 +192,20 @@ export function MealPlanWorkspace({
         </Badge>
       </Card>
 
-      <NutritionSummary onSave={savePlan} plan={plan} />
+      <NutritionSummary onSave={savePlan} plan={synchronizedPlan} />
+
+      <AssistedMealPreviewPanel
+        foods={prescription.foods}
+        key={strategySelection.updatedAt}
+        onPreviewChange={setAssistedPreview}
+        planMeals={plan.meals}
+        preview={effectiveAssistedPreview}
+        professionalName={plan.responsibleProfessional}
+        strategy={strategySelection}
+      />
 
       <NutritionPrescriptionEngine
-        dailySummary={plan.summary}
+        dailySummary={synchronizedPlan.summary}
         view={prescription}
       />
 
@@ -217,6 +280,8 @@ export function MealPlanWorkspace({
           ) : null}
         </section>
       </details>
+
+      <FinalNutritionAnalysis preview={effectiveAssistedPreview} strategy={strategySelection} />
     </div>
   );
 }

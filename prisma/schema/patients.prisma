@@ -1,20 +1,22 @@
 model Patient {
-  id                 String        @id @default(uuid()) @db.Uuid
+  id                 String         @id @default(uuid()) @db.Uuid
+  clinicalCode       String         @unique @db.VarChar(8)
   fullName           String
   preferredName      String?
-  cpf                String        @unique @db.VarChar(11)
+  cpf                String?        @unique @db.VarChar(11)
   sex                PatientSex
-  birthDate          DateTime      @db.Date
-  email              String
-  maritalStatus      MaritalStatus
-  profession         String
-  status             PatientStatus @default(ACTIVE)
-  moduleId           String        @db.Uuid
-  registeredByUserId String        @db.Uuid
-  updatedByUserId    String        @db.Uuid
-  version            Int           @default(1)
-  createdAt          DateTime      @default(now())
-  updatedAt          DateTime      @updatedAt
+  birthDate          DateTime       @db.Date
+  email              String?
+  maritalStatus      MaritalStatus?
+  profession         String?
+  observations       String?
+  status             PatientStatus  @default(ACTIVE)
+  moduleId           String         @db.Uuid
+  registeredByUserId String         @db.Uuid
+  updatedByUserId    String         @db.Uuid
+  version            Int            @default(1)
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
   deletedAt          DateTime?
 
   registeredBy              User                       @relation("PatientRegisteredBy", fields: [registeredByUserId], references: [id], onDelete: Restrict)
@@ -40,13 +42,13 @@ model PatientAddress {
   moduleId        String            @db.Uuid
   createdByUserId String            @db.Uuid
   updatedByUserId String            @db.Uuid
-  street          String
-  number          String
+  street          String?
+  number          String?
   complement      String?
-  neighborhood    String
-  city            String
-  state           String            @db.VarChar(2)
-  postalCode      String            @db.VarChar(8)
+  neighborhood    String?
+  city            String?
+  state           String?           @db.VarChar(2)
+  postalCode      String?           @db.VarChar(8)
   countryCode     String            @default("BR") @db.VarChar(2)
   status          PatientDataStatus @default(ACTIVE)
   version         Int               @default(1)
@@ -96,9 +98,9 @@ model PatientInsurance {
   moduleId        String            @db.Uuid
   createdByUserId String            @db.Uuid
   updatedByUserId String            @db.Uuid
-  providerName    String
-  planName        String
-  memberNumber    String
+  providerName    String?
+  planName        String?
+  memberNumber    String?
   validUntil      DateTime?         @db.Date
   status          PatientDataStatus @default(ACTIVE)
   version         Int               @default(1)
@@ -121,9 +123,9 @@ model PatientEmergencyContact {
   moduleId        String            @db.Uuid
   createdByUserId String            @db.Uuid
   updatedByUserId String            @db.Uuid
-  fullName        String
-  relationship    String
-  phone           String
+  fullName        String?
+  relationship    String?
+  phone           String?
   email           String?
   isPrimary       Boolean           @default(false)
   status          PatientDataStatus @default(ACTIVE)

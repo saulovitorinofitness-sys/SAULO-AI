@@ -1,31 +1,75 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
+import {
+  useRef,
+  useState,
+  type FormEvent,
+  type ReactNode,
+} from "react";
 
 import { CheckIcon } from "@/components/ui/icons";
-import { mvpService, patientSelectOptions, type PatientRegistrationDraft } from "@/features/mvp";
+import type {
+  PatientRegistrationInput,
+  PatientRegistrationResult,
+} from "@/features/patient-registration";
+import { patientSelectOptions } from "@/features/mvp";
 
-const inputClass = "mt-1.5 min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#3b9b7d] focus:ring-2 focus:ring-[#3b9b7d]/15";
+const inputClass =
+  "mt-1.5 min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#3b9b7d] focus:ring-2 focus:ring-[#3b9b7d]/15 disabled:bg-slate-50 disabled:text-slate-500";
 
-function Field({ label, name, required = false, hint, children }: { label: string; name: string; required?: boolean; hint?: string; children: ReactNode }) {
+function Field({
+  label,
+  name,
+  required = false,
+  hint,
+  children,
+}: {
+  label: string;
+  name: string;
+  required?: boolean;
+  hint?: string;
+  children: ReactNode;
+}) {
   const hintId = hint ? `${name}-hint` : undefined;
+
   return (
     <label className="block text-sm font-bold text-slate-700" htmlFor={name}>
-      {label}{required ? <span aria-hidden="true" className="ml-1 text-rose-600">*</span> : null}
+      {label}
+      {required ? (
+        <span aria-hidden="true" className="ml-1 text-rose-600">
+          *
+        </span>
+      ) : null}
       {children}
-      {hint ? <span className="mt-1 block text-xs font-normal text-slate-500" id={hintId}>{hint}</span> : null}
+      {hint ? (
+        <span
+          className="mt-1 block text-xs font-normal text-slate-500"
+          id={hintId}
+        >
+          {hint}
+        </span>
+      ) : null}
     </label>
   );
 }
 
-function FormSection({ number, title, description, children }: { number: string; title: string; description: string; children: ReactNode }) {
+function FormSection({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description: string;
+  children: ReactNode;
+}) {
   return (
     <fieldset className="rounded-2xl border border-[#dce5e0] bg-white p-4 shadow-[0_8px_24px_rgb(20_55_44/0.03)] sm:p-6">
       <legend className="sr-only">{title}</legend>
-      <div className="mb-5 flex items-start gap-3">
-        <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-[#e7f2ed] text-xs font-black text-[#0a4938]">{number}</span>
-        <div><h2 className="font-black text-slate-900">{title}</h2><p className="mt-1 text-sm leading-5 text-slate-500">{description}</p></div>
+      <div className="mb-5">
+        <h2 className="font-black text-slate-900">{title}</h2>
+        <p className="mt-1 text-sm leading-5 text-slate-500">{description}</p>
       </div>
       {children}
     </fieldset>
@@ -36,123 +80,568 @@ function value(data: FormData, key: string) {
   return String(data.get(key) ?? "").trim();
 }
 
+function optionalValue(data: FormData, key: string) {
+  return value(data, key) || undefined;
+}
+
+function digits(data: FormData, key: string) {
+  return value(data, key).replace(/\D/g, "");
+}
+
+function hasAnyValue(values: readonly (string | undefined)[]) {
+  return values.some(Boolean);
+}
+
 export function PatientForm() {
-  const [state, setState] = useState<"idle" | "saving" | "success" | "error">("idle");
+  const router = useRouter();
+  const submittingRef = useRef(false);
+  const [state, setState] = useState<"idle" | "saving" | "success" | "error">(
+    "idle",
+  );
+  const [errorMessage, setErrorMessage] = useState("");
+  const [createdClinicalCode, setCreatedClinicalCode] = useState("");
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (submittingRef.current) return;
+
     const form = event.currentTarget;
+
     if (!form.reportValidity()) return;
+
+    submittingRef.current = true;
     setState("saving");
+    setErrorMessage("");
+
     const data = new FormData(form);
-    const preferredName = value(data, "preferredName");
-    const complement = value(data, "complement");
-    const validUntil = value(data, "insuranceValidUntil");
-    const emergencyEmail = value(data, "emergencyEmail");
-    const draft: PatientRegistrationDraft = {
+    const cpf = digits(data, "cpf") || undefined;
+    const postalCode = digits(data, "postalCode") || undefined;
+    const address = {
+      street: optionalValue(data, "street"),
+      number: optionalValue(data, "number"),
+      complement: optionalValue(data, "complement"),
+      neighborhood: optionalValue(data, "neighborhood"),
+      city: optionalValue(data, "city"),
+      state: optionalValue(data, "addressState")?.toUpperCase(),
+      postalCode,
+      countryCode: "BR",
+    };
+    const insurance = {
+      providerName: optionalValue(data, "insuranceProvider"),
+      planName: optionalValue(data, "insurancePlan"),
+      memberNumber: optionalValue(data, "insuranceMemberNumber"),
+      validUntil: optionalValue(data, "insuranceValidUntil"),
+    };
+    const emergencyContact = {
+      fullName: optionalValue(data, "emergencyName"),
+      relationship: optionalValue(data, "emergencyRelationship"),
+      phone: optionalValue(data, "emergencyPhone"),
+      email: optionalValue(data, "emergencyEmail"),
+    };
+
+    const draft: PatientRegistrationInput = {
       fullName: value(data, "fullName"),
-      preferredName: preferredName || undefined,
-      cpf: value(data, "cpf").replace(/\D/g, ""),
-      sex: value(data, "sex") as PatientRegistrationDraft["sex"],
       birthDate: value(data, "birthDate"),
-      email: value(data, "email"),
-      maritalStatus: value(data, "maritalStatus") as PatientRegistrationDraft["maritalStatus"],
-      profession: value(data, "profession"),
-      address: {
-        street: value(data, "street"), number: value(data, "number"), complement: complement || undefined,
-        neighborhood: value(data, "neighborhood"), city: value(data, "city"), state: value(data, "addressState").toUpperCase(),
-        postalCode: value(data, "postalCode").replace(/\D/g, ""), countryCode: "BR",
-      },
+      sex: value(data, "sex") as PatientRegistrationInput["sex"],
       phone: {
-        type: value(data, "phoneType") as PatientRegistrationDraft["phone"]["type"], countryCode: "55",
-        areaCode: value(data, "areaCode").replace(/\D/g, ""), number: value(data, "phoneNumber").replace(/\D/g, ""), isPrimary: true,
+        type: value(data, "phoneType") as PatientRegistrationInput["phone"]["type"],
+        countryCode: "55",
+        areaCode: digits(data, "areaCode"),
+        number: digits(data, "phoneNumber"),
       },
-      insurance: {
-        providerName: value(data, "insuranceProvider"), planName: value(data, "insurancePlan"),
-        memberNumber: value(data, "insuranceMemberNumber"), validUntil: validUntil || undefined,
-      },
-      emergencyContact: {
-        fullName: value(data, "emergencyName"), relationship: value(data, "emergencyRelationship"),
-        phone: value(data, "emergencyPhone"), email: emergencyEmail || undefined, isPrimary: true,
-      },
+      preferredName: optionalValue(data, "preferredName"),
+      cpf,
+      email: optionalValue(data, "email"),
+      maritalStatus:
+        (optionalValue(
+          data,
+          "maritalStatus",
+        ) as PatientRegistrationInput["maritalStatus"]) ?? undefined,
+      profession: optionalValue(data, "profession"),
+      observations: optionalValue(data, "observations"),
+      address: hasAnyValue([
+        address.street,
+        address.number,
+        address.complement,
+        address.neighborhood,
+        address.city,
+        address.state,
+        address.postalCode,
+      ])
+        ? address
+        : undefined,
+      insurance: hasAnyValue([
+        insurance.providerName,
+        insurance.planName,
+        insurance.memberNumber,
+        insurance.validUntil,
+      ])
+        ? insurance
+        : undefined,
+      emergencyContact: hasAnyValue([
+        emergencyContact.fullName,
+        emergencyContact.relationship,
+        emergencyContact.phone,
+        emergencyContact.email,
+      ])
+        ? emergencyContact
+        : undefined,
     };
 
     try {
-      await mvpService.registerPatient(draft);
+      const response = await fetch("/api/patients", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(draft),
+      });
+      const result = (await response.json()) as
+        | PatientRegistrationResult
+        | { message?: string };
+
+      if (!response.ok || !("patientId" in result)) {
+        throw new Error(
+          "message" in result && result.message
+            ? result.message
+            : "Não foi possível cadastrar o paciente.",
+        );
+      }
+
+      setCreatedClinicalCode(result.clinicalCode);
       setState("success");
-      form.reset();
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    } catch {
+
+      await new Promise((resolve) => window.setTimeout(resolve, 650));
+      router.replace(`/pacientes/${result.patientId}?registered=1`);
+    } catch (error) {
+      submittingRef.current = false;
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível cadastrar o paciente. Tente novamente.",
+      );
       setState("error");
     }
   }
 
+  const saving = state === "saving" || state === "success";
+
   return (
-    <form className="space-y-4" noValidate onSubmit={handleSubmit}>
-      {state === "success" ? (
-        <div className="flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900" role="status">
-          <CheckIcon className="mt-0.5 shrink-0" />
-          <div><p className="font-black">Validação concluída com sucesso.</p><p className="mt-1">O envio foi simulado e nenhum dado foi persistido, pois o endpoint de cadastro ainda não existe.</p></div>
-        </div>
-      ) : null}
-      {state === "error" ? <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm font-semibold text-rose-800" role="alert">Não foi possível validar o formulário. Tente novamente.</div> : null}
+    <form
+      aria-busy={saving}
+      className="space-y-4"
+      noValidate
+      onSubmit={handleSubmit}
+    >
+      <div aria-live="polite">
+        {state === "success" ? (
+          <div
+            className="flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900"
+            role="status"
+          >
+            <CheckIcon className="mt-0.5 shrink-0" />
+            <div>
+              <p className="font-black">
+                Paciente {createdClinicalCode} cadastrado com sucesso.
+              </p>
+              <p className="mt-1">Abrindo o prontuário e a consulta inicial.</p>
+            </div>
+          </div>
+        ) : null}
 
-      <p className="text-xs font-semibold text-slate-500"><span className="text-rose-600">*</span> Campos obrigatórios previstos no domínio atual.</p>
+        {state === "error" ? (
+          <div
+            className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm font-semibold text-rose-800"
+            role="alert"
+          >
+            {errorMessage}
+          </div>
+        ) : null}
+      </div>
 
-      <FormSection description="Dados usados como referência única por todos os módulos autorizados." number="01" title="Identificação">
+      <p className="text-xs font-semibold text-slate-500">
+        <span className="text-rose-600">*</span> Nome, nascimento, sexo e
+        telefone são suficientes para iniciar.
+      </p>
+
+      <FormSection
+        description="Informe os dados essenciais para criar o prontuário e iniciar a consulta."
+        title="Dados obrigatórios"
+      >
         <div className="grid gap-4 md:grid-cols-2">
-          <div className="md:col-span-2"><Field label="Nome completo" name="fullName" required><input autoComplete="name" className={inputClass} id="fullName" name="fullName" required /></Field></div>
-          <Field label="Nome preferido" name="preferredName"><input className={inputClass} id="preferredName" name="preferredName" /></Field>
-          <Field hint="Somente números; validação definitiva permanece no back-end." label="CPF" name="cpf" required><input aria-describedby="cpf-hint" className={inputClass} id="cpf" inputMode="numeric" maxLength={14} name="cpf" placeholder="000.000.000-00" required /></Field>
-          <Field label="Sexo" name="sex" required><select className={inputClass} defaultValue="" id="sex" name="sex" required><option disabled value="">Selecione</option>{patientSelectOptions.sexes.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></Field>
-          <Field label="Data de nascimento" name="birthDate" required><input autoComplete="bday" className={inputClass} id="birthDate" name="birthDate" required type="date" /></Field>
-          <Field label="E-mail" name="email" required><input autoComplete="email" className={inputClass} id="email" name="email" required type="email" /></Field>
-          <Field label="Estado civil" name="maritalStatus" required><select className={inputClass} defaultValue="" id="maritalStatus" name="maritalStatus" required><option disabled value="">Selecione</option>{patientSelectOptions.maritalStatuses.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></Field>
-          <Field label="Profissão" name="profession" required><input className={inputClass} id="profession" name="profession" required /></Field>
+          <div className="md:col-span-2">
+            <Field label="Nome completo" name="fullName" required>
+              <input
+                autoComplete="name"
+                className={inputClass}
+                disabled={saving}
+                id="fullName"
+                name="fullName"
+                required
+              />
+            </Field>
+          </div>
+
+          <Field label="Data de nascimento" name="birthDate" required>
+            <input
+              autoComplete="bday"
+              className={inputClass}
+              disabled={saving}
+              id="birthDate"
+              max={new Date().toISOString().slice(0, 10)}
+              name="birthDate"
+              required
+              type="date"
+            />
+          </Field>
+
+          <Field label="Sexo" name="sex" required>
+            <select
+              className={inputClass}
+              defaultValue=""
+              disabled={saving}
+              id="sex"
+              name="sex"
+              required
+            >
+              <option disabled value="">
+                Selecione
+              </option>
+              {patientSelectOptions.sexes.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </Field>
+
+          <Field label="Tipo de telefone" name="phoneType" required>
+            <select
+              className={inputClass}
+              defaultValue="MOBILE"
+              disabled={saving}
+              id="phoneType"
+              name="phoneType"
+              required
+            >
+              {patientSelectOptions.phoneTypes.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </Field>
+
+          <div className="grid grid-cols-[88px_1fr] gap-3">
+            <Field label="DDD" name="areaCode" required>
+              <input
+                className={inputClass}
+                disabled={saving}
+                id="areaCode"
+                inputMode="numeric"
+                maxLength={3}
+                name="areaCode"
+                pattern="\d{2,3}"
+                required
+              />
+            </Field>
+
+            <Field label="Telefone" name="phoneNumber" required>
+              <input
+                autoComplete="tel"
+                className={inputClass}
+                disabled={saving}
+                id="phoneNumber"
+                inputMode="tel"
+                name="phoneNumber"
+                pattern="[\d\s()+-]{8,20}"
+                required
+              />
+            </Field>
+          </div>
         </div>
       </FormSection>
 
-      <FormSection description="Endereço residencial principal vinculado ao cadastro único." number="02" title="Endereço">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
-          <div className="sm:col-span-2 lg:col-span-4"><Field label="Logradouro" name="street" required><input autoComplete="address-line1" className={inputClass} id="street" name="street" required /></Field></div>
-          <div className="lg:col-span-2"><Field label="Número" name="number" required><input className={inputClass} id="number" name="number" required /></Field></div>
-          <div className="sm:col-span-2 lg:col-span-3"><Field label="Complemento" name="complement"><input autoComplete="address-line2" className={inputClass} id="complement" name="complement" /></Field></div>
-          <div className="lg:col-span-3"><Field label="Bairro" name="neighborhood" required><input className={inputClass} id="neighborhood" name="neighborhood" required /></Field></div>
-          <div className="lg:col-span-3"><Field label="Cidade" name="city" required><input autoComplete="address-level2" className={inputClass} id="city" name="city" required /></Field></div>
-          <div><Field label="UF" name="addressState" required><input autoComplete="address-level1" className={inputClass} id="addressState" maxLength={2} name="addressState" required /></Field></div>
-          <div className="lg:col-span-2"><Field label="CEP" name="postalCode" required><input autoComplete="postal-code" className={inputClass} id="postalCode" inputMode="numeric" name="postalCode" required /></Field></div>
-        </div>
-      </FormSection>
+      <details className="group overflow-hidden rounded-2xl border border-[#dce5e0] bg-white shadow-[0_8px_24px_rgb(20_55_44/0.03)]">
+        <summary className="flex min-h-16 cursor-pointer list-none items-center justify-between gap-4 px-4 py-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 sm:px-6">
+          <div>
+            <h2 className="font-black text-slate-900">
+              Informações complementares
+            </h2>
+            <p className="mt-1 text-sm text-slate-500">
+              Opcionais; podem ser preenchidas posteriormente.
+            </p>
+          </div>
+          <span
+            aria-hidden="true"
+            className="grid size-9 shrink-0 place-items-center rounded-xl bg-slate-100 font-black text-slate-600 transition group-open:rotate-180"
+          >
+            ⌄
+          </span>
+        </summary>
 
-      <FormSection description="Informe o telefone principal. Novos números poderão ser adicionados pela integração futura." number="03" title="Contato">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-          <div className="lg:col-span-2"><Field label="Tipo" name="phoneType" required><select className={inputClass} defaultValue="MOBILE" id="phoneType" name="phoneType" required>{patientSelectOptions.phoneTypes.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></Field></div>
-          <Field label="DDD" name="areaCode" required><input className={inputClass} id="areaCode" inputMode="numeric" maxLength={2} name="areaCode" required /></Field>
-          <div className="lg:col-span-2"><Field label="Telefone" name="phoneNumber" required><input autoComplete="tel" className={inputClass} id="phoneNumber" inputMode="tel" name="phoneNumber" required /></Field></div>
-        </div>
-      </FormSection>
+        <div className="space-y-7 border-t border-slate-100 p-4 sm:p-6">
+          <fieldset>
+            <legend className="mb-4 text-sm font-black text-emerald-900">
+              Identificação complementar
+            </legend>
+            <div className="grid gap-4 md:grid-cols-2">
+              <Field label="Nome preferido" name="preferredName">
+                <input
+                  className={inputClass}
+                  disabled={saving}
+                  id="preferredName"
+                  name="preferredName"
+                />
+              </Field>
+              <Field
+                hint="Informe 11 números, caso preenchido."
+                label="CPF"
+                name="cpf"
+              >
+                <input
+                  aria-describedby="cpf-hint"
+                  className={inputClass}
+                  disabled={saving}
+                  id="cpf"
+                  inputMode="numeric"
+                  maxLength={14}
+                  name="cpf"
+                  pattern="[\d.-]{11,14}"
+                  placeholder="000.000.000-00"
+                />
+              </Field>
+              <Field label="E-mail" name="email">
+                <input
+                  autoComplete="email"
+                  className={inputClass}
+                  disabled={saving}
+                  id="email"
+                  name="email"
+                  type="email"
+                />
+              </Field>
+              <Field label="Estado civil" name="maritalStatus">
+                <select
+                  className={inputClass}
+                  defaultValue=""
+                  disabled={saving}
+                  id="maritalStatus"
+                  name="maritalStatus"
+                >
+                  <option value="">Não informado</option>
+                  {patientSelectOptions.maritalStatuses.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Profissão" name="profession">
+                <input
+                  className={inputClass}
+                  disabled={saving}
+                  id="profession"
+                  name="profession"
+                />
+              </Field>
+              <div className="md:col-span-2">
+                <Field label="Observações" name="observations">
+                  <textarea
+                    className={`${inputClass} min-h-24 py-3`}
+                    disabled={saving}
+                    id="observations"
+                    maxLength={4000}
+                    name="observations"
+                  />
+                </Field>
+              </div>
+            </div>
+          </fieldset>
 
-      <FormSection description="Informações administrativas do convênio previsto no modelo do paciente." number="04" title="Convênio">
-        <div className="grid gap-4 md:grid-cols-2">
-          <Field label="Convênio" name="insuranceProvider" required><input className={inputClass} id="insuranceProvider" name="insuranceProvider" required /></Field>
-          <Field label="Plano" name="insurancePlan" required><input className={inputClass} id="insurancePlan" name="insurancePlan" required /></Field>
-          <Field label="Número da carteirinha" name="insuranceMemberNumber" required><input className={inputClass} id="insuranceMemberNumber" name="insuranceMemberNumber" required /></Field>
-          <Field label="Validade" name="insuranceValidUntil"><input className={inputClass} id="insuranceValidUntil" name="insuranceValidUntil" type="date" /></Field>
-        </div>
-      </FormSection>
+          <fieldset className="border-t border-slate-100 pt-6">
+            <legend className="mb-4 text-sm font-black text-emerald-900">
+              Endereço
+            </legend>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
+              <div className="sm:col-span-2 lg:col-span-4">
+                <Field label="Logradouro" name="street">
+                  <input
+                    autoComplete="address-line1"
+                    className={inputClass}
+                    disabled={saving}
+                    id="street"
+                    name="street"
+                  />
+                </Field>
+              </div>
+              <div className="lg:col-span-2">
+                <Field label="Número" name="number">
+                  <input
+                    className={inputClass}
+                    disabled={saving}
+                    id="number"
+                    name="number"
+                  />
+                </Field>
+              </div>
+              <div className="sm:col-span-2 lg:col-span-3">
+                <Field label="Complemento" name="complement">
+                  <input
+                    autoComplete="address-line2"
+                    className={inputClass}
+                    disabled={saving}
+                    id="complement"
+                    name="complement"
+                  />
+                </Field>
+              </div>
+              <div className="lg:col-span-3">
+                <Field label="Bairro" name="neighborhood">
+                  <input
+                    className={inputClass}
+                    disabled={saving}
+                    id="neighborhood"
+                    name="neighborhood"
+                  />
+                </Field>
+              </div>
+              <div className="lg:col-span-3">
+                <Field label="Cidade" name="city">
+                  <input
+                    autoComplete="address-level2"
+                    className={inputClass}
+                    disabled={saving}
+                    id="city"
+                    name="city"
+                  />
+                </Field>
+              </div>
+              <Field label="UF" name="addressState">
+                <input
+                  autoComplete="address-level1"
+                  className={inputClass}
+                  disabled={saving}
+                  id="addressState"
+                  maxLength={2}
+                  name="addressState"
+                />
+              </Field>
+              <div className="lg:col-span-2">
+                <Field label="CEP" name="postalCode">
+                  <input
+                    autoComplete="postal-code"
+                    className={inputClass}
+                    disabled={saving}
+                    id="postalCode"
+                    inputMode="numeric"
+                    name="postalCode"
+                    pattern="[\d-]{8,9}"
+                  />
+                </Field>
+              </div>
+            </div>
+          </fieldset>
 
-      <FormSection description="Pessoa a ser acionada quando necessário durante o atendimento." number="05" title="Contato de emergência">
-        <div className="grid gap-4 md:grid-cols-2">
-          <Field label="Nome completo" name="emergencyName" required><input className={inputClass} id="emergencyName" name="emergencyName" required /></Field>
-          <Field label="Relação com o paciente" name="emergencyRelationship" required><input className={inputClass} id="emergencyRelationship" name="emergencyRelationship" required /></Field>
-          <Field label="Telefone" name="emergencyPhone" required><input className={inputClass} id="emergencyPhone" inputMode="tel" name="emergencyPhone" required /></Field>
-          <Field label="E-mail" name="emergencyEmail"><input className={inputClass} id="emergencyEmail" name="emergencyEmail" type="email" /></Field>
+          <fieldset className="border-t border-slate-100 pt-6">
+            <legend className="mb-4 text-sm font-black text-emerald-900">
+              Convênio
+            </legend>
+            <div className="grid gap-4 md:grid-cols-2">
+              <Field label="Convênio" name="insuranceProvider">
+                <input
+                  className={inputClass}
+                  disabled={saving}
+                  id="insuranceProvider"
+                  name="insuranceProvider"
+                />
+              </Field>
+              <Field label="Plano" name="insurancePlan">
+                <input
+                  className={inputClass}
+                  disabled={saving}
+                  id="insurancePlan"
+                  name="insurancePlan"
+                />
+              </Field>
+              <Field label="Matrícula ou carteirinha" name="insuranceMemberNumber">
+                <input
+                  className={inputClass}
+                  disabled={saving}
+                  id="insuranceMemberNumber"
+                  name="insuranceMemberNumber"
+                />
+              </Field>
+              <Field label="Validade" name="insuranceValidUntil">
+                <input
+                  className={inputClass}
+                  disabled={saving}
+                  id="insuranceValidUntil"
+                  name="insuranceValidUntil"
+                  type="date"
+                />
+              </Field>
+            </div>
+          </fieldset>
+
+          <fieldset className="border-t border-slate-100 pt-6">
+            <legend className="mb-4 text-sm font-black text-emerald-900">
+              Contato de emergência
+            </legend>
+            <div className="grid gap-4 md:grid-cols-2">
+              <Field label="Nome completo" name="emergencyName">
+                <input
+                  className={inputClass}
+                  disabled={saving}
+                  id="emergencyName"
+                  name="emergencyName"
+                />
+              </Field>
+              <Field label="Relação com o paciente" name="emergencyRelationship">
+                <input
+                  className={inputClass}
+                  disabled={saving}
+                  id="emergencyRelationship"
+                  name="emergencyRelationship"
+                />
+              </Field>
+              <Field label="Telefone" name="emergencyPhone">
+                <input
+                  className={inputClass}
+                  disabled={saving}
+                  id="emergencyPhone"
+                  inputMode="tel"
+                  name="emergencyPhone"
+                />
+              </Field>
+              <Field label="E-mail" name="emergencyEmail">
+                <input
+                  className={inputClass}
+                  disabled={saving}
+                  id="emergencyEmail"
+                  name="emergencyEmail"
+                  type="email"
+                />
+              </Field>
+            </div>
+          </fieldset>
         </div>
-      </FormSection>
+      </details>
 
       <div className="sticky bottom-16 z-10 flex flex-col-reverse gap-2 rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-[0_-8px_30px_rgb(15_23_42/0.08)] backdrop-blur sm:bottom-4 sm:flex-row sm:justify-end">
-        <Link className="inline-flex min-h-11 items-center justify-center rounded-xl px-5 text-sm font-bold text-slate-600 hover:bg-slate-100" href="/pacientes">Cancelar</Link>
-        <button className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#12664f] px-6 text-sm font-bold text-white hover:bg-[#0a4938] disabled:cursor-wait disabled:opacity-60" disabled={state === "saving"} type="submit">{state === "saving" ? "Validando..." : "Validar cadastro"}</button>
+        <Link
+          aria-disabled={saving}
+          className="inline-flex min-h-11 items-center justify-center rounded-xl px-5 text-sm font-bold text-slate-600 hover:bg-slate-100 aria-disabled:pointer-events-none aria-disabled:opacity-50"
+          href="/pacientes"
+        >
+          Cancelar
+        </Link>
+        <button
+          className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#12664f] px-6 text-sm font-bold text-white hover:bg-[#0a4938] disabled:cursor-wait disabled:opacity-60"
+          disabled={saving}
+          type="submit"
+        >
+          {saving ? "Salvando paciente..." : "Salvar paciente"}
+        </button>
       </div>
     </form>
   );

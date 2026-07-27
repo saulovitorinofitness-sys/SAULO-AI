@@ -14,7 +14,7 @@ export const mockMvpGateway: MvpFrontendGateway = {
     return mockPatients.filter((item) =>
       item.patient.fullName.toLocaleLowerCase("pt-BR").includes(text)
       || item.code.toLocaleLowerCase("pt-BR").includes(text)
-      || (digits.length > 0 && (normalize(item.primaryPhone).includes(digits) || item.patient.cpf.includes(digits))),
+      || (digits.length > 0 && (normalize(item.primaryPhone).includes(digits) || (item.patient.cpf?.includes(digits) ?? false))),
     );
   },
   async getPatientMasterRecord(patientId) {
@@ -22,9 +22,6 @@ export const mockMvpGateway: MvpFrontendGateway = {
   },
   async getAttendanceContinuity(patientId) {
     return patientId === mockContinuity.patientId ? mockContinuity : null;
-  },
-  async registerPatient() {
-    return { patientId: "mock-not-persisted", persisted: false };
   },
   async saveAttendanceActivity() {
     return { savedAt: new Date().toISOString(), persisted: false };

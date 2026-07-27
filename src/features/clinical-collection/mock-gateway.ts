@@ -28,7 +28,7 @@ import {
 
 const mutableScenarios = new Map<ClinicalCollectionScenarioKey, ClinicalCollectionView>();
 const mutablePanels = new Map<ClinicalCollectionScenarioKey, Pick<ClinicalPanelView, "confirmedAt" | "confirmedBy" | "nextModule">>();
-const stepOrder: readonly EditableClinicalStepKey[] = ["ANTHROPOMETRY", "BIOIMPEDANCE", "PERIMETRY", "POSTURAL_ASSESSMENT"];
+const stepOrder: readonly EditableClinicalStepKey[] = ["ANTHROPOMETRY", "PERIMETRY", "BIOIMPEDANCE", "POSTURAL_ASSESSMENT"];
 
 const recordKey = {
   ANTHROPOMETRY: "anthropometry",
@@ -43,6 +43,14 @@ const moduleByStep: Readonly<Record<EditableClinicalStepKey, ModuleKey>> = {
   PERIMETRY: "PERIMETRY",
   POSTURAL_ASSESSMENT: "POSTURAL_ASSESSMENT",
 };
+
+function isNutritionFlowReady(records: ClinicalCollectionRecords) {
+  return [
+    records.anthropometry,
+    records.bioimpedance,
+    records.perimetry,
+  ].every((record) => record.status === "COMPLETED");
+}
 
 function clone<T>(value: T): T {
   return structuredClone(value);
@@ -92,18 +100,7 @@ function missingFields(step: EditableClinicalStepKey, data: EditableClinicalData
   if (step === "PERIMETRY") {
     return perimetryGroups.flatMap((group) => group.fields.filter((field) => field.required && isMissing(data[field.key as keyof typeof data])).map((field) => field.label));
   }
-  const postural = data as PosturalAssessmentData;
-  const missing: string[] = [];
-  const views = [
-    ["ANTERIOR", "Vista anterior"], ["POSTERIOR", "Vista posterior"],
-    ["RIGHT_LATERAL", "Vista lateral direita"], ["LEFT_LATERAL", "Vista lateral esquerda"],
-  ] as const;
-  for (const [key, label] of views) if (postural.views[key].state === "NOT_ASSESSED") missing.push(label);
-  if (postural.identifiedChanges === "NOT_ASSESSED") missing.push("Alterações identificadas");
-  if (postural.functionalLimitations === "NOT_ASSESSED") missing.push("Limitações funcionais");
-  if (postural.identifiedChanges === "FINDING_RECORDED" && !postural.identifiedChangesNotes?.trim()) missing.push("Descrição das alterações");
-  if (postural.functionalLimitations === "FINDING_RECORDED" && !postural.functionalLimitationsNotes?.trim()) missing.push("Descrição das limitações");
-  return missing;
+  return [];
 }
 
 function hasAnyValue(data: EditableClinicalData) {
@@ -112,7 +109,18 @@ function hasAnyValue(data: EditableClinicalData) {
 
 function withValidation<T extends EditableClinicalData>(step: EditableClinicalStepKey, record: ClinicalStepRecord<T>): ClinicalStepRecord<T> {
   const missing = missingFields(step, record.data);
-  return { ...record, missingRequiredFields: missing, status: missing.length === 0 ? "COMPLETED" : hasAnyValue(record.data) ? "IN_PROGRESS" : "NOT_STARTED" };
+  const status =
+    step === "POSTURAL_ASSESSMENT"
+      ? record.audit
+        ? ((record.data as PosturalAssessmentData)
+            .completionStatus ?? "COMPLETED")
+        : "NOT_STARTED"
+      : missing.length === 0
+        ? "COMPLETED"
+        : hasAnyValue(record.data)
+          ? "IN_PROGRESS"
+          : "NOT_STARTED";
+  return { ...record, missingRequiredFields: missing, status };
 }
 
 function validateRecords(records: ClinicalCollectionRecords): ClinicalCollectionRecords {
@@ -142,6 +150,7 @@ function buildCollection(scenario: ClinicalCollectionScenarioKey): ClinicalColle
     records,
     previousPerimetry: seed.previousPerimetry,
     progressPercent: completeCount * 25,
+    nutritionFlowReady: isNutritionFlowReady(records),
     firstIncompleteStep: stepOrder.find((step) => records[recordKey[step]].status !== "COMPLETED") ?? "SUMMARY",
     lastSavedStep: seed.lastSavedStep,
     canRead: true,
@@ -159,6 +168,7 @@ function recompute(collection: ClinicalCollectionView): ClinicalCollectionView {
     ...collection,
     records,
     progressPercent: completeCount * 25,
+    nutritionFlowReady: isNutritionFlowReady(records),
     firstIncompleteStep: stepOrder.find((step) => records[recordKey[step]].status !== "COMPLETED") ?? "SUMMARY",
   };
 }
@@ -182,13 +192,14 @@ function integrityIssues(collection: ClinicalCollectionView): readonly DataInteg
     ["Avaliação Postural", collection.records.posturalAssessment],
   ] as const;
   for (const [section, record] of records) {
-    if (record.status !== "COMPLETED") issues.push({ id: `${section}-step`, type: "REQUIRED_STEP_INCOMPLETE", section, message: "Etapa obrigatória incompleta.", blocking: true });
-    if (record.missingRequiredFields.length) issues.push({ id: `${section}-values`, type: "REQUIRED_VALUE_MISSING", section, message: `${record.missingRequiredFields.length} valor(es) obrigatório(s) ausente(s): ${record.missingRequiredFields.slice(0, 3).join(", ")}.`, blocking: true });
-    if (record.status === "COMPLETED" && record.missingRequiredFields.length) issues.push({ id: `${section}-mismatch`, type: "STATUS_DATA_MISMATCH", section, message: "Status concluído diverge dos campos preenchidos.", blocking: true });
-    if (record.status === "COMPLETED" && !record.audit) issues.push({ id: `${section}-author`, type: "MISSING_AUTHOR", section, message: "Registro concluído sem autoria.", blocking: true });
-    if (record.audit && !record.audit.updatedAt) issues.push({ id: `${section}-date`, type: "MISSING_DATE", section, message: "Registro sem data de atualização.", blocking: true });
+    const blocksIndependentFlow = section !== "Avaliação Postural";
+    if (record.status !== "COMPLETED") issues.push({ id: `${section}-step`, type: "REQUIRED_STEP_INCOMPLETE", section, message: blocksIndependentFlow ? "Etapa obrigatória incompleta." : "Módulo especializado pendente; não bloqueia o fluxo nutricional.", blocking: blocksIndependentFlow });
+    if (record.missingRequiredFields.length) issues.push({ id: `${section}-values`, type: "REQUIRED_VALUE_MISSING", section, message: `${record.missingRequiredFields.length} valor(es) obrigatório(s) ausente(s): ${record.missingRequiredFields.slice(0, 3).join(", ")}.`, blocking: blocksIndependentFlow });
+    if (record.status === "COMPLETED" && record.missingRequiredFields.length) issues.push({ id: `${section}-mismatch`, type: "STATUS_DATA_MISMATCH", section, message: "Status concluído diverge dos campos preenchidos.", blocking: blocksIndependentFlow });
+    if (record.status === "COMPLETED" && !record.audit) issues.push({ id: `${section}-author`, type: "MISSING_AUTHOR", section, message: "Registro concluído sem autoria.", blocking: blocksIndependentFlow });
+    if (record.audit && !record.audit.updatedAt) issues.push({ id: `${section}-date`, type: "MISSING_DATE", section, message: "Registro sem data de atualização.", blocking: blocksIndependentFlow });
   }
-  if (collection.records.posturalAssessment.status !== "COMPLETED") issues.push({ id: "postural-required", type: "POSTURAL_ASSESSMENT_MISSING", section: "Avaliação Postural", message: "Avaliação Postural obrigatória ausente ou incompleta.", blocking: true });
+  if (collection.records.posturalAssessment.status !== "COMPLETED") issues.push({ id: "postural-required", type: "POSTURAL_ASSESSMENT_MISSING", section: "Avaliação Postural", message: "Avaliação Postural pendente; permanece disponível para conclusão independente.", blocking: false });
   if (!collection.completed) issues.push({ id: "collection-confirmation", type: "NOT_CONFIRMED", section: "Coleta", message: "Coleta ainda não foi concluída.", blocking: true });
   return issues;
 }
@@ -266,7 +277,7 @@ function currentAttendance(collection: ClinicalCollectionView): CurrentAttendanc
       progressStep("Plano Alimentar", maria ? "NOT_APPLICABLE" : "PENDING", maria ? "Não aplicável" : "Ainda não iniciado"),
       progressStep("Plano de Treino", "PENDING", "Ainda não iniciado"),
       progressStep("Entregáveis", "PENDING", "Ainda não iniciado"),
-      progressStep("Finalização", "BLOCKED", "Bloqueado"),
+      progressStep("Finalização", isComplete ? "PENDING" : "BLOCKED", isComplete ? "Disponível" : "Bloqueado"),
     ],
     actions,
   };
@@ -316,8 +327,13 @@ export const mockClinicalCollectionGateway: ClinicalCollectionGateway = {
   async completeCollection({ patientId, attendanceId, scenario = "partial-saulo" }) {
     const collection = await this.getCollection({ patientId, attendanceId, scenario });
     if (!collection) throw new Error("COLLECTION_NOT_FOUND");
-    if (collection.progressPercent < 100) throw new Error("MANDATORY_STEPS_PENDING");
-    const completed = { ...collection, completed: true, nextAttendanceStep: "Painel Clínico Integrado" };
+    if (!collection.nutritionFlowReady) throw new Error("MANDATORY_STEPS_PENDING");
+    const completed = {
+      ...collection,
+      completed: true,
+      firstIncompleteStep: "SUMMARY" as const,
+      nextAttendanceStep: "Painel Clínico Integrado",
+    };
     storeCollection(scenario, completed);
     return { collection: clone(completed), persisted: false, nextAttendanceStep: "Painel Clínico Integrado" };
   },

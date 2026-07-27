@@ -1,61 +1,72 @@
 import type { Metadata } from "next";
-import dynamic from "next/dynamic";
 import { notFound } from "next/navigation";
 
-import { PatientNavigation } from "@/components/master-record/patient-navigation";
-import { PageHeading } from "@/components/ui/page-heading";
+import { ClinicalFlowNavigation } from "@/components/nutrition-clinical-flow/clinical-flow-navigation";
+import {
+  NutritionClinicalPanel,
+  NutritionStrategyDecisionEngine,
+} from "@/components/nutrition-strategy";
 import { PageState } from "@/components/ui/page-state";
-import { CLINICAL_COLLECTION_SCENARIO_KEYS, type ClinicalCollectionScenarioKey } from "@/features/clinical-collection";
-import { resolveClinicalMockSessionUser } from "@/features/clinical-collection/mock-data";
+import { nutritionClinicalFlowRepository } from "@/features/nutrition-clinical-flow/repository";
+import { nutritionClinicalPanelRepository } from "@/features/nutrition-strategy/clinical-panel-repository";
 import { nutritionStrategyService } from "@/features/nutrition-strategy";
+import { nutritionStrategyRepository } from "@/features/nutrition-strategy/strategy-repository";
 import { canAccess, mvpService } from "@/features/mvp";
-import { patientHubService } from "@/features/patient-hub";
 
 export const metadata: Metadata = { title: "Estratégia Nutricional" };
 
-const NutritionStrategyWorkspaceLazy = dynamic(
-  () => import("@/components/nutrition-strategy").then((module) => module.NutritionStrategyWorkspace),
-  { loading: () => <PageState description="Carregando a estratégia nutricional." title="Estratégia Nutricional" /> },
-);
-
-export default async function NutritionStrategyPage({ params, searchParams }: { params: Promise<{ patientId: string }>; searchParams: Promise<{ scenario?: string }> }) {
-  const [{ patientId }, query, access] = await Promise.all([params, searchParams, mvpService.getSession()]);
-  const scenario = CLINICAL_COLLECTION_SCENARIO_KEYS.includes(query.scenario as ClinicalCollectionScenarioKey) ? (query.scenario as ClinicalCollectionScenarioKey) : "complete";
-  const viewer = resolveClinicalMockSessionUser(access.user, scenario);
-  const [hub, view] = await Promise.all([
-    patientHubService.get({ patientId, scenario }),
-    nutritionStrategyService.get({ patientId, scenario, user: viewer }),
+export default async function NutritionStrategyPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ patientId: string }>;
+  searchParams: Promise<{ scenario?: string }>;
+}) {
+  const [{ patientId }, query, access] = await Promise.all([
+    params,
+    searchParams,
+    mvpService.getSession(),
   ]);
 
-  if (!hub) notFound();
-  if (!canAccess(access, "NUTRITION_STRATEGY", "READ") || !hub.showNutrition) {
-    return <PageState description="Seu perfil não possui acesso à Estratégia Nutricional." title="Acesso não permitido" tone="blocked" />;
-  }
-
-  if (!hub.motorAvailable) {
+  if (
+    !canAccess(access, "NUTRITION_STRATEGY", "READ") ||
+    !nutritionStrategyService.canAccess(access.user)
+  ) {
     return (
-      <>
-        <PatientNavigation currentModule="NUTRITION_STRATEGY" initialHub={hub} />
-        <PageState
-          description="A Estratégia Nutricional fica disponível após o Motor de Decisão Clínico estar liberado."
-          title="Estratégia Nutricional bloqueada"
-          tone="blocked"
-        />
-      </>
+      <PageState
+        description="Seu perfil não possui acesso à Estratégia Nutricional."
+        title="Acesso não permitido"
+        tone="blocked"
+      />
     );
   }
 
+  const view = await nutritionClinicalPanelRepository.get(patientId);
   if (!view) notFound();
-
+  const [flow, strategy] = await Promise.all([
+    nutritionClinicalFlowRepository.getFlow({
+      patientId,
+      attendanceId: view.attendanceId,
+      scenario: query.scenario,
+    }),
+    nutritionStrategyRepository.get(patientId, view.attendanceId),
+  ]);
+  if (!flow) notFound();
   return (
-    <>
-      <PatientNavigation currentModule="NUTRITION_STRATEGY" initialHub={hub} />
-      <PageHeading
-        description="Estratégia estrutural obrigatória antes da elaboração do Plano Alimentar. A decisão final continua sendo do nutricionista."
-        eyebrow="Nutrição · decisão profissional"
-        title="Estratégia Nutricional"
+    <ClinicalFlowNavigation
+      activeStep="NUTRITION_STRATEGY"
+      flow={flow.flow}
+      patient={{
+        id: patientId,
+        name: view.patient.name,
+        code: view.patient.code,
+      }}
+    >
+      <NutritionClinicalPanel view={view} />
+      <NutritionStrategyDecisionEngine
+        initialStrategy={strategy}
+        view={view}
       />
-      <NutritionStrategyWorkspaceLazy view={view} />
-    </>
+    </ClinicalFlowNavigation>
   );
 }

@@ -1,6 +1,26 @@
 import type { ClinicalCollectionScenarioKey } from "@/features/clinical-collection";
 import { CLINICAL_DEMO_MASTER_RECORD_ID, CLINICAL_DEMO_PATIENT_ID } from "@/features/clinical-collection/mock-data";
-import type { NutritionStrategyView } from "./contracts";
+import type { EnergyTargetMode, NutritionMethod, NutritionStrategyView } from "./contracts";
+
+export const nutritionMethodOptions: readonly (readonly [NutritionMethod, string])[] = [
+  ["STANDARD", "Padrão"],
+  ["LOW_CARB", "Low carb"],
+  ["CARB_CYCLING", "Ciclo de carboidratos"],
+] as const;
+
+export const energyTargetModeOptions: readonly (readonly [EnergyTargetMode, string])[] = [
+  ["CALORIES", "Calorias definidas diretamente"],
+  ["BMR", "Taxa metabólica basal (TMB)"],
+] as const;
+
+export const nutritionGoalsMockSeed = {
+  method: "STANDARD" as NutritionMethod,
+  energyMode: "CALORIES" as EnergyTargetMode,
+  targetCalories: 2150,
+  carbohydratesPercentage: 45,
+  proteinPercentage: 30,
+  fatsPercentage: 25,
+};
 
 export const nutritionStrategyMainObjectiveOptions = [
   ["EMAGRECIMENTO", "Emagrecimento"],

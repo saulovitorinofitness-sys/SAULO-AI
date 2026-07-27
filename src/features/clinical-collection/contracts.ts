@@ -90,9 +90,81 @@ export interface PerimetryData {
 export type StructuredFindingState = "NOT_ASSESSED" | "NO_FINDING_RECORDED" | "FINDING_RECORDED";
 export type PosturalViewKey = "ANTERIOR" | "POSTERIOR" | "RIGHT_LATERAL" | "LEFT_LATERAL";
 
+export interface PosturalViewImage {
+  /** Imagem original; a grade visual nunca é incorporada neste conteúdo. */
+  readonly dataUrl: string;
+  readonly fileName: string;
+  readonly mimeType: "image/jpeg" | "image/png" | "image/webp";
+  readonly sizeBytes: number;
+  readonly uploadedAt: ISODateTime;
+}
+
+export interface PosturalSymmetrograph {
+  /** Preferências de visualização persistidas separadamente da imagem original. */
+  readonly enabled: boolean;
+  readonly opacity: number;
+}
+
+export type PosturalSegmentGrade =
+  | "DISCREET"
+  | "MODERATE"
+  | "ACCENTUATED";
+export type PosturalSegmentRelevance =
+  | "NONE"
+  | "LOW"
+  | "MODERATE"
+  | "HIGH";
+
+export interface PosturalSegmentAssessment {
+  readonly selectedOption?: string;
+  readonly grade?: PosturalSegmentGrade;
+  readonly observation?: string;
+  readonly investigationSuggestions?: readonly string[];
+  readonly otherInvestigation?: string;
+  readonly relevance?: PosturalSegmentRelevance;
+}
+
 export interface PosturalViewData {
   readonly state: StructuredFindingState;
   readonly observation?: string;
+  readonly image?: PosturalViewImage;
+  readonly symmetrograph?: PosturalSymmetrograph;
+  readonly segments?: Readonly<
+    Record<string, PosturalSegmentAssessment>
+  >;
+}
+
+export type PosturalCompletionStatus =
+  | "IN_PROGRESS"
+  | "COMPLETED";
+export type PosturalOverallRelevance = "LOW" | "MODERATE" | "HIGH";
+export type PosturalFollowUpConduct =
+  | "REGISTER_ONLY"
+  | "MONITOR_EVOLUTION"
+  | "REASSESS_LATER"
+  | "CONSIDER_IN_TRAINING"
+  | "SUGGEST_COMPLEMENTARY_INVESTIGATION"
+  | "SUGGEST_QUALIFIED_REFERRAL"
+  | "OTHER";
+
+export interface PosturalSummaryGeneration {
+  readonly content: string;
+  readonly generatedAt: ISODateTime;
+}
+
+export interface PosturalTechnicalSummary {
+  readonly generatedOriginal?: string;
+  readonly editedSummary?: string;
+  readonly generatedAt?: ISODateTime;
+  readonly lastEditedAt?: ISODateTime;
+  readonly generationHistory?: readonly PosturalSummaryGeneration[];
+}
+
+export interface PosturalFollowUp {
+  readonly conduct?: PosturalFollowUpConduct;
+  readonly observation?: string;
+  readonly suggestedReassessmentDate?: string;
+  readonly reassessmentObservation?: string;
 }
 
 export interface PosturalAssessmentData {
@@ -103,6 +175,11 @@ export interface PosturalAssessmentData {
   readonly functionalLimitationsNotes?: string;
   readonly notes?: string;
   readonly futureCorrectiveExercisesNote?: string;
+  readonly technicalSummary?: PosturalTechnicalSummary;
+  readonly evaluatorConclusion?: string;
+  readonly overallRelevance?: PosturalOverallRelevance;
+  readonly followUp?: PosturalFollowUp;
+  readonly completionStatus?: PosturalCompletionStatus;
 }
 
 export interface ClinicalCollectionRecords {
@@ -122,6 +199,9 @@ export interface ClinicalCollectionView {
   readonly patientId: EntityId;
   readonly patientName: string;
   readonly patientCode: string;
+  readonly patientAge?: number;
+  readonly patientSex?: "FEMALE" | "MALE" | "INTERSEX" | "NOT_INFORMED";
+  readonly patientPhone?: string;
   readonly attendanceId: EntityId;
   readonly masterRecordId: EntityId;
   readonly consultationType: ConsultationType;
@@ -129,6 +209,7 @@ export interface ClinicalCollectionView {
   readonly records: ClinicalCollectionRecords;
   readonly previousPerimetry?: PreviousPerimetryReference;
   readonly progressPercent: number;
+  readonly nutritionFlowReady: boolean;
   readonly firstIncompleteStep: EditableClinicalStepKey | "SUMMARY";
   readonly lastSavedStep?: EditableClinicalStepKey;
   readonly canRead: boolean;

@@ -6,6 +6,9 @@ export interface UserProfile extends BaseEntity {
   readonly userId: EntityId;
   readonly type: ProfileType;
   readonly professionalRegistration?: string;
+  readonly professionalTitle?: string;
+  readonly professionalPhone?: string;
+  readonly professionalInstagram?: string;
   readonly metadata?: JsonValue;
 }
 
