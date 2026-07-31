@@ -1,0 +1,452 @@
+import { clinicalAnamnesisService, objectiveOptions } from "@/features/clinical-anamnesis";
+import { anthropometryPerimetryService } from "@/features/anthropometry-perimetry";
+import { clinicalCollectionService } from "@/features/clinical-collection";
+import { resolveClinicalMockSessionUser, CLINICAL_DEMO_ATTENDANCE_ID } from "@/features/clinical-collection/mock-data";
+import { clinicalDecisionService } from "@/features/clinical-decision";
+import { mealPlanService } from "@/features/meal-plan";
+import { nutritionStrategyService } from "@/features/nutrition-strategy";
+import { laboratoryExamsService } from "@/features/laboratory-exams";
+import { canAccess, mvpService } from "@/features/mvp";
+import { BUILT_IN_IDS } from "@/modules/permissions";
+import { MASTER_RECORD_MODULES } from "@/features/master-record-navigation";
+import type {
+  GetPatientHubInput,
+  PatientHubModuleCard,
+  PatientHubNextAction,
+  PatientHubOperationalItem,
+  PatientHubRecordMetric,
+  PatientHubTimelineEvent,
+  PatientHubView,
+} from "./contracts";
+
+const objectiveLabels = new Map(objectiveOptions);
+const context = (patientId: string, scenario: string) => `/pacientes/${patientId}?scenario=${scenario}`;
+const withContext = (path: string, scenario: string) => `${path}?scenario=${scenario}`;
+
+export const patientHubService = {
+  async get(input: GetPatientHubInput): Promise<PatientHubView | null> {
+    const [access, summary, scenarios] = await Promise.all([
+      mvpService.getSession(),
+      mvpService.getPatientMasterRecord(input.patientId),
+      clinicalCollectionService.listScenarios(),
+    ]);
+
+    if (!summary) return null;
+
+    const attendanceId = summary.patient.openAttendanceId ?? CLINICAL_DEMO_ATTENDANCE_ID;
+    if (!attendanceId) return null;
+
+    const viewer = resolveClinicalMockSessionUser(access.user, input.scenario);
+    const showNutrition = viewer.id === BUILT_IN_IDS.users.sauloXavierVitorino;
+    const isAthlete = input.scenario === "complete";
+    const showPerformance =
+      access.user.id === BUILT_IN_IDS.users.sauloXavierVitorino;
+
+    const [collection, attendance, panel, anamnesis, anthropometry, laboratory, decision, mealPlan, strategy] = await Promise.all([
+      clinicalCollectionService.getCollection({ patientId: input.patientId, attendanceId, scenario: input.scenario }),
+      clinicalCollectionService.getCurrentAttendance({ patientId: input.patientId, attendanceId, scenario: input.scenario }),
+      clinicalCollectionService.getClinicalPanel({ patientId: input.patientId, attendanceId, scenario: input.scenario }),
+      clinicalAnamnesisService.get({ patientId: input.patientId, scenario: input.scenario }),
+      anthropometryPerimetryService.get({ patientId: input.patientId, attendanceId, scenario: input.scenario }),
+      laboratoryExamsService.get({ patientId: input.patientId, scenario: input.scenario }),
+      clinicalDecisionService.getWorkspace({ patientId: input.patientId, attendanceId, collectionScenario: input.scenario }),
+      showNutrition ? mealPlanService.get({ patientId: input.patientId, scenario: input.scenario }) : Promise.resolve(null),
+      showNutrition ? nutritionStrategyService.get({ patientId: input.patientId, scenario: input.scenario, user: viewer }) : Promise.resolve(null),
+    ]);
+
+    if (!collection || !attendance || !panel || !anamnesis || !anthropometry || !laboratory || !decision) return null;
+
+    const collectionHref = `/pacientes/${input.patientId}/atendimentos/${attendanceId}/coleta?scenario=${input.scenario}`;
+    const panelHref = `/pacientes/${input.patientId}/atendimentos/${attendanceId}/painel-clinico?scenario=${input.scenario}`;
+    const decisionHref = `/pacientes/${input.patientId}/atendimentos/${attendanceId}/decisao-clinica?scenario=${input.scenario}`;
+    const strategyHref = `/pacientes/${input.patientId}/estrategia-nutricional?scenario=${input.scenario}`;
+    const mealPlanHref = `/pacientes/${input.patientId}/plano-alimentar?scenario=${input.scenario}`;
+    const posturalCompleted = collection.records.posturalAssessment.status === "COMPLETED";
+    const panelConfirmed = Boolean(panel.confirmedAt);
+    const motorAvailable = collection.completed && panel.accessible && panelConfirmed && canAccess(access, "CLINICAL_REASONING", "READ");
+    const professionalDecisionRegistered = decision.history.length > 0;
+    const nutritionStrategyActive = strategy?.status === "ACTIVE";
+    const nutritionStrategyAccessible = showNutrition && motorAvailable;
+
+    let nextAction: PatientHubNextAction;
+    if (anamnesis.status !== "COMPLETED") {
+      nextAction = {
+        label: "Completar anamnese",
+        description: "Finalize as informações compartilhadas antes de avançar no atendimento.",
+        href: withContext(`/pacientes/${input.patientId}/anamnese`, input.scenario),
+      };
+    } else if (!collection.completed) {
+      nextAction = {
+        label: "Continuar coleta clínica",
+        description: `A coleta está em ${attendance.progressPercent}% e possui etapas pendentes.`,
+        href: collectionHref,
+      };
+    } else if (!panel.accessible) {
+      nextAction = {
+        label: "Corrigir coleta clínica",
+        description: "Existem pendências objetivas de integridade antes da revisão profissional.",
+        href: `${collectionHref}&step=SUMMARY`,
+      };
+    } else if (!panelConfirmed) {
+      nextAction = {
+        label: "Confirmar revisão profissional",
+        description: "Revise o Painel Clínico Integrado para liberar o Motor de Decisão.",
+        href: panelHref,
+      };
+    } else if (!professionalDecisionRegistered) {
+      nextAction = {
+        label: "Registrar decisão profissional",
+        description: "O Motor está disponível e aguarda uma decisão do profissional autorizado.",
+        href: decisionHref,
+      };
+    } else if (nutritionStrategyAccessible && !nutritionStrategyActive) {
+      nextAction = {
+        label: "Definir estratégia nutricional",
+        description: "A estratégia precisa ser registrada antes do Plano Alimentar.",
+        href: strategyHref,
+      };
+    } else if (nutritionStrategyAccessible) {
+      nextAction = {
+        label: "Abrir Plano Alimentar",
+        description: "A estratégia nutricional já foi registrada e o plano pode ser elaborado.",
+        href: mealPlanHref,
+      };
+    } else {
+      nextAction = {
+        label: "Revisar decisão profissional",
+        description: "O fluxo principal está concluído; revise os registros compartilhados quando necessário.",
+        href: decisionHref,
+      };
+    }
+
+    const laboratoryActive = laboratory.records.filter((item) => item.status === "ACTIVE");
+    const latestLab = laboratoryActive.map((item) => item.collectedAt).sort().at(-1);
+    const moduleBase = { professionalName: collection.connectedProfessional.professionalName, visible: true } as const;
+
+    const modules: PatientHubModuleCard[] = [
+      {
+        id: "summary",
+        name: "Resumo",
+        description: "Visão central do Prontuário Mestre.",
+        status: "REVIEWED",
+        href: context(input.patientId, input.scenario),
+        actionLabel: "Abrir",
+        ...moduleBase,
+      },
+      {
+        id: "anamnesis",
+        name: "Anamnese",
+        description: "Histórico e informações clínicas compartilhadas.",
+        status: anamnesis.status === "COMPLETED" ? "COMPLETED" : "IN_PROGRESS",
+        updatedAt: anamnesis.audit.updatedAt,
+        professionalName: anamnesis.audit.professionalName,
+        href: withContext(`/pacientes/${input.patientId}/anamnese`, input.scenario),
+        actionLabel: anamnesis.status === "COMPLETED" ? "Abrir" : "Continuar",
+        visible: true,
+      },
+      {
+        id: "physical",
+        name: "Avaliação Física",
+        description: "Acesso à etapa física já existente na coleta.",
+        status: collection.records.anthropometry.status === "COMPLETED" ? "COMPLETED" : "IN_PROGRESS",
+        updatedAt: collection.records.anthropometry.audit?.updatedAt,
+        href: `${collectionHref}&step=ANTHROPOMETRY`,
+        actionLabel: "Abrir",
+        ...moduleBase,
+      },
+      {
+        id: "postural",
+        name: "Avaliação Postural",
+        description: posturalCompleted
+          ? "Módulo especializado concluído."
+          : "Módulo especializado pendente, sem bloqueio do fluxo nutricional.",
+        status: posturalCompleted ? "COMPLETED" : "PENDING",
+        updatedAt: collection.records.posturalAssessment.audit?.updatedAt,
+        pendingCount: posturalCompleted ? 0 : 1,
+        href: `${collectionHref}&step=POSTURAL_ASSESSMENT`,
+        actionLabel: posturalCompleted ? "Abrir" : "Continuar",
+        ...moduleBase,
+      },
+      {
+        id: "anthropometry",
+        name: "Antropometria",
+        description: "Medidas básicas e perimetria estruturada.",
+        status: anthropometry.currentAssessment.status === "REVIEWED" ? "REVIEWED" : anthropometry.currentAssessment.status === "COMPLETED" ? "COMPLETED" : "IN_PROGRESS",
+        updatedAt: anthropometry.currentAssessment.updatedAt,
+        professionalName: anthropometry.currentAssessment.professionalName,
+        href: withContext(`/pacientes/${input.patientId}/antropometria`, input.scenario),
+        actionLabel: "Abrir",
+        visible: true,
+      },
+      {
+        id: "perimetry",
+        name: "Perimetria",
+        description: "Circunferências corporais separadas da bioimpedância.",
+        status: anthropometry.currentAssessment.status === "REVIEWED" ? "REVIEWED" : anthropometry.currentAssessment.status === "COMPLETED" ? "COMPLETED" : "IN_PROGRESS",
+        updatedAt: anthropometry.currentAssessment.updatedAt,
+        professionalName: anthropometry.currentAssessment.professionalName,
+        href: `/pacientes/${input.patientId}/antropometria?scenario=${input.scenario}&module=perimetry#perimetry`,
+        actionLabel: "Abrir",
+        visible: true,
+      },
+      {
+        id: "bioimpedance",
+        name: "Bioimpedância",
+        description: "Registro Avanutri, separado da perimetria.",
+        status: collection.records.bioimpedance.status === "COMPLETED" ? "COMPLETED" : "IN_PROGRESS",
+        updatedAt: collection.records.bioimpedance.audit?.updatedAt,
+        href: `${collectionHref}&step=BIOIMPEDANCE`,
+        actionLabel: "Abrir",
+        ...moduleBase,
+      },
+      {
+        id: "exams",
+        name: "Exames",
+        description: `${laboratoryActive.length} exames ativos organizados sem interpretação.`,
+        status: laboratoryActive.length ? "COMPLETED" : "NOT_STARTED",
+        updatedAt: latestLab ? `${latestLab}T12:00:00-03:00` : undefined,
+        href: withContext(`/pacientes/${input.patientId}/exames`, input.scenario),
+        actionLabel: "Abrir",
+        ...moduleBase,
+      },
+      {
+        id: "attendances",
+        name: "Atendimentos",
+        description: "Continuidade e atividades do atendimento.",
+        status: "IN_PROGRESS",
+        updatedAt: attendance.updatedAt,
+        href: "/atendimentos",
+        actionLabel: "Abrir",
+        ...moduleBase,
+      },
+      {
+        id: "collection",
+        name: "Coleta Clínica",
+        description: `Progresso atual: ${attendance.progressPercent}%.`,
+        status: collection.completed ? "COMPLETED" : "IN_PROGRESS",
+        pendingCount: collection.completed ? 0 : 4 - Math.round(attendance.progressPercent / 25),
+        updatedAt: attendance.updatedAt,
+        href: collectionHref,
+        actionLabel: collection.completed ? "Abrir" : "Continuar",
+        ...moduleBase,
+      },
+      {
+        id: "clinical-engine",
+        name: "Motor Clínico",
+        description: "Consolidação automática dos dados existentes, sem interpretação clínica.",
+        status: collection.completed ? "COMPLETED" : "IN_PROGRESS",
+        pendingCount: collection.completed ? 0 : 1,
+        updatedAt: attendance.updatedAt,
+        href: withContext(`/pacientes/${input.patientId}/motor-clinico`, input.scenario),
+        actionLabel: "Abrir",
+        ...moduleBase,
+      },
+      {
+        id: "panel",
+        name: "Painel Clínico",
+        description: panelConfirmed ? "Revisão profissional confirmada." : "Aguardando revisão e confirmação profissional.",
+        status: !panel.accessible ? "BLOCKED" : panelConfirmed ? "REVIEWED" : "PENDING",
+        updatedAt: panel.confirmedAt ?? panel.collectedAt,
+        href: panel.accessible ? panelHref : undefined,
+        actionLabel: panel.accessible ? "Abrir" : undefined,
+        blockedReason: panel.accessible ? undefined : "Conclua a coleta obrigatória antes de abrir.",
+        ...moduleBase,
+      },
+      {
+        id: "decision",
+        name: "Decisão Clínica",
+        description: professionalDecisionRegistered ? "Decisão profissional registrada." : "Motor assistido sem decisão automática.",
+        status: !motorAvailable ? "BLOCKED" : professionalDecisionRegistered ? "REVIEWED" : "PENDING",
+        updatedAt: decision.history[0]?.createdAt,
+        href: motorAvailable ? decisionHref : undefined,
+        actionLabel: motorAvailable ? "Abrir" : undefined,
+        blockedReason: motorAvailable ? undefined : "Exige coleta completa, Painel confirmado e permissão.",
+        ...moduleBase,
+      },
+      {
+        id: "nutrition-strategy",
+        name: "Estratégia Nutricional",
+        description: !nutritionStrategyAccessible ? "Bloqueada até o Motor de Decisão estar disponível." : nutritionStrategyActive ? "Estratégia registrada antes do Plano Alimentar." : "Rascunho em revisão antes do Plano Alimentar.",
+        status: !nutritionStrategyAccessible ? "BLOCKED" : nutritionStrategyActive ? "REVIEWED" : "IN_PROGRESS",
+        updatedAt: strategy?.updatedAt,
+        href: nutritionStrategyAccessible ? strategyHref : undefined,
+        actionLabel: nutritionStrategyAccessible ? (nutritionStrategyActive ? "Abrir" : "Continuar") : undefined,
+        blockedReason: nutritionStrategyAccessible ? undefined : "Disponível após o Motor de Decisão.",
+        pendingCount: nutritionStrategyAccessible ? (nutritionStrategyActive ? 0 : 1) : 0,
+        ...moduleBase,
+        professionalName: strategy?.responsibleProfessional ?? collection.connectedProfessional.professionalName,
+        visible: showNutrition,
+      },
+      {
+        id: "meal-plan",
+        name: "Plano Alimentar",
+        description: "Estrutura exclusiva da Nutrição.",
+        status: !showNutrition ? "UNAVAILABLE" : !nutritionStrategyActive ? "BLOCKED" : mealPlan ? "IN_PROGRESS" : "NOT_STARTED",
+        updatedAt: mealPlan?.updatedAt,
+        href: showNutrition && nutritionStrategyActive ? mealPlanHref : undefined,
+        actionLabel: showNutrition && nutritionStrategyActive ? "Abrir" : undefined,
+        blockedReason: !showNutrition ? "Acesso restrito ao contexto nutricional." : "Estratégia Nutricional obrigatória antes do Plano Alimentar.",
+        ...moduleBase,
+        professionalName: mealPlan?.responsibleProfessional ?? collection.connectedProfessional.professionalName,
+        visible: showNutrition,
+      },
+      {
+        id: "training-plan",
+        name: "Plano de Treino",
+        description: "Interface ainda não implementada.",
+        status: "UNAVAILABLE",
+        blockedReason: "Ainda não implementado.",
+        ...moduleBase,
+      },
+      {
+        id: "evolution",
+        name: "Evolução",
+        description: "Domínio preparado; interface ainda não implementada.",
+        status: "UNAVAILABLE",
+        blockedReason: "Interface ainda não implementada.",
+        ...moduleBase,
+      },
+      {
+        id: "deliverables",
+        name: "Entregáveis",
+        description: "Interface ainda não implementada.",
+        status: "UNAVAILABLE",
+        blockedReason: "Ainda não implementado.",
+        ...moduleBase,
+      },
+      {
+        id: "performance-endurance",
+        name: "Performance Endurance",
+        description: "Prescrição profissional de treino vinculada ao atendimento.",
+        status: "NOT_STARTED",
+        href: showPerformance ? `/performance-endurance?scenario=${input.scenario}&patientId=${input.patientId}` : undefined,
+        actionLabel: showPerformance ? "Abrir" : undefined,
+        blockedReason: showPerformance ? undefined : "Disponível somente para profissional autorizado.",
+        ...moduleBase,
+        visible: showPerformance,
+      },
+    ];
+
+    const moduleOrder = new Map(MASTER_RECORD_MODULES.map((module) => [module.cardId, module]));
+    const normalizedModules = modules
+      .map((module) => ({ ...module, name: moduleOrder.get(module.id)?.label ?? module.name }))
+      .sort((a, b) => (moduleOrder.get(a.id)?.order ?? 999) - (moduleOrder.get(b.id)?.order ?? 999));
+
+    const alerts: PatientHubOperationalItem[] = [
+      { id: "attendance-open", title: "Atendimento aberto", description: `Atendimento em andamento com ${attendance.progressPercent}% do fluxo de coleta.`, level: "INFORMATION", module: "Atendimento" },
+      ...(input.scenario === "mandatory-pending" && !posturalCompleted
+        ? [{ id: "postural-alert", title: "Avaliação Postural obrigatória pendente", description: "O Atendimento Completo SV ainda não possui todas as vistas obrigatórias.", level: "PRIORITY" as const, module: "Avaliação Postural" }]
+        : []),
+      ...(nutritionStrategyAccessible && !nutritionStrategyActive
+        ? [{ id: "nutrition-strategy-alert", title: "Estratégia nutricional pendente", description: "A estratégia precisa ser registrada antes da liberação do Plano Alimentar.", level: "ATTENTION" as const, module: "Estratégia Nutricional" }]
+        : []),
+      ...(!professionalDecisionRegistered && panelConfirmed
+        ? [{ id: "decision-alert", title: "Decisão profissional pendente", description: "O Motor está liberado, mas ainda não há decisão profissional registrada.", level: "ATTENTION" as const, module: "Decisão Clínica" }]
+        : []),
+    ];
+
+    const pendingItems: PatientHubOperationalItem[] = [
+      ...(!collection.completed
+        ? [{ id: "collection-pending", title: "Coleta clínica incompleta", description: attendance.nextPendingStep ?? "Existem etapas pendentes.", level: "ATTENTION" as const, module: "Coleta Clínica" }]
+        : []),
+      ...(input.scenario === "mandatory-pending" && !posturalCompleted
+        ? [{ id: "postural-pending", title: "Concluir Avaliação Postural", description: "Pendência operacional obrigatória do atendimento.", level: "PRIORITY" as const, module: "Avaliação Postural" }]
+        : []),
+      ...(collection.completed && !panelConfirmed
+        ? [{ id: "panel-pending", title: "Painel Clínico não confirmado", description: "A revisão profissional deve ser confirmada antes do Motor.", level: "ATTENTION" as const, module: "Painel Clínico" }]
+        : []),
+      ...(panelConfirmed && !professionalDecisionRegistered
+        ? [{ id: "decision-pending", title: "Registrar decisão profissional", description: "A decisão final permanece sob responsabilidade do profissional.", level: "ATTENTION" as const, module: "Decisão Clínica" }]
+        : []),
+      ...(nutritionStrategyAccessible && !nutritionStrategyActive
+        ? [{ id: "nutrition-strategy-pending", title: "Registrar estratégia nutricional", description: "A estratégia é obrigatória antes do Plano Alimentar.", level: "ATTENTION" as const, module: "Estratégia Nutricional" }]
+        : []),
+    ];
+
+    const anthropometryRecord = collection.records.anthropometry;
+    const recordSummary: PatientHubRecordMetric[] = [
+      { id: "weight", domain: "Antropometria", label: "Peso atual", value: anthropometryRecord.data.weightKg !== undefined ? `${anthropometryRecord.data.weightKg} kg` : "Não registrado", updatedAt: anthropometryRecord.audit?.updatedAt },
+      { id: "height", domain: "Antropometria", label: "Altura", value: anthropometryRecord.data.heightCm !== undefined ? `${anthropometryRecord.data.heightCm} cm` : "Não registrada", updatedAt: anthropometryRecord.audit?.updatedAt },
+      { id: "bmi", domain: "Antropometria", label: "IMC registrado", value: anthropometryRecord.data.bmi !== undefined ? String(anthropometryRecord.data.bmi) : "Não registrado", updatedAt: anthropometryRecord.audit?.updatedAt },
+      { id: "strategy", domain: "Nutrição", label: "Estratégia nutricional", value: strategy?.summary.statusLabel ?? "Não registrada", updatedAt: strategy?.updatedAt },
+      { id: "bio-date", domain: "Bioimpedância", label: "Última atualização", value: collection.records.bioimpedance.audit?.updatedAt ? "Registro disponível" : "Não registrada", updatedAt: collection.records.bioimpedance.audit?.updatedAt },
+      { id: "lab-date", domain: "Exames", label: "Últimos exames", value: latestLab ?? "Não registrados", updatedAt: latestLab },
+      { id: "objective", domain: "Objetivos", label: "Objetivo principal", value: anamnesis.data.primaryObjective ? objectiveLabels.get(anamnesis.data.primaryObjective) ?? "Registrado" : "Não registrado" },
+      { id: "attendances", domain: "Atendimentos", label: "Quantidade", value: "1 atendimento demonstrativo" },
+      { id: "postural", domain: "Avaliação Postural", label: "Situação", value: posturalCompleted ? "Concluída" : "Pendente", updatedAt: collection.records.posturalAssessment.audit?.updatedAt },
+      { id: "decision", domain: "Decisão Clínica", label: "Situação", value: professionalDecisionRegistered ? "Registrada" : "Pendente", updatedAt: decision.history[0]?.createdAt },
+    ];
+
+    const timeline: PatientHubTimelineEvent[] = [
+      ...summary.timeline.map((item) => ({ id: item.id, occurredAt: item.occurredAt, title: item.title, description: item.detail ?? "Registro compartilhado.", professionalName: item.actorName, module: "Prontuário Mestre", href: context(input.patientId, input.scenario) })),
+      ...anamnesis.timeline.map((item) => ({ id: item.id, occurredAt: item.occurredAt, title: item.title, description: item.detail, professionalName: item.actorName, module: "Anamnese", href: withContext(`/pacientes/${input.patientId}/anamnese`, input.scenario) })),
+      ...anthropometry.assessments.map((item) => ({ id: `timeline-${item.id}`, occurredAt: item.updatedAt, title: "Antropometria registrada", description: `${item.measurements.filter((measurement) => measurement.valueCm !== undefined).length} medidas disponíveis.`, professionalName: item.professionalName, module: "Antropometria", href: withContext(`/pacientes/${input.patientId}/antropometria`, input.scenario) })),
+      ...laboratory.history.slice(0, 3).map((item) => ({ id: item.id, occurredAt: item.occurredAt, title: item.summary, description: "Evento laboratorial organizado sem interpretação.", professionalName: item.professionalName, module: "Exames", href: withContext(`/pacientes/${input.patientId}/exames`, input.scenario) })),
+      ...(panel.confirmedAt && panel.confirmedBy
+        ? [{ id: "panel-confirmed", occurredAt: panel.confirmedAt, title: "Painel Clínico confirmado", description: "Revisão profissional registrada no mock.", professionalName: panel.confirmedBy.professionalName, module: "Painel Clínico", href: panelHref }]
+        : []),
+      ...decision.history.map((item) => ({ id: item.id, occurredAt: item.createdAt, title: "Decisão profissional registrada", description: item.decision, professionalName: item.professionalName, module: "Decisão Clínica", href: decisionHref })),
+      ...(nutritionStrategyAccessible && strategy
+        ? [{ id: "nutrition-strategy-event", occurredAt: strategy.updatedAt, title: strategy.summary.statusLabel, description: strategy.planContext, professionalName: strategy.responsibleProfessional, module: "Estratégia Nutricional", href: strategyHref }]
+        : []),
+    ].sort((a, b) => b.occurredAt.localeCompare(a.occurredAt));
+
+    const quickActions = [
+      nextAction,
+      { label: "Abrir anamnese", href: withContext(`/pacientes/${input.patientId}/anamnese`, input.scenario) },
+      { label: "Registrar antropometria", href: withContext(`/pacientes/${input.patientId}/antropometria`, input.scenario) },
+      { label: "Adicionar exames", href: withContext(`/pacientes/${input.patientId}/exames`, input.scenario) },
+      ...(nutritionStrategyAccessible ? [{ label: "Abrir estratégia nutricional", href: strategyHref }] : []),
+      ...(showNutrition && nutritionStrategyActive ? [{ label: "Abrir Plano Alimentar", href: mealPlanHref }] : []),
+    ]
+      .filter((item, index, all) => all.findIndex((candidate) => candidate.href === item.href) === index)
+      .slice(0, 5)
+      .map((item, index) => ({ id: `quick-${index}`, label: item.label, href: item.href }));
+
+    const consolidatedAttendance = {
+      ...attendance,
+      progress: attendance.progress
+        .filter((step) => showNutrition || step.label !== "Plano Alimentar")
+        .map((step) => (step.label === "Anamnese" ? { ...step, status: "COMPLETED" as const, statusLabel: "Concluído" } : step)),
+    };
+
+    return {
+      scenario: input.scenario,
+      scenarios,
+      header: {
+        patientId: input.patientId,
+        fullName: summary.patient.patient.fullName,
+        code: summary.patient.code,
+        age: summary.patient.age,
+        sexLabel: panel.patient.sexLabel,
+        primaryObjective: anamnesis.data.primaryObjective ? objectiveLabels.get(anamnesis.data.primaryObjective) ?? "Objetivo registrado" : "Não registrado",
+        secondaryObjectives: anamnesis.data.secondaryObjectives.map((item) => objectiveLabels.get(item) ?? item),
+        patientStatus: "Ativo",
+        responsibleProfessionalName: attendance.responsibleProfessionalName,
+        lastAttendanceAt: summary.patient.lastAttendanceAt,
+        nextReturnAt: "2026-08-16T09:00:00-03:00",
+        followUpSince: "Desde março de 2026",
+        attendanceContext: collection.consultationType === "INITIAL" ? "Consulta inicial" : "Atendimento em continuidade",
+      },
+      attendance: consolidatedAttendance,
+      collectionCompleted: collection.completed,
+      posturalCompleted,
+      panelAccessible: panel.accessible,
+      panelConfirmed,
+      motorAvailable,
+      professionalDecisionRegistered,
+      nextAction,
+      modules: normalizedModules.filter((module) => module.visible),
+      alerts,
+      pendingItems,
+      recordSummary,
+      timeline,
+      quickActions,
+      canEditPatient: false,
+      showNutrition,
+      nutritionStrategyActive,
+      isAthlete,
+      showPerformance,
+    };
+  },
+};

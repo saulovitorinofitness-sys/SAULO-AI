@@ -16,6 +16,7 @@ import {
 import type {
   AnthropometryData,
   ClinicalStepRecord,
+  ProfessionalAudit,
 } from "@/features/clinical-collection";
 
 import { ClinicalField, clinicalInputClass } from "./clinical-field";
@@ -26,11 +27,13 @@ import { ResponsiveActionBar } from "./responsive-action-bar";
 
 export function AnthropometryStep({
   record,
+  responsibleProfessional,
   saving,
   onDirty,
   onSave,
 }: {
   record: ClinicalStepRecord<AnthropometryData>;
+  responsibleProfessional: ProfessionalAudit;
   saving: boolean;
   onDirty: () => void;
   onSave: (data: AnthropometryData) => Promise<void>;
@@ -180,7 +183,11 @@ export function AnthropometryStep({
           open={openSection === "audit"}
           title="Registro profissional"
         >
-          <ProfessionalAuditInfo audit={record.audit} origin={record.origin} />
+          <ProfessionalAuditInfo
+            audit={record.audit}
+            origin={record.origin}
+            responsible={responsibleProfessional}
+          />
         </AccordionSection>
       </div>
 

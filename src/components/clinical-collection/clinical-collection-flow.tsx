@@ -160,8 +160,7 @@ export function ClinicalCollectionFlow({ editableSteps, initialCollection, initi
       setActiveStep(nextStep);
       const query = new URLSearchParams(window.location.search);
       query.set("step", nextStep);
-      window.history.replaceState(null, "", `${pathname}?${query.toString()}`);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      router.replace(`${pathname}?${query.toString()}`, { scroll: true });
     } catch {
       setSaveState("ERROR");
     }
@@ -225,12 +224,17 @@ export function ClinicalCollectionFlow({ editableSteps, initialCollection, initi
           Avaliação salva com sucesso no Prontuário Mestre.
         </div>
       ) : null}
+      {saveState === "ERROR" ? (
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-900" role="alert">
+          Não foi possível salvar a avaliação. A etapa atual foi mantida para nova tentativa.
+        </div>
+      ) : null}
       {scenarios.length > 1 ? <div className="flex flex-col gap-2 rounded-xl border border-sky-200 bg-sky-50 p-3 sm:flex-row sm:items-center sm:justify-between">
         <div><p className="text-xs font-black uppercase tracking-wide text-sky-800">Cenário de validação</p><p className="mt-0.5 text-xs text-sky-700">{scenarios.find((item) => item.key === collection.scenario)?.description}</p></div>
         <label className="text-xs font-bold text-sky-900" htmlFor="scenario">Visualizar cenário<select className="ml-2 min-h-10 rounded-lg border border-sky-200 bg-white px-3 text-xs font-bold outline-none focus:border-sky-500" id="scenario" onChange={(event) => selectScenario(event.target.value as ClinicalCollectionScenarioKey)} value={collection.scenario}>{scenarios.map((scenario) => <option key={scenario.key} value={scenario.key}>{scenario.label}</option>)}</select></label>
       </div> : null}
           {!canEditActiveStep ? <PermissionDeniedState /> : null}
-          {canEditActiveStep && activeStep === "ANTHROPOMETRY" ? <AnthropometryStep key={`${collection.scenario}-anthropometry-${collection.records.anthropometry.audit?.version ?? 0}`} onDirty={() => setSaveState("UNSAVED")} onSave={(data: AnthropometryData) => saveStep("ANTHROPOMETRY", data)} record={collection.records.anthropometry} saving={saveState === "SAVING"} /> : null}
+          {canEditActiveStep && activeStep === "ANTHROPOMETRY" ? <AnthropometryStep key={`${collection.scenario}-anthropometry-${collection.records.anthropometry.audit?.version ?? 0}`} onDirty={() => setSaveState("UNSAVED")} onSave={(data: AnthropometryData) => saveStep("ANTHROPOMETRY", data)} record={collection.records.anthropometry} responsibleProfessional={collection.connectedProfessional} saving={saveState === "SAVING"} /> : null}
           {canEditActiveStep && activeStep === "BIOIMPEDANCE" ? <BioimpedanceStep key={`${collection.scenario}-bio-${collection.records.bioimpedance.audit?.version ?? 0}`} onDirty={() => setSaveState("UNSAVED")} onSave={(data: BioimpedanceAvanutriData) => saveStep("BIOIMPEDANCE", data)} record={collection.records.bioimpedance} saving={saveState === "SAVING"} /> : null}
           {canEditActiveStep && activeStep === "PERIMETRY" ? <PerimetryStep key={`${collection.scenario}-perimetry-${collection.records.perimetry.audit?.version ?? 0}`} onDirty={() => setSaveState("UNSAVED")} onSave={(data: PerimetryData) => saveStep("PERIMETRY", data)} previous={collection.previousPerimetry} record={collection.records.perimetry} saving={saveState === "SAVING"} /> : null}
           {canEditActiveStep && activeStep === "POSTURAL_ASSESSMENT" ? <PosturalStep assessmentId={collection.records.posturalAssessment.origin?.entryId} evaluatorName={professional.user.fullName} key={`${collection.scenario}-postural-${collection.records.posturalAssessment.audit?.version ?? 0}`} onDirty={() => setSaveState("UNSAVED")} onSave={(data: PosturalAssessmentData) => saveStep("POSTURAL_ASSESSMENT", data)} patientId={collection.patientId} record={collection.records.posturalAssessment} saving={saveState === "SAVING"} /> : null}

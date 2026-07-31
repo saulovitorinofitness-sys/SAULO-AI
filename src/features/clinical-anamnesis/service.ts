@@ -73,10 +73,7 @@ export const clinicalAnamnesisService = {
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            primaryObjective: input.data.primaryObjective,
-            secondaryObjectives: input.data.secondaryObjectives,
-          }),
+          body: JSON.stringify({ data: input.data }),
         },
       );
       const result = (await response.json().catch(() => null)) as {
@@ -84,17 +81,10 @@ export const clinicalAnamnesisService = {
         message?: string;
       } | null;
       if (!response.ok || !result?.view) {
-        throw new Error(result?.message ?? "Não foi possível salvar os objetivos.");
+        throw new Error(result?.message ?? "Não foi possível salvar a anamnese clínica.");
       }
       return {
-        view: {
-          ...result.view,
-          data: {
-            ...input.data,
-            primaryObjective: result.view.data.primaryObjective,
-            secondaryObjectives: result.view.data.secondaryObjectives,
-          },
-        },
+        view: result.view,
         persisted: true as const,
       };
     }

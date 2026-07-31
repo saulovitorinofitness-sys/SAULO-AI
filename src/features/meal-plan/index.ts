@@ -6,3 +6,4 @@ export * from "./adequacy-engine";
 export * from "./final-nutrition-analysis-mock";
 export * from "./service";
 export * from "./substitution-engine";
+export * from "./prescription-history";

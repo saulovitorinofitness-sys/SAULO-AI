@@ -211,7 +211,7 @@ export function PatientForm() {
       setState("success");
 
       await new Promise((resolve) => window.setTimeout(resolve, 650));
-      router.replace(`/pacientes/${result.patientId}?registered=1`);
+      router.replace(`/pacientes/${result.patientId}/continuar`);
     } catch (error) {
       submittingRef.current = false;
       setErrorMessage(

@@ -45,6 +45,7 @@ export interface AnamnesisTimelineEntry { readonly id: string; readonly occurred
 export interface ClinicalAnamnesisView {
   readonly patientId: EntityId;
   readonly masterRecordId: EntityId;
+  readonly attendanceId?: EntityId;
   readonly patientName: string;
   readonly patientCode: string;
   readonly scenario: ClinicalCollectionScenarioKey;

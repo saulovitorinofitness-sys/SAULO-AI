@@ -47,6 +47,7 @@ model SystemModule {
   evolutionFactors          EvolutionAssociatedFactor[]
   athleteProfiles           AthleteProgressProfile[]
   athleteReferences         AthleteProgressReference[]
+  exerciseLibraryItems      ExerciseLibraryItem[]
 }
 
 model Role {

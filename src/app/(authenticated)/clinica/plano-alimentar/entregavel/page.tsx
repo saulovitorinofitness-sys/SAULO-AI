@@ -16,6 +16,7 @@ import {
 } from "@/features/meal-plan";
 import { canAccess, mvpService } from "@/features/mvp";
 import { nutritionClinicalFlowRepository } from "@/features/nutrition-clinical-flow/repository";
+import { getNutritionClinicalFlowStepAccess } from "@/features/nutrition-clinical-flow";
 import { nutritionPrescriptionService } from "@/features/nutrition-prescription";
 import {
   nutritionStrategySelectionFromView,
@@ -89,6 +90,34 @@ export default async function MealPlanDeliverablePage({
     name: patientContext.patient.name,
     code: patientContext.patient.code,
   };
+  const deliverablesAccess = getNutritionClinicalFlowStepAccess(
+    flow.flow,
+    "DELIVERABLES",
+    "DELIVERABLES",
+  );
+
+  if (!deliverablesAccess.canOpen) {
+    return (
+      <ClinicalFlowNavigation
+        activeStep="DELIVERABLES"
+        flow={flow.flow}
+        patient={navigation}
+      >
+        <PageState
+          action={
+            <ButtonLink
+              href={`/pacientes/${encodeURIComponent(patientId)}/plano-alimentar?scenario=${scenario}`}
+            >
+              Abrir Plano Alimentar
+            </ButtonLink>
+          }
+          description="Conclua o Plano Alimentar antes de acessar os Entregáveis."
+          title="Entregáveis bloqueados"
+          tone="blocked"
+        />
+      </ClinicalFlowNavigation>
+    );
+  }
 
   if (!plan || !prescription || !strategy) {
     return (

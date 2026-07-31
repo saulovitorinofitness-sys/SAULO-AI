@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 
 import { mealPlanRepository } from "@/features/meal-plan/repository";
-import { parseMealPlanRecordDraft } from "@/features/meal-plan/record";
+import {
+  mealPlanClinicalJustificationSchema,
+  parseMealPlanRecordDraft,
+} from "@/features/meal-plan/record";
 import { canonicalizeMealPlanDraftFoods } from "@/features/meal-plan/food-snapshot";
 import { nutritionStrategyInheritanceService } from "@/features/nutrition-strategy/inheritance-service";
 import { foodRepository } from "@/features/food-database/repository";
@@ -28,10 +31,18 @@ export async function PUT(
     );
   }
 
-  const draft = parseMealPlanRecordDraft(
-    await request.json().catch(() => null),
+  const body = await request.json().catch(() => null);
+  const draft = parseMealPlanRecordDraft(body);
+  const justification = mealPlanClinicalJustificationSchema.safeParse(
+    body && typeof body === "object" && !Array.isArray(body)
+      ? (body as Record<string, unknown>).clinicalJustification
+      : undefined,
   );
-  if (!draft || !["DRAFT", "IN_REVIEW"].includes(draft.status)) {
+  if (
+    !draft ||
+    !justification.success ||
+    !["DRAFT", "IN_REVIEW", "APPROVED"].includes(draft.status)
+  ) {
     return NextResponse.json(
       { message: "Revise a estrutura do Plano Alimentar." },
       { status: 400 },
@@ -79,6 +90,7 @@ export async function PUT(
       canonicalDraft,
       access.user.id,
       strategy,
+      justification.data,
     );
     return NextResponse.json({ record });
   } catch (error) {

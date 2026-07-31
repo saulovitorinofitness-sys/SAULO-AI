@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  Activity,
   BookOpen,
   BrainCircuit,
   CalendarClock,
@@ -125,22 +124,6 @@ const groups: readonly NavigationGroup[] = [
         label: "Importações",
         icon: Upload,
         sauloOnly: true,
-      },
-    ],
-  },
-  {
-    id: "performance",
-    label: "Performance",
-    sauloOnly: true,
-    items: [
-      {
-        id: "endurance",
-        href: "/performance-endurance",
-        label: "Performance Endurance",
-        mobileLabel: "Endurance",
-        icon: Activity,
-        sauloOnly: true,
-        bottom: true,
       },
     ],
   },

@@ -273,7 +273,7 @@ export const patientRegistrationRepository = {
           lastCompletedStepKey: "PATIENT_REGISTRATION",
           responsibleUserId: professionalUserId,
           lastActivityAt: now,
-          nextSuggestedStepKey: "ASSESSMENT",
+          nextSuggestedStepKey: "ANAMNESIS",
           suggestionSource: "WORKFLOW",
           createdByUserId: professionalUserId,
           updatedByUserId: professionalUserId,

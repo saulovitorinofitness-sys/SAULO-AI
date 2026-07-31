@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import {
+  nutritionStrategyApprovalIssues,
   parseNutritionStrategyDraft,
 } from "@/features/nutrition-strategy";
 import { resolveDevelopmentAccess } from "@/features/development-session";
@@ -114,6 +115,16 @@ export async function POST(
         return NextResponse.json(
           { message: "Revise os dados obrigatórios antes da aprovação." },
           { status: 400 },
+        );
+      }
+      const approvalIssues = nutritionStrategyApprovalIssues(strategy);
+      if (approvalIssues.length) {
+        return NextResponse.json(
+          {
+            message: `Não foi possível aprovar. Pendências: ${approvalIssues.join("; ")}.`,
+            issues: approvalIssues,
+          },
+          { status: 409 },
         );
       }
       const record = await nutritionStrategyRepository.approve(

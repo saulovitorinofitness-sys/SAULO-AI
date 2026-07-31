@@ -3,6 +3,10 @@ import type {
   MealPlanNutritionValues,
   MealPlanRecordMeal,
 } from "./record";
+import {
+  DEFAULT_NUTRITION_ADEQUACY_THRESHOLDS,
+  type NutritionAdequacyStatus,
+} from "./adequacy-engine";
 import type { FoodNutrientsPer100g } from "@/features/food-database";
 
 export const EMPTY_NUTRITION_VALUES: MealPlanNutritionValues = {
@@ -126,4 +130,21 @@ export function compareMealPlanNutrition(
     keyof MealPlanNutritionValues,
     "COMPATIBLE" | "ABOVE" | "BELOW"
   >;
+}
+
+export function compareMealEnergyTarget(
+  targetKcal: number,
+  actualKcal: number,
+): NutritionAdequacyStatus {
+  if (targetKcal <= 0) return "OUTSIDE_TARGET";
+  const deviationPercentage =
+    (Math.abs(actualKcal - targetKcal) / targetKcal) * 100;
+  const threshold = DEFAULT_NUTRITION_ADEQUACY_THRESHOLDS.energyKcal;
+  if (deviationPercentage <= threshold.adequateMaximumDeviationPercent) {
+    return "ADEQUATE";
+  }
+  if (deviationPercentage <= threshold.nearTargetMaximumDeviationPercent) {
+    return "NEAR_TARGET";
+  }
+  return "OUTSIDE_TARGET";
 }

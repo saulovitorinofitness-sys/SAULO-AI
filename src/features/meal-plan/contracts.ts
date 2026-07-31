@@ -7,6 +7,7 @@ import type {
   StoredMealPlanPayload,
 } from "./record";
 import type { NutritionAdequacyResult } from "./adequacy-engine";
+import type { PrescriptionHistoryEntry } from "./prescription-history";
 
 export type MealPlanStatus =
   | "DRAFT"
@@ -78,5 +79,7 @@ export interface MealPlanPrescriptionView extends MealPlanView {
   readonly aiDecision: MealPlanAiDecision;
   readonly adequacy: NutritionAdequacyResult;
   readonly prescriptionMeals: readonly MealPlanRecordMeal[];
+  readonly prescriptionSupplements: StoredMealPlanPayload["supplements"];
+  readonly prescriptionHistory: readonly PrescriptionHistoryEntry[];
 }
 export interface GetMealPlanInput { readonly patientId: string; readonly scenario: ClinicalCollectionScenarioKey; }

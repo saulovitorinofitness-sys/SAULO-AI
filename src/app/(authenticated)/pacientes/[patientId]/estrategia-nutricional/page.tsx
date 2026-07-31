@@ -62,7 +62,10 @@ export default async function NutritionStrategyPage({
         code: view.patient.code,
       }}
     >
-      <NutritionClinicalPanel view={view} />
+      <NutritionClinicalPanel
+        activityFactor={strategy?.activityFactor}
+        view={view}
+      />
       <NutritionStrategyDecisionEngine
         initialStrategy={strategy}
         view={view}

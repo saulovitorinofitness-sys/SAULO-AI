@@ -10,7 +10,7 @@ import { ENERGY_PROTOCOLS } from "@/lib/nutrition";
 const positiveNumber = z.number().finite().positive();
 const requiredText = z.string().trim().min(1).max(500);
 const macroInput = z.object({
-  mode: z.enum(["GRAMS_PER_KG", "PERCENTAGE", "GRAMS"]),
+  mode: z.enum(["GRAMS_PER_KG", "PERCENTAGE"]),
   value: positiveNumber.optional(),
 });
 const calculatedMacro = z.object({
@@ -28,13 +28,13 @@ export const nutritionStrategyDraftSchema = z.object({
     keyof typeof NUTRITION_OBJECTIVES,
     ...(keyof typeof NUTRITION_OBJECTIVES)[],
   ]).optional(),
-  secondaryObjectives: z.array(requiredText).max(10),
   method: z.enum(["STANDARD", "LOW_CARB", "CARB_CYCLING"]).optional(),
   protocol: z.enum(Object.keys(ENERGY_PROTOCOLS) as [
     keyof typeof ENERGY_PROTOCOLS,
     ...(keyof typeof ENERGY_PROTOCOLS)[],
   ]),
   calorieAdjustmentPercentage: calorieAdjustment,
+  activityFactor: positiveNumber.optional(),
   manualFinalCaloriesKcal: positiveNumber.optional(),
   finalCaloriesKcal: positiveNumber.optional(),
   basalMetabolicRateKcal: positiveNumber.optional(),
@@ -61,10 +61,13 @@ export const nutritionStrategyDraftSchema = z.object({
   mealDistribution: z.array(
     z.object({
       mealNumber: z.number().int().positive(),
-      energyPercentage: z.number().finite().nonnegative(),
-      proteinPercentage: z.number().finite().nonnegative(),
-      carbohydratesPercentage: z.number().finite().nonnegative(),
-      fatsPercentage: z.number().finite().nonnegative(),
+      name: requiredText,
+      time: z
+        .string()
+        .regex(/^([01]\d|2[0-3]):[0-5]\d$/)
+        .or(z.literal("")),
+      vetPercentage: z.number().finite().min(0).max(100),
+      plannedCaloriesKcal: z.number().finite().nonnegative(),
     }),
   ).max(20),
   supplementation: z.array(

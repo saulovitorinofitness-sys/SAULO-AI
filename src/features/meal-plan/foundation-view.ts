@@ -76,6 +76,8 @@ export function assembleMealPlanView(input: {
         updatedAt: record.updatedAt,
       }),
     prescriptionMeals: record.meals,
+    prescriptionSupplements: record.supplements,
+    prescriptionHistory: record.history,
     summary: {
       primaryObjective: NUTRITION_OBJECTIVES[displayedStrategy.objective],
       strategy: `${displayedStrategy.method ? `${displayedStrategy.method} · ` : ""}${ENERGY_PROTOCOLS[displayedStrategy.protocol]} · ${adjustment(displayedStrategy.calorieAdjustmentPercentage)} · Aprovada`,

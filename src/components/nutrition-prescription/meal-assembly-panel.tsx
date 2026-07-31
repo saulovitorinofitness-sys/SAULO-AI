@@ -303,59 +303,53 @@ export function MealAssemblyPanel({
                     >
                       Excluir
                     </Button>
+                    <Select
+  aria-label={`Substituir ${entry.name}`}
+  value=""
+  onChange={(event) => {
+    const selectedFood = foods.find(
+      (food) => food.id === event.target.value,
+    );
 
-                    {entry.kind === "FOOD" ? (
-                      <Select
-                        aria-label={`Substituir ${entry.name}`}
-                        onChange={(event) => {
-                          const selectedFood = foods.find(
-                            (food) => food.id === event.target.value,
-                          );
+    if (!selectedFood || selectedFood.domain !== "FOOD") {
+      return;
+    }
 
-                          if (!selectedFood || selectedFood.domain !== "FOOD") {
-                            return;
-                          }
+    onChangeEntry({
+      ...entry,
+      name: selectedFood.name,
+      scientificLibraryItemId: selectedFood.id,
+      group: String(selectedFood.attributes.foodGroup),
+    });
+  }}
+>
+  <option value="">Substituir</option>
 
-                          onChangeEntry({
-                            ...entry,
-                            name: selectedFood.name,
-                            scientificLibraryItemId: selectedFood.id,
-                            group: selectedFood.category,
-                          });
+  {foods
+    .filter((food) => {
+      const currentFood = foods.find(
+        (item) => item.id === entry.scientificLibraryItemId,
+      );
 
-                          event.target.value = "";
-                        }}
-                        value=""
-                      >
-                        <option value="">Substituir</option>
-                        {foods
-                          .filter((food) => {
-                            const currentFood = foods.find(
-                              (item) =>
-                                item.id === entry.scientificLibraryItemId,
-                            );
-
-                            return (
-                              food.id !== entry.scientificLibraryItemId &&
-                              food.domain === "FOOD" &&
-                              currentFood?.domain === "FOOD" &&
-                              food.attributes.foodGroup ===
-                                currentFood.attributes.foodGroup
-                            );
-                          })
-                          .map((food) => (
-                            <option key={food.id} value={food.id}>
-                              {food.name}
-                            </option>
-                          ))}
-                      </Select>
-                    ) : null}
+      return (
+        food.id !== entry.scientificLibraryItemId &&
+        food.domain === "FOOD" &&
+        currentFood?.domain === "FOOD" &&
+        food.attributes.foodGroup === currentFood.attributes.foodGroup
+      );
+    })
+    .map((food) => (
+      <option key={food.id} value={food.id}>
+        {food.name}
+      </option>
+    ))}
+</Select>
                   </div>
 
                   <div className="rounded-lg border border-[var(--line)] bg-[var(--surface)]">
-                    <div className="px-3 py-2 text-xs font-bold">
-                      Substituir alimento
-                    </div>
+  <div className="px-3 py-2 text-xs font-bold">
+    Substituir alimento
+  </div>
                     <div className="grid gap-3 border-t border-[var(--line)] p-3 sm:grid-cols-2">
                       <FormField
                         id={`entry-group-${entry.id}`}
@@ -412,26 +406,21 @@ export function MealAssemblyPanel({
                             </option>
                             {foods
                               .filter((food) => {
-                                const currentFood = foods.find(
-                                  (item) =>
-                                    item.id ===
-                                    entry.scientificLibraryItemId,
-                                );
+  const currentFood = foods.find(
+    (item) => item.id === entry.scientificLibraryItemId,
+  );
 
-                                return (
-                                  food.id !==
-                                    entry.scientificLibraryItemId &&
-                                  food.domain === "FOOD" &&
-                                  currentFood?.domain === "FOOD" &&
-                                  food.attributes.foodGroup ===
-                                    currentFood.attributes.foodGroup &&
-                                  !entry.substitutions.some(
-                                    (substitution) =>
-                                      substitution.scientificLibraryItemId ===
-                                      food.id,
-                                  )
-                                );
-                              })
+  return (
+    food.id !== entry.scientificLibraryItemId &&
+    food.domain === "FOOD" &&
+    currentFood?.domain === "FOOD" &&
+    food.attributes.foodGroup === currentFood.attributes.foodGroup &&
+    !entry.substitutions.some(
+      (substitution) =>
+        substitution.scientificLibraryItemId === food.id,
+    )
+  );
+})
                               .map((food) => (
                                 <option key={food.id} value={food.id}>
                                   {food.name} · {food.category}

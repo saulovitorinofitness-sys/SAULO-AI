@@ -26,7 +26,7 @@ const strategyEntrySelect = {
 } satisfies Prisma.MasterRecordEntrySelect;
 
 interface StoredStrategyPayload extends NutritionStrategyDraft {
-  readonly schemaVersion: 1 | 2;
+  readonly schemaVersion: 1 | 2 | 3 | 4;
   readonly approvedAt?: string;
   readonly approvedByUserId?: string;
   readonly approvedByName?: string;
@@ -62,9 +62,91 @@ function macroInput(
   return { mode, value: inputValue };
 }
 
+const standardMeals = [
+  ["Desjejum", "07:00"],
+  ["Lanche da manhã", "10:00"],
+  ["Almoço", "12:30"],
+  ["Lanche da tarde", "16:00"],
+  ["Jantar", "19:30"],
+  ["Ceia", "22:00"],
+] as const;
+
+function rounded(value: number) {
+  return Math.round(value * 10) / 10;
+}
+
+function mealDistribution(
+  value: unknown,
+  mealCount: number | undefined,
+  finalCaloriesKcal: number | undefined,
+): readonly NutritionStrategyMealAllocation[] {
+  const source = Array.isArray(value) ? value.map(objectValue) : [];
+  const count =
+    mealCount && Number.isInteger(mealCount) && mealCount > 0
+      ? mealCount
+      : source.length;
+  if (!count) return [];
+  const base = Math.floor((100 / count) * 100) / 100;
+  const fallbackPercentages = Array.from({ length: count }, (_, index) =>
+    index === count - 1
+      ? Number((100 - base * (count - 1)).toFixed(2))
+      : base,
+  );
+  const storedPercentages = source.map((meal) => {
+    const percentage =
+      typeof meal.vetPercentage === "number"
+        ? meal.vetPercentage
+        : typeof meal.energyPercentage === "number"
+          ? meal.energyPercentage
+          : undefined;
+    return percentage !== undefined && Number.isFinite(percentage)
+      ? percentage
+      : undefined;
+  });
+  const storedTotal = storedPercentages.reduce<number>(
+    (total, percentage) => total + (percentage ?? 0),
+    0,
+  );
+  const percentages =
+    storedPercentages.length === count &&
+    storedPercentages.every((percentage) => percentage !== undefined) &&
+    Math.abs(storedTotal - 100) < 0.1
+      ? (storedPercentages as number[])
+      : fallbackPercentages;
+
+  return Array.from({ length: count }, (_, index) => {
+    const meal = source[index] ?? {};
+    const [fallbackName, fallbackTime] =
+      standardMeals[index] ?? [`Refeição ${index + 1}`, ""];
+    const percentage = percentages[index];
+    return {
+      mealNumber: index + 1,
+      name:
+        typeof meal.name === "string" && meal.name.trim()
+          ? meal.name.trim()
+          : fallbackName,
+      time:
+        typeof meal.time === "string" &&
+        /^([01]\d|2[0-3]):[0-5]\d$/.test(meal.time)
+          ? meal.time
+          : fallbackTime,
+      vetPercentage: percentage,
+      plannedCaloriesKcal:
+        finalCaloriesKcal && finalCaloriesKcal > 0
+          ? rounded(finalCaloriesKcal * (percentage / 100))
+          : 0,
+    };
+  });
+}
+
 function storedPayload(value: unknown): StoredStrategyPayload | null {
   const source = objectValue(value);
-  if (source.schemaVersion !== 1 && source.schemaVersion !== 2) {
+  if (
+    source.schemaVersion !== 1 &&
+    source.schemaVersion !== 2 &&
+    source.schemaVersion !== 3 &&
+    source.schemaVersion !== 4
+  ) {
     return null;
   }
   const secondaryObjectives = Array.isArray(source.secondaryObjectives)
@@ -73,9 +155,13 @@ function storedPayload(value: unknown): StoredStrategyPayload | null {
           typeof item === "string" && Boolean(item.trim()),
       )
     : [];
-  const mealDistribution = Array.isArray(source.mealDistribution)
-    ? (source.mealDistribution as NutritionStrategyMealAllocation[])
-    : [];
+  const normalizedMealDistribution = mealDistribution(
+    source.mealDistribution,
+    typeof source.mealCount === "number" ? source.mealCount : undefined,
+    typeof source.finalCaloriesKcal === "number"
+      ? source.finalCaloriesKcal
+      : undefined,
+  );
   const supplementation = Array.isArray(source.supplementation)
     ? (source.supplementation as NutritionStrategySupplement[])
     : [];
@@ -90,10 +176,16 @@ function storedPayload(value: unknown): StoredStrategyPayload | null {
     ...(source as unknown as StoredStrategyPayload),
     secondaryObjectives,
     method,
-    protein: macroInput(source.protein, "GRAMS_PER_KG"),
-    carbohydrates: macroInput(source.carbohydrates, "GRAMS"),
+    activityFactor:
+      typeof source.activityFactor === "number" &&
+      Number.isFinite(source.activityFactor) &&
+      source.activityFactor > 0
+        ? source.activityFactor
+        : undefined,
+    protein: macroInput(source.protein, "PERCENTAGE"),
+    carbohydrates: macroInput(source.carbohydrates, "PERCENTAGE"),
     fats: macroInput(source.fats, "PERCENTAGE"),
-    mealDistribution,
+    mealDistribution: normalizedMealDistribution,
     supplementation,
     clinicalObservations:
       typeof source.clinicalObservations === "string"
@@ -367,7 +459,7 @@ async function persistStrategy(input: {
     const now = new Date();
     const payload: StoredStrategyPayload = {
       ...input.strategy,
-      schemaVersion: 2,
+      schemaVersion: 4,
       approvedAt: input.approve ? now.toISOString() : undefined,
       approvedByUserId: input.approve ? professional.id : undefined,
       approvedByName: input.approve ? professional.fullName : undefined,
@@ -449,6 +541,19 @@ async function persistStrategy(input: {
         select: { id: true },
       });
       if (continuity) {
+        const downstreamModules = await transaction.systemModule.findMany({
+          where: { key: { in: ["MEAL_PLAN", "DELIVERABLES"] } },
+          select: { id: true, key: true },
+        });
+        const mealPlanModuleId = downstreamModules.find(
+          (module) => module.key === "MEAL_PLAN",
+        )?.id;
+        const deliverablesModuleId = downstreamModules.find(
+          (module) => module.key === "DELIVERABLES",
+        )?.id;
+        if (!mealPlanModuleId || !deliverablesModuleId) {
+          throw new Error("STRATEGY_FLOW_MODULES_NOT_FOUND");
+        }
         await transaction.continuityStep.upsert({
           where: {
             continuityId_key: {
@@ -474,6 +579,60 @@ async function persistStrategy(input: {
             responsibleUserId: professional.id,
             completedByUserId: professional.id,
             completedAt: now,
+            createdByUserId: professional.id,
+            updatedByUserId: professional.id,
+          },
+        });
+        await transaction.continuityStep.upsert({
+          where: {
+            continuityId_key: {
+              continuityId: continuity.id,
+              key: "MEAL_PLAN",
+            },
+          },
+          update: {
+            status: "IN_PROGRESS",
+            responsibleUserId: professional.id,
+            completedByUserId: null,
+            completedAt: null,
+            updatedByUserId: professional.id,
+            version: { increment: 1 },
+          },
+          create: {
+            continuityId: continuity.id,
+            moduleId: mealPlanModuleId,
+            key: "MEAL_PLAN",
+            title: "Plano alimentar",
+            status: "IN_PROGRESS",
+            sortOrder: 4,
+            responsibleUserId: professional.id,
+            createdByUserId: professional.id,
+            updatedByUserId: professional.id,
+          },
+        });
+        await transaction.continuityStep.upsert({
+          where: {
+            continuityId_key: {
+              continuityId: continuity.id,
+              key: "DELIVERABLES",
+            },
+          },
+          update: {
+            status: "BLOCKED",
+            responsibleUserId: professional.id,
+            completedByUserId: null,
+            completedAt: null,
+            updatedByUserId: professional.id,
+            version: { increment: 1 },
+          },
+          create: {
+            continuityId: continuity.id,
+            moduleId: deliverablesModuleId,
+            key: "DELIVERABLES",
+            title: "Entregáveis",
+            status: "BLOCKED",
+            sortOrder: 5,
+            responsibleUserId: professional.id,
             createdByUserId: professional.id,
             updatedByUserId: professional.id,
           },

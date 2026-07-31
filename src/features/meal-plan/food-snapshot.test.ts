@@ -56,8 +56,9 @@ const food: ProfessionalFood = {
 const draft: MealPlanRecordDraft = {
   strategyEntryId: "8bd60bc7-5f36-4b2b-9782-813884fc9f19",
   status: "DRAFT",
-  aiDecision: "IDLE",
-  meals: [
+      aiDecision: "IDLE",
+      supplements: [],
+      meals: [
     {
       id: "0dde6733-90c2-4dc7-acac-a79f5155030f",
       name: "Almoço",

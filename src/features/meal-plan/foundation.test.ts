@@ -26,8 +26,20 @@ const strategy: MealPlanStrategyInheritance = {
   waterMl: 2800,
   mealCount: 2,
   mealDistribution: [
-    { mealNumber: 1, energyPercentage: 50, proteinPercentage: 50, carbohydratesPercentage: 50, fatsPercentage: 50 },
-    { mealNumber: 2, energyPercentage: 50, proteinPercentage: 50, carbohydratesPercentage: 50, fatsPercentage: 50 },
+    {
+      mealNumber: 1,
+      name: "Desjejum",
+      time: "07:00",
+      vetPercentage: 50,
+      plannedCaloriesKcal: 900,
+    },
+    {
+      mealNumber: 2,
+      name: "Jantar",
+      time: "19:00",
+      vetPercentage: 50,
+      plannedCaloriesKcal: 900,
+    },
   ],
   supplementation: [],
   clinicalObservations: "",
@@ -85,8 +97,10 @@ test("monta o resumo apenas com valores herdados da estratégia", () => {
       responsibleProfessional: "Saulo Xavier Vitorino",
       createdAt: "2026-07-26T10:15:00.000Z",
       updatedAt: "2026-07-26T10:15:00.000Z",
-      revision: 1,
-      meals: [
+    revision: 1,
+    supplements: [],
+    history: [],
+    meals: [
         {
           id: "1b6f3ccb-03d1-4ad2-b7b3-fbff89f77576",
           name: "Refeição 1",

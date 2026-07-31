@@ -58,6 +58,8 @@ model User {
   clinicalPriorities        ClinicalPriority[]          @relation("ClinicalPriorityProfessional")
   clinicalObjectives        ClinicalObjective[]         @relation("ClinicalObjectiveProfessional")
   updatedClinicalObjectives ClinicalObjective[]         @relation("ClinicalObjectiveUpdater")
+  createdExerciseLibraryItems ExerciseLibraryItem[]      @relation("ExerciseLibraryCreator")
+  updatedExerciseLibraryItems ExerciseLibraryItem[]      @relation("ExerciseLibraryUpdater")
   clinicalDecisions         ClinicalDecision[]          @relation("ClinicalDecisionProfessional")
   updatedClinicalDecisions  ClinicalDecision[]          @relation("ClinicalDecisionUpdater")
   therapeuticStrategies     TherapeuticStrategy[]       @relation("TherapeuticStrategyProfessional")

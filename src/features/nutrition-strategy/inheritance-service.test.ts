@@ -47,10 +47,10 @@ function approvedStrategy(): NutritionStrategyRecordView {
     mealCount: 5,
     mealDistribution: Array.from({ length: 5 }, (_, index) => ({
       mealNumber: index + 1,
-      energyPercentage: 20,
-      proteinPercentage: 20,
-      carbohydratesPercentage: 20,
-      fatsPercentage: 20,
+      name: `Refeição ${index + 1}`,
+      time: `${String(7 + index * 3).padStart(2, "0")}:00`,
+      vetPercentage: 20,
+      plannedCaloriesKcal: 360,
     })),
     supplementation: [
       {
@@ -99,10 +99,10 @@ test("fornece ao Plano Alimentar somente o contrato da estratégia aprovada", ()
     mealCount: 5,
     mealDistribution: Array.from({ length: 5 }, (_, index) => ({
       mealNumber: index + 1,
-      energyPercentage: 20,
-      proteinPercentage: 20,
-      carbohydratesPercentage: 20,
-      fatsPercentage: 20,
+      name: `Refeição ${index + 1}`,
+      time: `${String(7 + index * 3).padStart(2, "0")}:00`,
+      vetPercentage: 20,
+      plannedCaloriesKcal: 360,
     })),
     supplementation: [
       {

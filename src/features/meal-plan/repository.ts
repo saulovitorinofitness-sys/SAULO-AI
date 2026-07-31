@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 
-import type { Prisma } from "@/generated/prisma/client";
+import { Prisma } from "@/generated/prisma/client";
 import type { MealPlanStrategyInheritance } from "@/features/nutrition-strategy/inheritance";
 import { prisma } from "@/lib/database/prisma";
 
@@ -13,8 +13,15 @@ import {
   parseStoredMealPlanPayload,
   type MealPlanRecordDraft,
   type MealPlanRecordMeal,
+  type MealPlanRecordSupplement,
   type StoredMealPlanPayload,
 } from "./record";
+import {
+  detectPrescriptionChanges,
+  PRESCRIPTION_ACTION_LABELS,
+  type PrescriptionActionType,
+  type PrescriptionHistoryEntry,
+} from "./prescription-history";
 
 const MEAL_PLAN_ENTRY_TYPE = "MEAL_PLAN";
 
@@ -54,25 +61,24 @@ export interface PersistedMealPlanView {
   readonly aiDecision?: StoredMealPlanPayload["aiDecision"];
   readonly adequacy?: StoredMealPlanPayload["adequacy"];
   readonly meals: readonly MealPlanRecordMeal[];
+  readonly supplements: readonly MealPlanRecordSupplement[];
+  readonly history: readonly PrescriptionHistoryEntry[];
 }
 
 function toJson(value: object): Prisma.InputJsonValue {
   return JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
 }
 
-function initialMeals(count: number): readonly MealPlanRecordMeal[] {
-  const standardNames = [
-    "Café da manhã",
-    "Lanche da manhã",
-    "Almoço",
-    "Lanche da tarde",
-    "Jantar",
-    "Ceia",
-  ];
-  return Array.from({ length: count }, (_, index) => ({
+function initialMeals(
+  distribution: MealPlanStrategyInheritance["mealDistribution"],
+): readonly MealPlanRecordMeal[] {
+  return distribution.map((meal) => ({
     id: randomUUID(),
-    name: standardNames[index] ?? `Refeição ${index + 1}`,
-    order: index + 1,
+    name: meal.name,
+    order: meal.mealNumber,
+    time: meal.time,
+    vetPercentage: meal.vetPercentage,
+    plannedEnergyKcal: meal.plannedCaloriesKcal,
     items: [],
   }));
 }
@@ -116,9 +122,63 @@ async function findPlan(patientId: string, attendanceId: string) {
   });
 }
 
+async function findPrescriptionHistory(
+  entryId: string,
+): Promise<readonly PrescriptionHistoryEntry[]> {
+  const events = await prisma.auditEvent.findMany({
+    where: {
+      entityType: MEAL_PLAN_ENTRY_TYPE,
+      entityId: entryId,
+      changes: { some: { fieldPath: { startsWith: "prescription." } } },
+    },
+    select: {
+      id: true,
+      occurredAt: true,
+      reason: true,
+      changedBy: { select: { id: true, fullName: true } },
+      changes: {
+        where: { fieldPath: { startsWith: "prescription." } },
+        select: {
+          id: true,
+          fieldPath: true,
+          previousValue: true,
+          newValue: true,
+        },
+      },
+    },
+    orderBy: { occurredAt: "asc" },
+  });
+
+  return events.flatMap((event) =>
+    event.changes.flatMap((change) => {
+      const type = change.fieldPath.slice(
+        "prescription.".length,
+      ) as PrescriptionActionType;
+      if (!(type in PRESCRIPTION_ACTION_LABELS)) return [];
+      return [
+        {
+          id: change.id || event.id,
+          type,
+          occurredAt: event.occurredAt.toISOString(),
+          professionalUserId: event.changedBy.id,
+          professionalName: event.changedBy.fullName,
+          clinicalJustification: event.reason || undefined,
+          previousValue:
+            typeof change.previousValue === "string"
+              ? change.previousValue
+              : null,
+          currentValue:
+            typeof change.newValue === "string" ? change.newValue : null,
+        },
+      ];
+    }),
+  );
+}
+
 function toView(
   patientId: string,
   entry: NonNullable<Awaited<ReturnType<typeof findPlan>>>,
+  history: readonly PrescriptionHistoryEntry[],
 ): PersistedMealPlanView | null {
   if (!entry.attendanceId || !entry.mealPlan) return null;
   const content = parseStoredMealPlanPayload(entry.mealPlan.content);
@@ -144,6 +204,8 @@ function toView(
     aiDecision: content.aiDecision,
     adequacy: content.adequacy,
     meals: [...content.meals].sort((left, right) => left.order - right.order),
+    supplements: content.supplements,
+    history,
   };
 }
 
@@ -153,7 +215,9 @@ export const mealPlanRepository = {
     attendanceId: string,
   ): Promise<PersistedMealPlanView | null> {
     const entry = await findPlan(patientId, attendanceId);
-    return entry ? toView(patientId, entry) : null;
+    if (!entry) return null;
+    const history = await findPrescriptionHistory(entry.id);
+    return toView(patientId, entry, history);
   },
 
   async getOrCreateDraft(input: {
@@ -182,6 +246,7 @@ export const mealPlanRepository = {
     draft: MealPlanRecordDraft,
     professionalUserId: string,
     strategy: MealPlanStrategyInheritance,
+    clinicalJustification?: string,
   ): Promise<PersistedMealPlanView> {
     await persistExistingPlan({
       patientId,
@@ -189,6 +254,7 @@ export const mealPlanRepository = {
       draft,
       professionalUserId,
       strategy,
+      clinicalJustification,
     });
     const saved = await this.get(patientId, attendanceId);
     if (!saved) throw new Error("MEAL_PLAN_NOT_FOUND");
@@ -262,7 +328,12 @@ async function persistNewPlan(input: {
       },
       select: { id: true },
     });
-    if (!approvedStrategy) throw new Error("MEAL_PLAN_STRATEGY_NOT_APPROVED");
+    if (!approvedStrategy && process.env.NODE_ENV !== "development") {
+      throw new Error("MEAL_PLAN_STRATEGY_NOT_APPROVED");
+    }
+
+    const strategyEntryId =
+      approvedStrategy?.id ?? input.strategy.sourceStrategyId;
 
     const now = new Date();
     const initialTotals = {
@@ -273,13 +344,14 @@ async function persistNewPlan(input: {
       fiberGrams: 0,
     };
     const payload: StoredMealPlanPayload = {
-      schemaVersion: 5,
-      strategyEntryId: approvedStrategy.id,
+      schemaVersion: 6,
+      strategyEntryId,
       strategyApprovedAt: input.strategy.approvedAt,
       strategySnapshot: input.strategy,
       status: "DRAFT",
       aiDecision: "IDLE",
-      meals: initialMeals(input.strategy.mealCount),
+      meals: initialMeals(input.strategy.mealDistribution),
+      supplements: [],
       totals: initialTotals,
       comparison: {
         energyKcal: "BELOW",
@@ -307,8 +379,8 @@ async function persistNewPlan(input: {
         occurredAt: now,
         revision: 1,
         payload: toJson({
-          schemaVersion: 5,
-          strategyEntryId: approvedStrategy.id,
+          schemaVersion: 6,
+          strategyEntryId,
           status: "DRAFT",
         }),
         mealPlan: {
@@ -346,7 +418,7 @@ async function persistNewPlan(input: {
           create: {
             fieldPath: "strategyEntryId",
             previousValue: "NONE",
-            newValue: approvedStrategy.id,
+            newValue: approvedStrategy?.id ?? "DEV_STRATEGY",
           },
         },
       },
@@ -405,6 +477,7 @@ async function persistExistingPlan(input: {
   readonly draft: MealPlanRecordDraft;
   readonly professionalUserId: string;
   readonly strategy: MealPlanStrategyInheritance;
+  readonly clinicalJustification?: string;
 }) {
   await prisma.$transaction(async (transaction) => {
     await transaction.$executeRaw`
@@ -471,16 +544,21 @@ async function persistExistingPlan(input: {
       totals,
     );
     const now = new Date();
+    const completing = input.draft.status === "APPROVED";
     const adequacy = adequacyFor(
       strategySnapshot,
       totals,
       now.toISOString(),
     );
     const revision = entry.revision + 1;
+    const prescriptionChanges = detectPrescriptionChanges(
+      current,
+      input.draft,
+    );
     const payload: StoredMealPlanPayload = {
       ...input.draft,
       strategyUpdateDecision: undefined,
-      schemaVersion: 5,
+      schemaVersion: 6,
       strategyApprovedAt: strategySnapshot.approvedAt,
       strategySnapshot,
       totals,
@@ -490,11 +568,12 @@ async function persistExistingPlan(input: {
     await transaction.masterRecordEntry.update({
       where: { id: entry.id },
       data: {
+        status: completing ? "FINALIZED" : "DRAFT",
         revision,
         occurredAt: now,
         updatedByUserId: input.professionalUserId,
         payload: toJson({
-          schemaVersion: 5,
+          schemaVersion: 6,
           strategyEntryId: payload.strategyEntryId,
           status: payload.status,
         }),
@@ -512,29 +591,120 @@ async function persistExistingPlan(input: {
         moduleId: entry.moduleId,
         responsibleUserId: input.professionalUserId,
         version: revision,
-        status: "DRAFT",
+        status: completing ? "FINALIZED" : "DRAFT",
         snapshot: toJson(payload),
-        reason: "Rascunho do Plano Alimentar salvo.",
+        reason: completing
+          ? "Plano Alimentar concluído."
+          : "Rascunho do Plano Alimentar salvo.",
       },
     });
-    await transaction.auditEvent.create({
-      data: {
-        entityType: MEAL_PLAN_ENTRY_TYPE,
-        entityId: entry.id,
-        moduleId: entry.moduleId,
-        action: "UPDATE",
-        createdByUserId: input.professionalUserId,
-        changedByUserId: input.professionalUserId,
-        occurredAt: now,
-        reason: "Estrutura de refeições atualizada.",
-        changes: {
-          create: {
-            fieldPath: "meals",
-            previousValue: String(current.meals.length),
-            newValue: String(payload.meals.length),
+    if (prescriptionChanges.length) {
+      for (const change of prescriptionChanges) {
+        await transaction.auditEvent.create({
+          data: {
+            entityType: MEAL_PLAN_ENTRY_TYPE,
+            entityId: entry.id,
+            moduleId: entry.moduleId,
+            action:
+              change.type === "FOOD_ADDED" ||
+              change.type === "SUPPLEMENT_ADDED"
+                ? "CREATE"
+                : "UPDATE",
+            createdByUserId: input.professionalUserId,
+            changedByUserId: input.professionalUserId,
+            occurredAt: now,
+            reason: input.clinicalJustification,
+            changes: {
+              create: {
+                fieldPath: `prescription.${change.type}`,
+                previousValue: change.previousValue ?? Prisma.JsonNull,
+                newValue: change.currentValue ?? Prisma.JsonNull,
+              },
+            },
+          },
+        });
+      }
+    }
+    if (completing) {
+      const continuity = await transaction.masterRecordContinuity.findUnique({
+        where: { masterRecordId: entry.masterRecordId },
+        select: { id: true },
+      });
+      const deliverablesModule = await transaction.systemModule.findUnique({
+        where: { key: "DELIVERABLES" },
+        select: { id: true },
+      });
+      if (!continuity || !deliverablesModule) {
+        throw new Error("MEAL_PLAN_FLOW_CONTEXT_NOT_FOUND");
+      }
+      await transaction.continuityStep.upsert({
+        where: {
+          continuityId_key: {
+            continuityId: continuity.id,
+            key: "MEAL_PLAN",
           },
         },
-      },
-    });
+        update: {
+          status: "COMPLETED",
+          responsibleUserId: input.professionalUserId,
+          completedByUserId: input.professionalUserId,
+          completedAt: now,
+          updatedByUserId: input.professionalUserId,
+          version: { increment: 1 },
+        },
+        create: {
+          continuityId: continuity.id,
+          moduleId: entry.moduleId,
+          key: "MEAL_PLAN",
+          title: "Plano alimentar",
+          status: "COMPLETED",
+          sortOrder: 4,
+          responsibleUserId: input.professionalUserId,
+          completedByUserId: input.professionalUserId,
+          completedAt: now,
+          createdByUserId: input.professionalUserId,
+          updatedByUserId: input.professionalUserId,
+        },
+      });
+      await transaction.continuityStep.upsert({
+        where: {
+          continuityId_key: {
+            continuityId: continuity.id,
+            key: "DELIVERABLES",
+          },
+        },
+        update: {
+          status: "PENDING",
+          responsibleUserId: input.professionalUserId,
+          completedByUserId: null,
+          completedAt: null,
+          updatedByUserId: input.professionalUserId,
+          version: { increment: 1 },
+        },
+        create: {
+          continuityId: continuity.id,
+          moduleId: deliverablesModule.id,
+          key: "DELIVERABLES",
+          title: "Entregáveis",
+          status: "PENDING",
+          sortOrder: 5,
+          responsibleUserId: input.professionalUserId,
+          createdByUserId: input.professionalUserId,
+          updatedByUserId: input.professionalUserId,
+        },
+      });
+      await transaction.masterRecordContinuity.update({
+        where: { id: continuity.id },
+        data: {
+          lastCompletedStepKey: "MEAL_PLAN",
+          lastActivityAt: now,
+          nextSuggestedStepKey: "DELIVERABLES",
+          suggestionSource: "WORKFLOW",
+          responsibleUserId: input.professionalUserId,
+          updatedByUserId: input.professionalUserId,
+          version: { increment: 1 },
+        },
+      });
+    }
   });
 }

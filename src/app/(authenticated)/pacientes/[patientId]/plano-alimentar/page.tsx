@@ -91,8 +91,14 @@ export default async function MealPlanPage({
       primaryAction={
         foundation
           ? {
-              label: "Salvar e continuar",
+              label:
+                foundation.plan.status === "APPROVED"
+                  ? "Plano concluído"
+                  : "Concluir Plano Alimentar",
               form: "clinical-form-meal-plan",
+              name: "mealPlanAction",
+              value: "complete",
+              disabled: foundation.plan.status === "APPROVED",
             }
           : undefined
       }

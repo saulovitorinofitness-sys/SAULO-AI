@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import { ClinicalCollectionFlow } from "@/components/clinical-collection/clinical-collection-flow";
 import type { ClinicalCollectionStepKey } from "@/features/clinical-collection";
@@ -47,13 +47,20 @@ export default async function ClinicalCollectionPage({
 
   if (!result) notFound();
   const { collection } = result;
+  const resumeIsCollectionStep =
+    result.resumeStep.id in clinicalCollectionStepByFlowStep;
+
+  if (!requestedStep && !resumeIsCollectionStep) {
+    redirect(result.resumeStep.href);
+  }
+
   const resumedCollectionStep =
-    result.resumeStep.id in clinicalCollectionStepByFlowStep
+    resumeIsCollectionStep
       ? clinicalCollectionStepByFlowStep[
           result.resumeStep
             .id as keyof typeof clinicalCollectionStepByFlowStep
         ]
-      : "SUMMARY";
+      : "ANTHROPOMETRY";
   const initialStep = requestedStep ?? resumedCollectionStep;
 
   return (

@@ -1,3 +1,7 @@
+"use client";
+
+import { useEffect, useRef } from "react";
+
 import { CheckIcon } from "@/components/ui/icons";
 import {
   getNutritionClinicalFlowStepAccess,
@@ -7,26 +11,79 @@ import {
 
 export function ClinicalFlowStepper({
   activeStep,
+  allowMealPlanAccess = false,
   flow,
   onSelect,
 }: {
   activeStep: NutritionClinicalFlowStepId;
+  allowMealPlanAccess?: boolean;
   flow: readonly NutritionClinicalFlowStep[];
   onSelect: (step: NutritionClinicalFlowStepId) => void;
 }) {
+  const listRef = useRef<HTMLOListElement>(null);
+  const activeStepRef = useRef<HTMLLIElement>(null);
+
+  useEffect(() => {
+    const list = listRef.current;
+    const active = activeStepRef.current;
+    if (!list || !active) return;
+
+    const activeTop = active.offsetTop;
+    const activeBottom = activeTop + active.offsetHeight;
+    const visibleTop = list.scrollTop;
+    const visibleBottom = visibleTop + list.clientHeight;
+    if (activeTop < visibleTop) {
+      list.scrollTo({ top: activeTop, behavior: "auto" });
+    } else if (activeBottom > visibleBottom) {
+      list.scrollTo({
+        top: activeBottom - list.clientHeight,
+        behavior: "auto",
+      });
+    }
+
+    const activeLeft = active.offsetLeft;
+    const activeRight = activeLeft + active.offsetWidth;
+    const visibleLeft = list.scrollLeft;
+    const visibleRight = visibleLeft + list.clientWidth;
+    if (activeLeft < visibleLeft) {
+      list.scrollTo({ left: activeLeft, behavior: "auto" });
+    } else if (activeRight > visibleRight) {
+      list.scrollTo({
+        left: activeRight - list.clientWidth,
+        behavior: "auto",
+      });
+    }
+  }, [activeStep]);
+
   return (
     <nav
       aria-label="Fluxo oficial da Consulta Nutricional"
-      className="rounded-2xl border border-[#dce5e0] bg-white p-2 shadow-[0_8px_24px_rgb(20_55_44/0.03)] lg:p-3"
+      className="rounded-2xl border border-[#dce5e0] bg-white p-2 shadow-[0_8px_24px_rgb(20_55_44/0.03)] lg:flex lg:max-h-[calc(100dvh-10.5rem)] lg:flex-col lg:overflow-hidden lg:p-3"
     >
-      <ol className="no-scrollbar flex max-w-full gap-1 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible lg:pb-0">
+      <ol
+        className="flex max-w-full gap-1 overflow-x-auto overscroll-contain pb-1 [scrollbar-color:#dbe5df_transparent] [scrollbar-width:thin] lg:min-h-0 lg:flex-1 lg:flex-col lg:overflow-x-hidden lg:overflow-y-auto lg:pb-0 lg:pr-1"
+        ref={listRef}
+        tabIndex={0}
+      >
         {flow.map((step) => {
           const active = step.id === activeStep;
-          const access = getNutritionClinicalFlowStepAccess(
+          const resolvedAccess = getNutritionClinicalFlowStepAccess(
             flow,
             step.id,
             activeStep,
           );
+          const access =
+            allowMealPlanAccess && step.id === "MEAL_PLAN"
+              ? {
+                  ...resolvedAccess,
+                  canOpen: true,
+                  status:
+                    resolvedAccess.status === "COMPLETED"
+                      ? "COMPLETED"
+                      : "NOT_STARTED",
+                  blockedReason: undefined,
+                } as const
+              : resolvedAccess;
           const completed = access.status === "COMPLETED";
           const blockedReasonId = access.blockedReason
             ? `clinical-flow-blocked-${step.id.toLowerCase()}`
@@ -36,6 +93,7 @@ export function ClinicalFlowStepper({
             <li
               className="group min-w-[10rem] lg:min-w-0"
               key={step.id}
+              ref={active ? activeStepRef : undefined}
               title={access.blockedReason}
             >
               <button
@@ -76,8 +134,8 @@ export function ClinicalFlowStepper({
                       ? "Concluída"
                       : access.status === "IN_PROGRESS"
                         ? "Em andamento"
-                        : access.status === "AVAILABLE"
-                          ? "Disponível"
+                        : access.status === "NOT_STARTED"
+                          ? "Não iniciada"
                           : "Bloqueada"}
                   </span>
                 </span>

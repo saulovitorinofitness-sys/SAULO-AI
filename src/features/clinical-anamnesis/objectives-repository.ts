@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+
 import { prisma } from "@/lib/database/prisma";
 
 import type {
@@ -6,6 +8,8 @@ import type {
   ClinicalAnamnesisView,
 } from "./contracts";
 import { emptyAnamnesisData, objectiveOptions } from "./mock-data";
+
+const ENTRY_TYPE = "CLINICAL_ANAMNESIS";
 
 const objectiveByTitle = new Map<string, AnamnesisObjective>(
   objectiveOptions.flatMap(([value, title]) => [
@@ -28,6 +32,14 @@ function blankData(): ClinicalAnamnesisData {
   };
 }
 
+function isStoredData(value: unknown): value is ClinicalAnamnesisData {
+  return Boolean(value && typeof value === "object" && "chiefComplaint" in value);
+}
+
+function jsonPayload(data: ClinicalAnamnesisData) {
+  return JSON.parse(JSON.stringify(data));
+}
+
 export const clinicalAnamnesisObjectivesRepository = {
   async getView(
     patientId: string,
@@ -47,11 +59,28 @@ export const clinicalAnamnesisObjectivesRepository = {
             clinicalCode: true,
           },
         },
+        entries: {
+          where: {
+            type: ENTRY_TYPE,
+            deletedAt: null,
+            status: { in: ["DRAFT", "FINALIZED"] },
+          },
+          orderBy: [{ revision: "desc" }, { createdAt: "desc" }],
+          select: {
+            id: true,
+            revision: true,
+            payload: true,
+            occurredAt: true,
+            updatedAt: true,
+            author: { select: { id: true, fullName: true } },
+          },
+        },
         attendances: {
           where: { status: { in: ["DRAFT", "IN_PROGRESS"] }, deletedAt: null },
           orderBy: { createdAt: "desc" },
           take: 1,
           select: {
+            id: true,
             professional: { select: { id: true, fullName: true } },
             startedAt: true,
             updatedAt: true,
@@ -74,49 +103,65 @@ export const clinicalAnamnesisObjectivesRepository = {
         },
       },
     });
+
     const attendance = masterRecord?.attendances[0];
     if (!masterRecord || !attendance) return null;
 
-    const objectives =
-      attendance.clinicalReasoningSession?.objectives ?? [];
+    const latestEntry = masterRecord.entries[0];
+    const previousEntries = masterRecord.entries.slice(1);
+    const storedData = isStoredData(latestEntry?.payload)
+      ? latestEntry.payload
+      : null;
+    const objectives = attendance.clinicalReasoningSession?.objectives ?? [];
     const primary = objectives.find((item) => item.type === "PRIMARY");
-    const primaryValue = primary
-      ? objectiveValue(primary.title)
-      : undefined;
+    const primaryValue = primary ? objectiveValue(primary.title) : undefined;
     const secondaryValues = objectives
       .filter((item) => item.type === "SECONDARY")
       .map((item) => objectiveValue(item.title))
       .filter((item): item is AnamnesisObjective => item !== undefined);
-    const latest = [...objectives].sort(
-      (left, right) =>
-        right.updatedAt.getTime() - left.updatedAt.getTime(),
-    )[0];
-    const auditUser = latest?.updatedBy ?? attendance.professional;
-    const updatedAt =
-      latest?.updatedAt ?? attendance.updatedAt ?? attendance.startedAt;
-    const data = blankData();
+
+    const data: ClinicalAnamnesisData = storedData ?? {
+      ...blankData(),
+      primaryObjective: primaryValue ?? "",
+      secondaryObjectives: secondaryValues,
+    };
+    const auditUser = latestEntry?.author ?? attendance.professional;
+    const updatedAt = latestEntry?.updatedAt ?? attendance.updatedAt ?? attendance.startedAt;
+    const version = latestEntry?.revision ?? attendance.clinicalReasoningSession?.version ?? 1;
 
     return {
       patientId,
       masterRecordId: masterRecord.id,
+      attendanceId: attendance.id,
       patientName: masterRecord.patient.fullName,
       patientCode: masterRecord.patient.clinicalCode,
       scenario,
-      status: primaryValue ? "COMPLETED" : "DRAFT",
-      version: attendance.clinicalReasoningSession?.version ?? 1,
-      data: {
-        ...data,
-        primaryObjective: primaryValue ?? "",
-        secondaryObjectives: secondaryValues,
-      },
+      status: latestEntry ? "COMPLETED" : data.primaryObjective ? "COMPLETED" : "DRAFT",
+      version,
+      data,
       audit: {
         professionalUserId: auditUser.id,
         professionalName: auditUser.fullName,
         updatedAt: updatedAt.toISOString(),
-        version: attendance.clinicalReasoningSession?.version ?? 1,
+        version,
       },
-      history: [],
-      timeline: [],
+      history: previousEntries
+        .filter((entry) => isStoredData(entry.payload))
+        .map((entry) => ({
+          id: entry.id,
+          version: entry.revision,
+          changedAt: entry.updatedAt.toISOString(),
+          changedBy: entry.author.fullName,
+          summary: `Versão ${entry.revision} da anamnese clínica.`,
+          data: entry.payload as unknown as ClinicalAnamnesisData,
+        })),
+      timeline: masterRecord.entries.map((entry) => ({
+        id: `timeline-${entry.id}`,
+        occurredAt: entry.occurredAt.toISOString(),
+        actorName: entry.author.fullName,
+        title: entry.revision === 1 ? "Anamnese criada" : "Anamnese atualizada",
+        detail: `Versão ${entry.revision} registrada no Prontuário Mestre.`,
+      })),
       canRead: true,
       canEdit: true,
       canViewNutrition: true,
@@ -125,8 +170,7 @@ export const clinicalAnamnesisObjectivesRepository = {
 
   async save(input: {
     patientId: string;
-    primaryObjective: AnamnesisObjective;
-    secondaryObjectives: readonly AnamnesisObjective[];
+    data: ClinicalAnamnesisData;
     professionalUserId: string;
   }) {
     await prisma.$transaction(async (transaction) => {
@@ -139,6 +183,12 @@ export const clinicalAnamnesisObjectivesRepository = {
           },
           select: {
             id: true,
+            entries: {
+              where: { type: ENTRY_TYPE, deletedAt: null },
+              orderBy: [{ revision: "desc" }, { createdAt: "desc" }],
+              take: 1,
+              select: { id: true, aggregateId: true, revision: true },
+            },
             attendances: {
               where: {
                 status: { in: ["DRAFT", "IN_PROGRESS"] },
@@ -159,10 +209,39 @@ export const clinicalAnamnesisObjectivesRepository = {
           select: { id: true },
         }),
       ]);
+
       const attendance = masterRecord?.attendances[0];
       if (!masterRecord || !attendance || !module || !professional) {
         throw new Error("OBJECTIVE_CONTEXT_NOT_FOUND");
       }
+
+      const previousEntry = masterRecord.entries[0];
+      if (previousEntry) {
+        await transaction.masterRecordEntry.update({
+          where: { id: previousEntry.id },
+          data: {
+            status: "SUPERSEDED",
+            updatedByUserId: professional.id,
+          },
+        });
+      }
+
+      await transaction.masterRecordEntry.create({
+        data: {
+          masterRecordId: masterRecord.id,
+          moduleId: module.id,
+          authorUserId: professional.id,
+          updatedByUserId: professional.id,
+          attendanceId: attendance.id,
+          aggregateId: previousEntry?.aggregateId ?? randomUUID(),
+          previousEntryId: previousEntry?.id,
+          type: ENTRY_TYPE,
+          status: "FINALIZED",
+          occurredAt: new Date(),
+          revision: (previousEntry?.revision ?? 0) + 1,
+          payload: jsonPayload(input.data),
+        },
+      });
 
       const session = await transaction.clinicalReasoningSession.upsert({
         where: { attendanceId: attendance.id },
@@ -181,27 +260,30 @@ export const clinicalAnamnesisObjectivesRepository = {
         },
         select: { id: true },
       });
+
       const uniqueSecondary = [
         ...new Set(
-          input.secondaryObjectives.filter(
-            (objective) => objective !== input.primaryObjective,
+          input.data.secondaryObjectives.filter(
+            (objective) => objective !== input.data.primaryObjective,
           ),
         ),
       ];
-      const desired = [
-        {
-          type: "PRIMARY" as const,
-          sequence: 0,
-          value: input.primaryObjective,
-          deduplicationKey: "anamnesis:objective:primary",
-        },
-        ...uniqueSecondary.map((value, index) => ({
-          type: "SECONDARY" as const,
-          sequence: index + 1,
-          value,
-          deduplicationKey: `anamnesis:objective:secondary:${index + 1}`,
-        })),
-      ];
+      const desired = input.data.primaryObjective
+        ? [
+            {
+              type: "PRIMARY" as const,
+              sequence: 0,
+              value: input.data.primaryObjective,
+              deduplicationKey: "anamnesis:objective:primary",
+            },
+            ...uniqueSecondary.map((value, index) => ({
+              type: "SECONDARY" as const,
+              sequence: index + 1,
+              value,
+              deduplicationKey: `anamnesis:objective:secondary:${index + 1}`,
+            })),
+          ]
+        : [];
 
       await transaction.clinicalObjective.updateMany({
         where: { sessionId: session.id, status: { not: "CANCELLED" } },
@@ -211,6 +293,7 @@ export const clinicalAnamnesisObjectivesRepository = {
           version: { increment: 1 },
         },
       });
+
       for (const objective of desired) {
         await transaction.clinicalObjective.upsert({
           where: {
@@ -241,6 +324,17 @@ export const clinicalAnamnesisObjectivesRepository = {
           },
         });
       }
+
+      await transaction.masterRecordContinuity.update({
+        where: { masterRecordId: masterRecord.id },
+        data: {
+          lastActivityAt: new Date(),
+          nextSuggestedStepKey: "ANTHROPOMETRY",
+          suggestionSource: "WORKFLOW",
+          responsibleUserId: professional.id,
+          updatedByUserId: professional.id,
+        },
+      });
     });
   },
 };

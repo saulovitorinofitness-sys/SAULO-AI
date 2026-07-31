@@ -21,24 +21,25 @@ import {
   CALORIE_ADJUSTMENT_PERCENTAGES,
   NUTRITION_OBJECTIVES,
   canApproveNutritionStrategy,
+  nutritionStrategyApprovalIssues,
   nutritionStrategyDecisionService,
   resolveNutritionObjective,
   type CalorieAdjustmentPercentage,
   type MacronutrientDraftInput,
   type NutritionDecisionObjective,
   type NutritionStrategyDraft,
+  type NutritionStrategyMealAllocation,
   type NutritionStrategyRecordView,
   type NutritionStrategySupplement,
 } from "@/features/nutrition-strategy";
 import type { NutritionClinicalPanelView } from "@/features/nutrition-strategy/clinical-panel-contracts";
 import {
+  ACTIVITY_LEVEL_FACTORS,
   ENERGY_PROTOCOLS,
-  calculateCarbohydratesByDifference,
   calculateMacronutrient,
   validateMacroDistribution,
   type EnergyProtocol,
   type MacronutrientCalculation,
-  type MacronutrientInputMode,
 } from "@/lib/nutrition";
 
 const NOT_INFORMED = "NÃO INFORMADO";
@@ -56,6 +57,22 @@ const nutritionMethods = {
   LOW_CARB: "Low carb",
   CARB_CYCLING: "Ciclagem de carboidratos",
 } as const;
+const activityFactorLabels: Readonly<Record<number, string>> = {
+  1.2: "Sedentário · 1,20",
+  1.375: "Levemente ativo · 1,375",
+  1.55: "Moderadamente ativo · 1,55",
+  1.725: "Muito ativo · 1,725",
+  1.9: "Extremamente ativo · 1,90",
+};
+const activityFactors: readonly number[] = Object.values(
+  ACTIVITY_LEVEL_FACTORS,
+) as number[];
+
+function hydrationCoefficient(ageYears: number) {
+  if (ageYears > 65) return 25;
+  if (ageYears > 55) return 30;
+  return 35;
+}
 
 function positive(value: string) {
   const number = Number(value);
@@ -70,12 +87,10 @@ function formatted(value: number | undefined, digits = 1) {
     : NOT_INFORMED;
 }
 
-function formattedFinite(value: number | undefined, digits = 1) {
-  return value !== undefined && Number.isFinite(value)
-    ? new Intl.NumberFormat("pt-BR", {
-        maximumFractionDigits: digits,
-      }).format(value)
-    : NOT_INFORMED;
+function formattedPercentage(value: number) {
+  return new Intl.NumberFormat("pt-BR", {
+    maximumFractionDigits: 2,
+  }).format(value);
 }
 
 function energyValue(value: number | undefined) {
@@ -84,15 +99,9 @@ function energyValue(value: number | undefined) {
     : NOT_INFORMED;
 }
 
-function calorieValue(value: number | undefined) {
-  return value !== undefined && Number.isFinite(value) && value > 0
-    ? `${numberFormatter.format(value)} kcal`
-    : NOT_INFORMED;
-}
-
 function macroSummary(value: MacronutrientCalculation | undefined) {
   return value
-    ? `${formatted(value.grams)} g · ${formatted(value.percentage)}%`
+    ? `${formatted(value.grams)} g · ${formatted(value.gramsPerKg, 2)} g/kg · ${formatted(value.percentage)}%`
     : NOT_INFORMED;
 }
 
@@ -105,44 +114,60 @@ function equalMealDistribution(mealCount: number | undefined) {
   if (!mealCount || mealCount < 1) return [];
   const base = Math.floor((100 / mealCount) * 100) / 100;
 
+  const standardMeals = [
+    ["Desjejum", "07:00"],
+    ["Lanche da manhã", "10:00"],
+    ["Almoço", "12:30"],
+    ["Lanche da tarde", "16:00"],
+    ["Jantar", "19:30"],
+    ["Ceia", "22:00"],
+  ] as const;
+
   return Array.from({ length: mealCount }, (_, index) => {
     const percentage =
       index === mealCount - 1
         ? Number((100 - base * (mealCount - 1)).toFixed(2))
         : base;
+    const [name, time] =
+      standardMeals[index] ?? [`Refeição ${index + 1}`, ""];
     return {
       mealNumber: index + 1,
-      energyPercentage: percentage,
-      proteinPercentage: percentage,
-      carbohydratesPercentage: percentage,
-      fatsPercentage: percentage,
+      name,
+      time,
+      vetPercentage: percentage,
+      plannedCaloriesKcal: 0,
     };
   });
 }
 
 function SummaryItem({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3">
-      <dt className="text-[9px] font-black uppercase tracking-[0.12em] text-slate-500">
+    <div className="border-b border-slate-200 py-3 last:border-b-0 sm:border-b-0 sm:border-r sm:px-4 sm:first:pl-0 sm:last:border-r-0">
+      <dt className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">
         {label}
       </dt>
-      <dd className={`mt-1 text-sm font-black ${value === NOT_INFORMED ? "text-slate-400" : "text-slate-900"}`}>
+      <dd className={`mt-1 text-sm font-black leading-5 ${value === NOT_INFORMED ? "text-slate-400" : "text-slate-900"}`}>
         {value}
       </dd>
     </div>
   );
 }
 
-function macroFieldValue(
+function editableMacroInput(
   input: MacronutrientDraftInput,
-  mode: MacronutrientInputMode,
   calculated: MacronutrientCalculation | undefined,
+  fallbackMode: "GRAMS_PER_KG" | "PERCENTAGE",
 ) {
-  if (input.mode === mode && input.value !== undefined) return input.value;
-  if (!calculated) return "";
-  if (mode === "GRAMS_PER_KG") return calculated.gramsPerKg?.toFixed(2) ?? "";
-  if (mode === "PERCENTAGE") return calculated.percentage.toFixed(2);
-  return calculated.grams.toFixed(1);
+  if (input.mode === "GRAMS_PER_KG" || input.mode === "PERCENTAGE") {
+    return input;
+  }
+  return {
+    mode: fallbackMode,
+    value:
+      fallbackMode === "GRAMS_PER_KG"
+        ? calculated?.gramsPerKg
+        : calculated?.percentage,
+  } satisfies MacronutrientDraftInput;
 }
 
 function MacroEditor({
@@ -158,45 +183,67 @@ function MacroEditor({
   label: string;
   onChange: (value: MacronutrientDraftInput) => void;
 }) {
-  const fields = [
-    ["GRAMS_PER_KG", "g/kg"],
-    ["PERCENTAGE", "Percentual (%)"],
-    ["GRAMS", "Gramas"],
-  ] as const;
-
   return (
-    <section className="rounded-xl border border-[var(--line)] bg-[var(--surface-elevated)] p-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-sm font-black text-[var(--text-primary)]">{label}</h3>
-        <span className="text-xs font-bold text-[var(--muted)]">
-          {calculated ? `${formatted(calculated.kcal)} kcal` : NOT_INFORMED}
-        </span>
+    <div className="grid gap-3 border-b border-[var(--line)] py-4 last:border-b-0 md:grid-cols-[minmax(9rem,1fr)_minmax(9rem,0.8fr)_minmax(8rem,0.7fr)_minmax(9rem,0.8fr)_minmax(9rem,0.8fr)] md:items-end">
+      <div className="self-center">
+        <h3 className="text-sm font-black uppercase tracking-wide text-[var(--text-primary)]">
+          {label}
+        </h3>
       </div>
-      <div className="mt-3 grid gap-3 sm:grid-cols-3">
-        {fields.map(([mode, fieldLabel]) => (
-          <FormField
-            id={`macro-${label}-${mode}`}
-            key={mode}
-            label={fieldLabel}
-          >
-            <NumberInput
-              disabled={disabled}
-              id={`macro-${label}-${mode}`}
-              min={0}
-              onChange={(event) =>
-                onChange({ mode, value: positive(event.target.value) })
-              }
-              value={macroFieldValue(input, mode, calculated)}
-            />
-          </FormField>
-        ))}
-      </div>
-      <p className="mt-3 text-xs font-bold text-[var(--text-secondary)]">
+      <FormField id={`macro-${label}-mode`} label="Modo">
+        <Select
+          disabled={disabled}
+          id={`macro-${label}-mode`}
+          onChange={(event) => {
+            const mode = event.target.value as
+              | "GRAMS_PER_KG"
+              | "PERCENTAGE";
+            onChange({
+              mode,
+              value:
+                mode === "GRAMS_PER_KG"
+                  ? calculated?.gramsPerKg
+                  : calculated?.percentage,
+            });
+          }}
+          value={input.mode}
+        >
+          <option value="PERCENTAGE">Percentual (%)</option>
+          <option value="GRAMS_PER_KG">g/kg</option>
+        </Select>
+      </FormField>
+      <FormField
+        id={`macro-${label}-value`}
+        label={input.mode === "GRAMS_PER_KG" ? "g/kg" : "Percentual (%)"}
+      >
+        <NumberInput
+          disabled={disabled}
+          id={`macro-${label}-value`}
+          min={0}
+          onChange={(event) =>
+            onChange({
+              mode: input.mode,
+              value: positive(event.target.value),
+            })
+          }
+          step={input.mode === "GRAMS_PER_KG" ? "0.01" : "0.1"}
+          value={input.value ?? ""}
+        />
+      </FormField>
+      <output
+        aria-live="polite"
+        className="rounded-lg bg-[var(--surface)] px-3 py-2 text-sm font-black text-[var(--text-primary)]"
+      >
         {calculated
-          ? `${formatted(calculated.gramsPerKg, 2)} g/kg · ${formatted(calculated.grams)} g · ${formatted(calculated.kcal)} kcal · ${formatted(calculated.percentage)}%`
-          : "Informe um valor positivo para calcular."}
-      </p>
-    </section>
+          ? `${formatted(calculated.grams)} g calculados`
+          : "Gramas calculadas automaticamente"}
+      </output>
+      <output className="rounded-lg bg-[var(--surface)] px-3 py-2 text-sm font-black text-[var(--text-primary)]">
+        {calculated
+          ? `${formatted(calculated.kcal)} kcal`
+          : "kcal calculadas automaticamente"}
+      </output>
+    </div>
   );
 }
 
@@ -213,10 +260,6 @@ export function NutritionStrategyDecisionEngine({
     initialStrategy?.objective ??
       resolveNutritionObjective(view.patient.primaryObjective),
   );
-  const [secondaryObjectives, setSecondaryObjectives] = useState(
-    initialStrategy?.secondaryObjectives ??
-      view.patient.secondaryObjectives,
-  );
   const [method, setMethod] = useState<
     keyof typeof nutritionMethods
   >(initialStrategy?.method ?? "STANDARD");
@@ -226,31 +269,49 @@ export function NutritionStrategyDecisionEngine({
   const [adjustment, setAdjustment] = useState<CalorieAdjustmentPercentage>(
     initialStrategy?.calorieAdjustmentPercentage ?? 0,
   );
+  const [activityFactor, setActivityFactor] = useState<number | undefined>(
+    initialStrategy?.activityFactor ?? view.energyDecision?.activityFactor,
+  );
   const [manualCalories, setManualCalories] = useState<number | undefined>(
     initialStrategy?.manualFinalCaloriesKcal,
   );
-  const [totalEnergyExpenditure, setTotalEnergyExpenditure] =
-    useState<number | undefined>(
-      initialStrategy?.totalEnergyExpenditureKcal ??
-        view.bodyComposition.totalEnergyExpenditureKcal,
-    );
   const [protein, setProtein] = useState<MacronutrientDraftInput>(
-    initialStrategy?.protein ?? { mode: "GRAMS_PER_KG" },
+    initialStrategy
+      ? editableMacroInput(
+          initialStrategy.protein,
+          initialStrategy.calculatedMacros.protein,
+          "PERCENTAGE",
+        )
+      : { mode: "PERCENTAGE" },
   );
   const [fats, setFats] = useState<MacronutrientDraftInput>(
-    initialStrategy?.fats ?? { mode: "PERCENTAGE" },
+    initialStrategy
+      ? editableMacroInput(
+          initialStrategy.fats,
+          initialStrategy.calculatedMacros.fats,
+          "PERCENTAGE",
+        )
+      : { mode: "PERCENTAGE" },
   );
   const [carbohydrates, setCarbohydrates] = useState<MacronutrientDraftInput>(
-    initialStrategy?.carbohydrates ?? { mode: "GRAMS" },
+    initialStrategy
+      ? editableMacroInput(
+          initialStrategy.carbohydrates,
+          initialStrategy.calculatedMacros.carbohydrates,
+          "PERCENTAGE",
+        )
+      : { mode: "PERCENTAGE" },
   );
   const [mealCount, setMealCount] = useState<number | undefined>(
     initialStrategy?.mealCount,
   );
+  const [mealDistribution, setMealDistribution] = useState(
+    initialStrategy?.mealDistribution.length
+      ? initialStrategy.mealDistribution.map((meal) => ({ ...meal }))
+      : equalMealDistribution(initialStrategy?.mealCount),
+  );
   const [fiberGrams, setFiberGrams] = useState<number | undefined>(
     initialStrategy?.fiberGrams,
-  );
-  const [waterMl, setWaterMl] = useState<number | undefined>(
-    initialStrategy?.waterMl,
   );
   const [supplementation, setSupplementation] = useState<
     readonly NutritionStrategySupplement[]
@@ -274,8 +335,8 @@ export function NutritionStrategyDecisionEngine({
         ? nutritionStrategyDecisionService.calculate({
             energy: {
               ...view.energyDecision,
-              recordedTotalEnergyExpenditureKcal:
-                totalEnergyExpenditure,
+              activityFactor,
+              recordedTotalEnergyExpenditureKcal: undefined,
             },
             objective,
             protocol,
@@ -284,16 +345,26 @@ export function NutritionStrategyDecisionEngine({
           })
         : undefined,
     [
+      activityFactor,
       adjustment,
       manualCalories,
       objective,
       protocol,
-      totalEnergyExpenditure,
       view.energyDecision,
     ],
   );
   const weightKg = view.nutritionalStatus.weightKg;
-  const finalCalories = decision?.finalCaloriesKcal;
+  const waterCoefficientMlPerKg = hydrationCoefficient(view.patient.age);
+  const waterMl = weightKg
+    ? Math.round(weightKg * waterCoefficientMlPerKg)
+    : undefined;
+  const totalEnergyExpenditure =
+    decision?.totalEnergyExpenditureKcal ??
+    initialStrategy?.totalEnergyExpenditureKcal;
+  const finalCalories =
+    manualCalories ??
+    decision?.finalCaloriesKcal ??
+    initialStrategy?.finalCaloriesKcal;
   const proteinCalculation = useMemo(
     () =>
       protein.value && finalCalories
@@ -309,24 +380,15 @@ export function NutritionStrategyDecisionEngine({
     [fats, finalCalories, weightKg],
   );
   const carbohydratesCalculation = useMemo(() => {
-    if (!finalCalories) return undefined;
-    if (carbohydrates.value) {
-      return calculateMacronutrient(
-        "carbohydrates",
-        carbohydrates.mode,
-        carbohydrates.value,
-        finalCalories,
-        weightKg,
-      );
-    }
-    if (!proteinCalculation || !fatsCalculation) return undefined;
-    return calculateCarbohydratesByDifference(
+    if (!finalCalories || !carbohydrates.value) return undefined;
+    return calculateMacronutrient(
+      "carbohydrates",
+      carbohydrates.mode,
+      carbohydrates.value,
       finalCalories,
-      proteinCalculation.kcal,
-      fatsCalculation.kcal,
       weightKg,
     );
-  }, [carbohydrates, fatsCalculation, finalCalories, proteinCalculation, weightKg]);
+  }, [carbohydrates, finalCalories, weightKg]);
   const macroValidation = useMemo(
     () =>
       finalCalories
@@ -338,22 +400,38 @@ export function NutritionStrategyDecisionEngine({
         : undefined,
     [carbohydratesCalculation, fatsCalculation, finalCalories, proteinCalculation],
   );
-  const mealDistribution = useMemo(
-    () => equalMealDistribution(mealCount),
-    [mealCount],
+  const calculatedMealDistribution = useMemo<
+    readonly NutritionStrategyMealAllocation[]
+  >(
+    () =>
+      mealDistribution.map((meal) => ({
+        ...meal,
+        plannedCaloriesKcal: finalCalories
+          ? Math.round(
+              finalCalories * (meal.vetPercentage / 100) * 10,
+            ) / 10
+          : 0,
+      })),
+    [finalCalories, mealDistribution],
   );
+  const distributedTotal = mealDistribution.reduce(
+    (total, meal) => total + meal.vetPercentage,
+    0,
+  );
+  const distributionDifference = distributedTotal - 100;
+  const mealDistributionValid =
+    Math.abs(distributionDifference) < 0.01;
   const draft: NutritionStrategyDraft = useMemo(
     () => ({
       objective,
-      secondaryObjectives,
       method,
       protocol,
       calorieAdjustmentPercentage: adjustment,
+      activityFactor,
       manualFinalCaloriesKcal: manualCalories,
       finalCaloriesKcal: finalCalories,
       basalMetabolicRateKcal: decision?.basalMetabolicRateKcal,
       totalEnergyExpenditureKcal:
-        decision?.totalEnergyExpenditureKcal ??
         totalEnergyExpenditure,
       protein,
       carbohydrates,
@@ -367,12 +445,13 @@ export function NutritionStrategyDecisionEngine({
       fiberGrams,
       waterMl,
       mealCount,
-      mealDistribution,
+      mealDistribution: calculatedMealDistribution,
       supplementation,
       clinicalObservations,
       evaluationEntryId: view.evaluationEntryId,
     }),
     [
+      activityFactor,
       adjustment,
       carbohydrates,
       carbohydratesCalculation,
@@ -385,13 +464,12 @@ export function NutritionStrategyDecisionEngine({
       macroValidation,
       manualCalories,
       mealCount,
-      mealDistribution,
+      calculatedMealDistribution,
       method,
       objective,
       protein,
       proteinCalculation,
       protocol,
-      secondaryObjectives,
       supplementation,
       totalEnergyExpenditure,
       view.evaluationEntryId,
@@ -399,6 +477,7 @@ export function NutritionStrategyDecisionEngine({
     ],
   );
   const canApprove = canApproveNutritionStrategy(draft);
+  const approvalIssues = nutritionStrategyApprovalIssues(draft);
   const endpoint = `/api/patients/${view.patientId}/attendances/${view.attendanceId}/nutrition-strategy`;
 
   async function send(method: "PUT" | "POST", body: unknown) {
@@ -428,7 +507,9 @@ export function NutritionStrategyDecisionEngine({
         ? "Estratégia aprovada e bloqueada para alterações acidentais."
         : "Estratégia salva no Prontuário Mestre.",
     );
-    router.refresh();
+    if (result.record.status === "APPROVED") {
+      router.refresh();
+    }
   }
 
   return (
@@ -436,23 +517,21 @@ export function NutritionStrategyDecisionEngine({
       <Card aria-live="polite" className="p-5" variant="elevated">
         <CardHeader>
           <CardTitle>Estratégia Atual</CardTitle>
-          <CardDescription>Resumo atualizado automaticamente e persistido no Prontuário Mestre.</CardDescription>
+          <CardDescription>Decisões clínicas essenciais da estratégia em elaboração.</CardDescription>
         </CardHeader>
         <CardContent>
-          <dl className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+          <dl className="grid border-y border-slate-200 sm:grid-cols-2 lg:grid-cols-4">
             <SummaryItem label="Objetivo" value={decision?.objectiveLabel ?? NOT_INFORMED} />
             <SummaryItem label="Protocolo" value={decision?.protocolLabel ?? ENERGY_PROTOCOLS[protocol]} />
-            <SummaryItem label="TMB" value={energyValue(decision?.basalMetabolicRateKcal)} />
             <SummaryItem label="GET" value={energyValue(draft.totalEnergyExpenditureKcal)} />
-            <SummaryItem label="Déficit/Superávit" value={objective ? adjustmentLabel(adjustment) : NOT_INFORMED} />
-            <SummaryItem label="Calorias finais" value={energyValue(finalCalories)} />
-            <SummaryItem label="Proteínas" value={macroSummary(proteinCalculation)} />
-            <SummaryItem label="Carboidratos" value={macroSummary(carbohydratesCalculation)} />
-            <SummaryItem label="Lipídios" value={macroSummary(fatsCalculation)} />
+            <SummaryItem
+              label="VET (Valor Energético Total)"
+              value={energyValue(finalCalories)}
+            />
+            <SummaryItem label="Proteína" value={macroSummary(proteinCalculation)} />
+            <SummaryItem label="Carboidrato" value={macroSummary(carbohydratesCalculation)} />
+            <SummaryItem label="Lipídio" value={macroSummary(fatsCalculation)} />
             <SummaryItem label="Número de refeições" value={mealCount ? String(mealCount) : NOT_INFORMED} />
-            <SummaryItem label="Fibras" value={fiberGrams ? `${formatted(fiberGrams)} g` : NOT_INFORMED} />
-            <SummaryItem label="Água" value={waterMl ? `${formatted(waterMl, 0)} ml` : NOT_INFORMED} />
-            <SummaryItem label="Status" value={approved ? "Aprovada" : record ? "Rascunho salvo" : "Não iniciada"} />
           </dl>
         </CardContent>
       </Card>
@@ -475,9 +554,26 @@ export function NutritionStrategyDecisionEngine({
                 {Object.entries(nutritionMethods).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
               </Select>
             </FormField>
-            <FormField id="energy-protocol" label="Protocolo energético" required>
+            <FormField id="energy-protocol" label="Protocolo utilizado" required>
               <Select disabled={approved} id="energy-protocol" onChange={(event) => setProtocol(event.target.value as EnergyProtocol)} value={protocol}>
                 {energyProtocols.map((value) => <option disabled={!availableProtocols.includes(value)} key={value} value={value}>{ENERGY_PROTOCOLS[value]}{availableProtocols.includes(value) ? "" : " · estrutura preparada"}</option>)}
+              </Select>
+            </FormField>
+            <FormField id="activity-factor" label="Fator de atividade" required>
+              <Select
+                disabled={approved}
+                id="activity-factor"
+                onChange={(event) =>
+                  setActivityFactor(positive(event.target.value))
+                }
+                value={activityFactor ?? ""}
+              >
+                <option value="">Selecione</option>
+                {activityFactors.map((value) => (
+                  <option key={value} value={value}>
+                    {activityFactorLabels[value]}
+                  </option>
+                ))}
               </Select>
             </FormField>
             <FormField id="calorie-adjustment" label="Déficit / Superávit" required>
@@ -485,95 +581,247 @@ export function NutritionStrategyDecisionEngine({
                 {CALORIE_ADJUSTMENT_PERCENTAGES.map((value) => <option key={value} value={value}>{adjustmentLabel(value)}</option>)}
               </Select>
             </FormField>
-            <FormField id="strategy-get" label="GET" help="Gasto energético total registrado ou calculado." required>
-              <NumberInput disabled={approved} id="strategy-get" min={0} onChange={(event) => setTotalEnergyExpenditure(positive(event.target.value))} value={totalEnergyExpenditure ?? ""} />
+            <div className="rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3 py-2">
+              <p className="text-xs font-bold text-[var(--muted)]">GET calculado</p>
+              <output className="mt-1 block text-sm font-black text-[var(--text-primary)]">
+                {energyValue(totalEnergyExpenditure)}
+              </output>
+              <p className="mt-1 text-[11px] text-[var(--muted)]">
+                Atualizado automaticamente pelo protocolo e fator de atividade.
+              </p>
+            </div>
+            <FormField id="manual-calories" label="VET manual (opcional)" help="Quando informado, substitui imediatamente o VET calculado pelo ajuste energético.">
+              <NumberInput
+                disabled={approved}
+                id="manual-calories"
+                min={0}
+                onChange={(event) => {
+                  const nextValue = event.currentTarget.valueAsNumber;
+                  setManualCalories(
+                    Number.isFinite(nextValue) && nextValue > 0
+                      ? nextValue
+                      : undefined,
+                  );
+                }}
+                value={manualCalories ?? ""}
+              />
             </FormField>
-            <FormField id="manual-calories" label="Calorias finais manuais" help="Valor profissional opcional; quando informado, substitui a sugestão automática.">
-              <NumberInput disabled={approved} id="manual-calories" min={0} onChange={(event) => setManualCalories(positive(event.target.value))} value={manualCalories ?? ""} />
-            </FormField>
+            <div className="rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3 py-2">
+              <p className="text-xs font-bold text-[var(--muted)]">VET utilizado</p>
+              <output className="mt-1 block text-sm font-black text-[var(--text-primary)]">
+                {energyValue(finalCalories)}
+              </output>
+              <p className="mt-1 text-[11px] text-[var(--muted)]">
+                {manualCalories
+                  ? "Fonte manual. Macronutrientes e refeições recalculados automaticamente."
+                  : "Fonte automática: GET com o déficit ou superávit selecionado."}
+              </p>
+            </div>
           </div>
 
-          <FormField id="secondary-objectives" label="Objetivos secundários" help="Separe os objetivos por ponto e vírgula.">
-            <Input disabled={approved} id="secondary-objectives" onChange={(event) => setSecondaryObjectives(event.target.value.split(";").map((item) => item.trim()).filter(Boolean))} value={secondaryObjectives.join("; ")} />
-          </FormField>
-
-          <div className="grid gap-4">
-            <MacroEditor calculated={proteinCalculation} disabled={approved || !finalCalories} input={protein} label="Proteínas" onChange={setProtein} />
-            <MacroEditor calculated={fatsCalculation} disabled={approved || !finalCalories} input={fats} label="Lipídios" onChange={setFats} />
-            <MacroEditor calculated={carbohydratesCalculation} disabled={approved || !finalCalories} input={carbohydrates} label="Carboidratos" onChange={setCarbohydrates} />
-            {carbohydrates.value && !approved ? (
-              <div>
-                <Button onClick={() => setCarbohydrates({ mode: "GRAMS" })} size="small" type="button" variant="outline">
-                  Recalcular carboidratos por diferença
-                </Button>
-              </div>
-            ) : null}
-          </div>
-
-          <Card className="p-4" variant="muted">
-            <h3 className="text-sm font-black text-[var(--text-primary)]">Validação dos macronutrientes</h3>
-            <dl className="mt-3 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-5">
-              <SummaryItem label="Calorias planejadas" value={calorieValue(macroValidation?.plannedCalories)} />
-              <SummaryItem label="Calorias dos macros" value={calorieValue(macroValidation?.calculatedCalories)} />
-              <SummaryItem label="Diferença" value={macroValidation ? `${formattedFinite(macroValidation.differenceKcal)} kcal` : NOT_INFORMED} />
-              <SummaryItem label="Diferença percentual" value={macroValidation ? `${formattedFinite(Math.abs(macroValidation.differencePercent))}%` : NOT_INFORMED} />
-              <SummaryItem label="Adequação" value={macroValidation ? macroStatusLabels[macroValidation.status] : NOT_INFORMED} />
-            </dl>
-            <p className="mt-3 text-xs font-bold text-[var(--text-secondary)]">
-              Proteínas: {formatted(proteinCalculation?.percentage)}% · Carboidratos: {formatted(carbohydratesCalculation?.percentage)}% · Lipídios: {formatted(fatsCalculation?.percentage)}% · Total: {formatted(macroValidation?.percentageTotal)}%
+          <section aria-labelledby="macronutrients-title">
+            <div className="mb-1">
+              <h3
+                className="text-base font-black text-[var(--text-primary)]"
+                id="macronutrients-title"
+              >
+                Macronutrientes
+              </h3>
+              <p className="mt-1 text-xs text-[var(--muted)]">
+                Escolha um único modo por macronutriente. Gramas e kcal são calculadas automaticamente.
+              </p>
+            </div>
+            <MacroEditor calculated={proteinCalculation} disabled={approved} input={protein} label="Proteínas" onChange={setProtein} />
+            <MacroEditor calculated={fatsCalculation} disabled={approved} input={fats} label="Lipídios" onChange={setFats} />
+            <MacroEditor calculated={carbohydratesCalculation} disabled={approved} input={carbohydrates} label="Carboidratos" onChange={setCarbohydrates} />
+            <p
+              aria-live="polite"
+              className={`mt-4 rounded-lg px-3 py-2 text-xs font-bold ${
+                macroValidation?.status === "ADEQUATE"
+                  ? "bg-emerald-50 text-emerald-800"
+                  : "bg-amber-50 text-amber-900"
+              }`}
+            >
+              {macroValidation
+                ? `Soma dos macronutrientes: ${formatted(macroValidation.percentageTotal)}% · ${macroStatusLabels[macroValidation.status]}.`
+                : "Preencha os macronutrientes para validar a distribuição."}
             </p>
-          </Card>
+          </section>
 
-          <div className="grid gap-4 sm:grid-cols-3">
-            <FormField id="strategy-meals" label="Número de refeições" required>
-              <NumberInput disabled={approved} id="strategy-meals" min={1} onChange={(event) => {
-                const value = positive(event.target.value);
-                setMealCount(value && Number.isInteger(value) ? value : undefined);
-              }} step={1} value={mealCount ?? ""} />
-            </FormField>
-            <FormField id="strategy-fiber" label="Fibras (g/dia)" required>
-              <NumberInput disabled={approved} id="strategy-fiber" min={0} onChange={(event) => setFiberGrams(positive(event.target.value))} value={fiberGrams ?? ""} />
-            </FormField>
-            <FormField id="strategy-water" label="Água (ml/dia)" required>
-              <NumberInput disabled={approved} id="strategy-water" min={0} onChange={(event) => setWaterMl(positive(event.target.value))} value={waterMl ?? ""} />
-            </FormField>
-          </div>
+          <section className="rounded-xl border border-[var(--line)] p-4" aria-labelledby="meal-organization-title">
+            <div className="mb-3">
+              <h3 className="text-sm font-black text-slate-900" id="meal-organization-title">
+                Organização alimentar
+              </h3>
+              <p className="mt-1 text-xs text-slate-500">
+                Defina quantas refeições serão distribuídas ao longo do dia.
+              </p>
+            </div>
+            <div className="max-w-[12rem]">
+              <FormField id="strategy-meals" label="Número de refeições" required>
+                <NumberInput disabled={approved} id="strategy-meals" min={1} onChange={(event) => {
+                  const value = positive(event.target.value);
+                  const nextMealCount =
+                    value && Number.isInteger(value) ? value : undefined;
+                  setMealCount(nextMealCount);
+                  setMealDistribution(equalMealDistribution(nextMealCount));
+                }} step={1} value={mealCount ?? ""} />
+              </FormField>
+            </div>
+          </section>
+
+          <section className="rounded-xl border border-[var(--line)] p-4" aria-labelledby="hydration-goal-title">
+            <div className="mb-3">
+              <h3 className="text-sm font-black text-slate-900" id="hydration-goal-title">
+                Meta hídrica
+              </h3>
+              <p className="mt-1 text-xs text-slate-500">
+                Calculada automaticamente a partir do peso registrado no Prontuário Mestre.
+              </p>
+            </div>
+            <div className="max-w-md rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3 py-2">
+              <p className="text-xs font-bold text-[var(--muted)]">Meta hídrica automática</p>
+              <output className="mt-1 block text-sm font-black text-[var(--text-primary)]">
+                {waterMl
+                  ? `${numberFormatter.format(waterMl)} ml/dia · ${numberFormatter.format(waterMl / 1000)} L/dia`
+                  : NOT_INFORMED}
+              </output>
+              <p className="mt-1 text-[11px] text-[var(--muted)]">
+                {weightKg
+                  ? `${numberFormatter.format(weightKg)} kg × ${waterCoefficientMlPerKg} ml/kg`
+                  : "Peso não informado no Prontuário Mestre."}
+              </p>
+            </div>
+          </section>
 
           {mealDistribution.length ? (
             <section className="overflow-x-auto rounded-xl border border-[var(--line)]">
               <div className="border-b border-[var(--line)] bg-slate-50 px-4 py-3">
-                <h3 className="text-sm font-black text-slate-900">Distribuição automática por refeição</h3>
-                <p className="mt-1 text-xs text-slate-500">Recalculada sempre que a quantidade de refeições for alterada.</p>
+                <h3 className="text-sm font-black uppercase tracking-wide text-slate-900">
+                  Distribuição das Refeições
+                </h3>
+                <p className="mt-1 text-xs text-slate-500">
+                  Defina nome, horário e participação no VET. As kcal são calculadas automaticamente.
+                </p>
               </div>
-              <table className="min-w-full text-left text-xs">
+              <table className="min-w-[48rem] text-left text-xs">
                 <thead>
                   <tr className="border-b border-slate-200 text-slate-500">
                     <th className="p-3">Refeição</th>
-                    <th className="p-3">Energia</th>
-                    <th className="p-3">Proteína</th>
-                    <th className="p-3">Carboidratos</th>
-                    <th className="p-3">Lipídios</th>
+                    <th className="p-3">Nome</th>
+                    <th className="p-3">Horário</th>
+                    <th className="p-3">% do VET</th>
+                    <th className="p-3">Meta calculada</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {mealDistribution.map((meal) => (
+                  {calculatedMealDistribution.map((meal) => (
                     <tr className="border-b border-slate-100 last:border-0" key={meal.mealNumber}>
                       <th className="p-3 font-black">Refeição {meal.mealNumber}</th>
-                      <td className="p-3">{formatted(meal.energyPercentage, 2)}%</td>
-                      <td className="p-3">{formatted(meal.proteinPercentage, 2)}%</td>
-                      <td className="p-3">{formatted(meal.carbohydratesPercentage, 2)}%</td>
-                      <td className="p-3">{formatted(meal.fatsPercentage, 2)}%</td>
+                      <td className="p-2">
+                        <label className="sr-only" htmlFor={`meal-${meal.mealNumber}-name`}>
+                          Nome da refeição {meal.mealNumber}
+                        </label>
+                        <Input
+                          disabled={approved}
+                          id={`meal-${meal.mealNumber}-name`}
+                          onChange={(event) =>
+                            setMealDistribution((current) =>
+                              current.map((item) =>
+                                item.mealNumber === meal.mealNumber
+                                  ? { ...item, name: event.target.value }
+                                  : item,
+                              ),
+                            )
+                          }
+                          value={meal.name}
+                        />
+                      </td>
+                      <td className="p-2">
+                        <label className="sr-only" htmlFor={`meal-${meal.mealNumber}-time`}>
+                          Horário da refeição {meal.mealNumber}
+                        </label>
+                        <Input
+                          disabled={approved}
+                          id={`meal-${meal.mealNumber}-time`}
+                          onChange={(event) =>
+                            setMealDistribution((current) =>
+                              current.map((item) =>
+                                item.mealNumber === meal.mealNumber
+                                  ? { ...item, time: event.target.value }
+                                  : item,
+                              ),
+                            )
+                          }
+                          type="time"
+                          value={meal.time}
+                        />
+                      </td>
+                      <td className="p-2">
+                        <label className="sr-only" htmlFor={`meal-${meal.mealNumber}-vet`}>
+                          Percentual do VET da refeição {meal.mealNumber}
+                        </label>
+                        <div className="flex items-center gap-1">
+                          <NumberInput
+                            disabled={approved}
+                            id={`meal-${meal.mealNumber}-vet`}
+                            max={100}
+                            min={0}
+                            onChange={(event) => {
+                              const vetPercentage =
+                                Number(event.target.value) || 0;
+                              setMealDistribution((current) =>
+                                current.map((item) =>
+                                  item.mealNumber === meal.mealNumber
+                                    ? { ...item, vetPercentage }
+                                    : item,
+                                ),
+                              );
+                            }}
+                            step="0.1"
+                            value={meal.vetPercentage}
+                          />
+                          <span aria-hidden="true">%</span>
+                        </div>
+                      </td>
+                      <td className="p-3">
+                        <output className="font-black text-slate-900">
+                          {finalCalories
+                            ? `${formatted(meal.plannedCaloriesKcal)} kcal`
+                            : NOT_INFORMED}
+                        </output>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+              <div
+                aria-live="polite"
+                className={`grid gap-2 border-t px-4 py-3 text-sm sm:grid-cols-2 ${
+                  mealDistributionValid
+                    ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                    : "border-amber-200 bg-amber-50 text-amber-900"
+                }`}
+              >
+                <p>
+                  Total distribuído:{" "}
+                  <strong>{formattedPercentage(distributedTotal)}%</strong>
+                </p>
+                <p>
+                  {mealDistributionValid
+                    ? "Distribuição completa."
+                    : distributionDifference < 0
+                      ? `Faltam: ${formattedPercentage(Math.abs(distributionDifference))}%`
+                      : `Excede: ${formattedPercentage(distributionDifference)}%`}
+                </p>
+              </div>
             </section>
           ) : null}
 
           <section className="rounded-xl border border-[var(--line)] p-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h3 className="text-sm font-black text-slate-900">Suplementação</h3>
+                <h3 className="text-sm font-black text-slate-900">Suplementação (opcional)</h3>
                 <p className="mt-1 text-xs text-slate-500">Itens persistidos como parte da Estratégia Nutricional.</p>
               </div>
               <Button
@@ -601,7 +849,7 @@ export function NutritionStrategyDecisionEngine({
               {supplementation.length ? (
                 supplementation.map((item) => (
                   <div className="grid gap-3 rounded-xl bg-slate-50 p-3 md:grid-cols-2" key={item.id}>
-                    <FormField id={`${item.id}-name`} label="Suplemento" required>
+                    <FormField id={`${item.id}-name`} label="Suplemento">
                       <Input disabled={approved} id={`${item.id}-name`} onChange={(event) => setSupplementation((items) => items.map((current) => current.id === item.id ? { ...current, name: event.target.value } : current))} value={item.name} />
                     </FormField>
                     <FormField id={`${item.id}-objective`} label="Objetivo">
@@ -646,9 +894,24 @@ export function NutritionStrategyDecisionEngine({
               </>
             )}
           </div>
-          <p aria-live="polite" className={`text-xs font-bold ${saveState === "ERROR" ? "text-[var(--danger)]" : "text-[var(--muted)]"}`}>
-            {message || (!canApprove && !approved ? "Preencha objetivo, método, GET, VET, macronutrientes, fibras, água e refeições para aprovar." : "")}
-          </p>
+          <div aria-live="polite">
+            {message ? (
+              <p className={`text-xs font-bold ${saveState === "ERROR" ? "text-[var(--danger)]" : "text-[var(--muted)]"}`}>
+                {message}
+              </p>
+            ) : !approved && approvalIssues.length ? (
+              <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900" role="alert">
+                <p className="font-black">
+                  Para aprovar a Estratégia, conclua:
+                </p>
+                <ul className="mt-1 list-disc space-y-0.5 pl-5 font-bold">
+                  {approvalIssues.map((issue) => (
+                    <li key={issue}>{issue}</li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+          </div>
         </CardContent>
       </Card>
     </div>

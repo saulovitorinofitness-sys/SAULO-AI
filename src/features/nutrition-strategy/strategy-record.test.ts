@@ -7,7 +7,10 @@ import {
   validateMacroDistribution,
 } from "@/lib/nutrition";
 
-import { canApproveNutritionStrategy } from "./strategy-record";
+import {
+  canApproveNutritionStrategy,
+  nutritionStrategyApprovalIssues,
+} from "./strategy-record";
 import { parseNutritionStrategyDraft } from "./strategy-validation";
 
 function completeStrategy() {
@@ -36,7 +39,6 @@ function completeStrategy() {
 
   return {
     objective: "MAINTENANCE" as const,
-    secondaryObjectives: ["Manter composição corporal"],
     method: "STANDARD" as const,
     protocol: "MIFFLIN_ST_JEOR" as const,
     calorieAdjustmentPercentage: 0 as const,
@@ -45,7 +47,10 @@ function completeStrategy() {
     basalMetabolicRateKcal: 1340.25,
     totalEnergyExpenditureKcal: 2200,
     protein: { mode: "GRAMS_PER_KG" as const, value: 1.6 },
-    carbohydrates: { mode: "GRAMS" as const },
+    carbohydrates: {
+      mode: "PERCENTAGE" as const,
+      value: carbohydrates.percentage,
+    },
     fats: { mode: "PERCENTAGE" as const, value: 30 },
     calculatedMacros: { protein, carbohydrates, fats },
     macroValidation: validateMacroDistribution(finalCaloriesKcal, [
@@ -58,10 +63,10 @@ function completeStrategy() {
     mealCount: 5,
     mealDistribution: Array.from({ length: 5 }, (_, index) => ({
       mealNumber: index + 1,
-      energyPercentage: 20,
-      proteinPercentage: 20,
-      carbohydratesPercentage: 20,
-      fatsPercentage: 20,
+      name: `Refeição ${index + 1}`,
+      time: `${String(7 + index * 3).padStart(2, "0")}:00`,
+      vetPercentage: 20,
+      plannedCaloriesKcal: 400,
     })),
     supplementation: [],
     clinicalObservations: "",
@@ -74,17 +79,31 @@ test("valida payload persistível e critérios mínimos de aprovação", () => {
 
   assert.ok(parsed);
   assert.equal(canApproveNutritionStrategy(parsed), true);
+  assert.equal(
+    parseNutritionStrategyDraft({
+      ...strategy,
+      protein: {
+        mode: "GRAMS",
+        value: strategy.calculatedMacros.protein.grams,
+      },
+    }),
+    null,
+  );
 });
 
-test("GET ausente bloqueia aprovação mesmo com calorias finais manuais", () => {
+test("GET ausente bloqueia aprovação mesmo com VET manual", () => {
   const strategy = completeStrategy();
+  const incomplete = {
+    ...strategy,
+    totalEnergyExpenditureKcal: undefined,
+  };
   assert.equal(
-    canApproveNutritionStrategy({
-      ...strategy,
-      totalEnergyExpenditureKcal: undefined,
-    }),
+    canApproveNutritionStrategy(incomplete),
     false,
   );
+  assert.deepEqual(nutritionStrategyApprovalIssues(incomplete), [
+    "GET calculado",
+  ]);
 });
 
 test("bloqueia aprovação sem refeição ou macronutriente", () => {
@@ -103,5 +122,38 @@ test("bloqueia aprovação sem refeição ou macronutriente", () => {
       },
     }),
     false,
+  );
+});
+
+test("valida a distribuição do VET por refeição", () => {
+  const strategy = completeStrategy();
+  assert.equal(canApproveNutritionStrategy(strategy), true);
+  assert.equal(
+    canApproveNutritionStrategy({
+      ...strategy,
+      mealDistribution: strategy.mealDistribution.map((meal, index) => ({
+        ...meal,
+        vetPercentage:
+          index === 0 ? meal.vetPercentage - 1 : meal.vetPercentage,
+        plannedCaloriesKcal:
+          index === 0
+            ? meal.plannedCaloriesKcal - 20
+            : meal.plannedCaloriesKcal,
+      })),
+    }),
+    false,
+  );
+  assert.deepEqual(
+    nutritionStrategyApprovalIssues({
+      ...strategy,
+      mealDistribution: strategy.mealDistribution.map((meal, index) => ({
+        ...meal,
+        vetPercentage:
+          index === 0 ? meal.vetPercentage - 5 : meal.vetPercentage,
+      })),
+    }),
+    [
+      "Distribuição das refeições: total atual 95%; necessário 100%",
+    ],
   );
 });

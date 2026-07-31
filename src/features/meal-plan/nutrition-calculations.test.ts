@@ -4,6 +4,7 @@ import test from "node:test";
 import {
   calculateFoodNutrientsForGrams,
   calculateMealPlanTotals,
+  compareMealEnergyTarget,
   compareMealPlanNutrition,
   EMPTY_FOOD_NUTRIENTS,
   nutritionForGrams,
@@ -94,4 +95,10 @@ test("classifica compatível, acima e abaixo com tolerância técnica", () => {
   assert.equal(result.proteinGrams, "ABOVE");
   assert.equal(result.carbohydratesGrams, "BELOW");
   assert.equal(result.fatsGrams, "COMPATIBLE");
+});
+
+test("compara a energia realizada com a meta prevista da refeição", () => {
+  assert.equal(compareMealEnergyTarget(400, 392), "ADEQUATE");
+  assert.equal(compareMealEnergyTarget(400, 370), "NEAR_TARGET");
+  assert.equal(compareMealEnergyTarget(400, 300), "OUTSIDE_TARGET");
 });

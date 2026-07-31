@@ -73,8 +73,15 @@ export interface MealPlanRecordMeal {
   readonly name: string;
   readonly order: number;
   readonly time?: string;
+  readonly vetPercentage?: number;
+  readonly plannedEnergyKcal?: number;
   readonly observations?: string;
   readonly items: readonly MealPlanRecordFood[];
+}
+
+export interface MealPlanRecordSupplement {
+  readonly id: string;
+  readonly description: string;
 }
 
 export interface MealPlanRecordDraft {
@@ -83,10 +90,11 @@ export interface MealPlanRecordDraft {
   readonly strategyUpdateDecision?: MealPlanStrategyUpdateDecision;
   readonly aiDecision: MealPlanAiDecision;
   readonly meals: readonly MealPlanRecordMeal[];
+  readonly supplements: readonly MealPlanRecordSupplement[];
 }
 
 export interface StoredMealPlanPayload extends MealPlanRecordDraft {
-  readonly schemaVersion: 5;
+  readonly schemaVersion: 6;
   readonly strategyApprovedAt: string;
   readonly strategySnapshot?: MealPlanStrategyInheritance;
   readonly totals: MealPlanNutritionValues;
@@ -178,8 +186,14 @@ const mealPlanRecordMealSchema = z.object({
   name: z.string().trim().min(1).max(120),
   order: z.number().int().positive(),
   time: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/).optional(),
+  vetPercentage: z.number().finite().positive().max(100).optional(),
+  plannedEnergyKcal: z.number().finite().positive().optional(),
   observations: optionalTrimmedText,
   items: z.array(foodSchema).max(100),
+});
+const mealPlanRecordSupplementSchema = z.object({
+  id: z.string().uuid(),
+  description: z.string().trim().min(1).max(2_000),
 });
 
 export const mealPlanRecordDraftSchema = z.object({
@@ -197,7 +211,15 @@ export const mealPlanRecordDraftSchema = z.object({
       (meals) => new Set(meals.map((meal) => meal.order)).size === meals.length,
       "A ordem das refeições deve ser única.",
     ),
+  supplements: z.array(mealPlanRecordSupplementSchema).max(100).default([]),
 });
+
+export const mealPlanClinicalJustificationSchema = z
+  .string()
+  .trim()
+  .max(10_000)
+  .optional()
+  .transform((value) => value || undefined);
 
 export function parseMealPlanRecordDraft(
   value: unknown,
@@ -363,9 +385,10 @@ export function parseStoredMealPlanPayload(
     if (!legacy.success) return null;
     return {
       ...legacy.data,
-      schemaVersion: 5,
+      schemaVersion: 6,
       strategyApprovedAt: "",
       aiDecision: "IDLE",
+      supplements: [],
       totals: {
         energyKcal: 0,
         proteinGrams: 0,
@@ -388,8 +411,12 @@ export function parseStoredMealPlanPayload(
     versionFour.schemaVersion === 4
       ? { ...versionFour, schemaVersion: 5 }
       : versionFour;
-  if (candidate.schemaVersion !== 5) return null;
-  const draft = parseMealPlanRecordDraft(candidate);
+  const versionSix =
+    candidate.schemaVersion === 5
+      ? { ...candidate, schemaVersion: 6, supplements: [] }
+      : candidate;
+  if (versionSix.schemaVersion !== 6) return null;
+  const draft = parseMealPlanRecordDraft(versionSix);
   const meta = z
     .object({
       strategyApprovedAt: z.string().datetime(),
@@ -409,8 +436,8 @@ export function parseStoredMealPlanPayload(
       comparison: comparisonSchema,
       adequacy: adequacySchema.optional(),
     })
-    .safeParse(candidate);
+    .safeParse(versionSix);
   return draft && meta.success
-    ? { ...draft, ...meta.data, schemaVersion: 5 }
+    ? { ...draft, ...meta.data, schemaVersion: 6 }
     : null;
 }

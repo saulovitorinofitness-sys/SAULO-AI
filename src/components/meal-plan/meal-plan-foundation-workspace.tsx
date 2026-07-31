@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { Badge, Button, Card, SectionHeader } from "@/components/ui";
+import { PrescriptionHistory } from "./prescription-history";
 import { developmentUserRequestHeaders } from "@/features/development-session";
 import type {
   FoodSearchResult,
@@ -12,6 +14,7 @@ import type { MealPlanPrescriptionView } from "@/features/meal-plan";
 import {
   calculateFoodNutrientsForGrams,
   calculateMealPlanTotals,
+  compareMealEnergyTarget,
   EMPTY_FOOD_NUTRIENTS,
   normalizeFoodNutrients,
 } from "@/features/meal-plan/nutrition-calculations";
@@ -24,6 +27,7 @@ import type {
   MealPlanAiDecision,
   MealPlanRecordFood,
   MealPlanRecordMeal,
+  MealPlanRecordSupplement,
   MealPlanStrategyUpdateDecision,
 } from "@/features/meal-plan/record";
 import type { NutritionalEquivalent } from "@/features/meal-plan/substitution-engine";
@@ -38,6 +42,11 @@ const STANDARD_MEALS = [
   "Jantar",
   "Ceia",
 ] as const;
+const MEAL_ENERGY_STATUS_LABEL = {
+  ADEQUATE: "Adequado",
+  NEAR_TARGET: "Próximo da meta",
+  OUTSIDE_TARGET: "Fora da meta",
+} as const;
 const adequacyMetricConfig = {
   energyKcal: { label: "Energia", unit: "kcal" },
   proteinGrams: { label: "Proteínas", unit: "g" },
@@ -116,6 +125,7 @@ export function MealPlanFoundationWorkspace({
 }: {
   initialPlan: MealPlanPrescriptionView;
 }) {
+  const router = useRouter();
   const [plan, setPlan] = useState(initialPlan);
   const [meals, setMeals] = useState<MealPlanRecordMeal[]>(
     initialPlan.prescriptionMeals.map((meal) => ({
@@ -126,6 +136,21 @@ export function MealPlanFoundationWorkspace({
   const [message, setMessage] = useState(
     "Plano vinculado à Estratégia Nutricional aprovada.",
   );
+  const [supplements, setSupplements] = useState<
+    MealPlanRecordSupplement[]
+  >(
+    initialPlan.prescriptionSupplements.map((supplement) => ({
+      ...supplement,
+    })),
+  );
+  const [newSupplement, setNewSupplement] = useState("");
+  const [clinicalJustification, setClinicalJustification] = useState("");
+  const [activeTab, setActiveTab] = useState<"PLAN" | "HISTORY">("PLAN");
+  const [activeMealId, setActiveMealId] = useState<string | undefined>(
+    initialPlan.prescriptionMeals[0]?.id,
+  );
+  const [showStrategyDetails, setShowStrategyDetails] = useState(false);
+  const [showClinicalJustification, setShowClinicalJustification] = useState(false);
   const [saving, setSaving] = useState(false);
   const [strategyDecision, setStrategyDecision] =
     useState<MealPlanStrategyUpdateDecision>();
@@ -148,6 +173,11 @@ export function MealPlanFoundationWorkspace({
   const strategy =
     strategyDecision === "UPDATE" ? plan.latestStrategy : plan.strategy;
   const totals = useMemo(() => calculateMealPlanTotals(meals), [meals]);
+  const hasFoods = useMemo(
+    () => meals.some((meal) => meal.items.some((food) => food.catalogFoodId)),
+    [meals],
+  );
+  const activeMeal = meals.find((meal) => meal.id === activeMealId) ?? meals[0];
   const adequacy = useMemo(
     () =>
       calculateNutritionAdequacy({
@@ -252,23 +282,27 @@ export function MealPlanFoundationWorkspace({
   }
 
   function addMeal(name: string) {
+    const id = crypto.randomUUID();
     setMeals((current) => [
       ...current,
       {
-        id: crypto.randomUUID(),
+        id,
         name,
         order: current.length + 1,
         items: [],
       },
     ]);
+    setActiveMealId(id);
   }
 
   function removeMeal(mealId: string) {
-    setMeals((current) =>
-      current
+    setMeals((current) => {
+      const next = current
         .filter((meal) => meal.id !== mealId)
-        .map((meal, index) => ({ ...meal, order: index + 1 })),
-    );
+        .map((meal, index) => ({ ...meal, order: index + 1 }));
+      if (activeMealId === mealId) setActiveMealId(next[0]?.id);
+      return next;
+    });
   }
 
   function moveMeal(mealId: string, direction: -1 | 1) {
@@ -458,7 +492,44 @@ export function MealPlanFoundationWorkspace({
     );
   }
 
-  async function savePlan() {
+  function prepareAssistedAssembly() {
+    const emptyMeals = meals.filter((meal) => meal.items.length === 0);
+
+    if (emptyMeals.length === 0) {
+      setMessage(
+        "Todas as refeições já possuem alimentos. Continue a edição ou substituição inline.",
+      );
+      return;
+    }
+
+    const createdLines = new Map(
+      emptyMeals.map((meal) => [meal.id, emptyFoodLine()] as const),
+    );
+
+    setMeals((current) =>
+      current.map((meal) => {
+        const food = createdLines.get(meal.id);
+        return food ? { ...meal, items: [food] } : meal;
+      }),
+    );
+
+    const firstMeal = emptyMeals[0];
+    const firstFood = createdLines.get(firstMeal.id);
+
+    setAiDecision("SUGGESTION_GENERATED");
+    setQuery("");
+    setEquivalenceFoodId(undefined);
+    setEquivalents([]);
+
+    if (firstFood) {
+      setActivePicker({ mealId: firstMeal.id, foodId: firstFood.id });
+    }
+
+    setMessage(
+      "Estrutura preparada conforme as refeições herdadas da Estratégia Nutricional. Selecione os alimentos no catálogo profissional.",
+    );
+  }
+  async function savePlan(complete = false) {
     if (!plan.attendanceId || !plan.strategyEntryId || meals.length === 0) {
       setMessage("Adicione ao menos uma refeição antes de salvar.");
       return;
@@ -478,14 +549,20 @@ export function MealPlanFoundationWorkspace({
           strategyUpdateDecision: plan.strategyUpdateAvailable
             ? strategyDecision
             : undefined,
-          status: plan.status === "PENDING_REVIEW" ? "IN_REVIEW" : "DRAFT",
+          status: complete
+            ? "APPROVED"
+            : plan.status === "PENDING_REVIEW"
+              ? "IN_REVIEW"
+              : "DRAFT",
           aiDecision,
+          clinicalJustification: clinicalJustification || undefined,
           meals: meals.map((meal) => ({
             ...meal,
             items: meal.items.filter(
               (food) => food.catalogFoodId && food.description.trim(),
             ),
           })),
+          supplements,
         }),
       },
     );
@@ -494,6 +571,8 @@ export function MealPlanFoundationWorkspace({
           record?: {
             updatedAt: string;
             responsibleProfessional: string;
+            history: MealPlanPrescriptionView["prescriptionHistory"];
+            status: "DRAFT" | "IN_REVIEW" | "APPROVED" | "REJECTED";
           };
           message?: string;
         }
@@ -512,608 +591,390 @@ export function MealPlanFoundationWorkspace({
       strategyUpdateAvailable: false,
       updatedAt: result.record!.updatedAt,
       responsibleProfessional: result.record!.responsibleProfessional,
+      prescriptionHistory: result.record!.history,
+      status:
+        result.record!.status === "IN_REVIEW"
+          ? "PENDING_REVIEW"
+          : result.record!.status,
     }));
     setStrategyDecision(undefined);
-    setMessage("Plano Alimentar salvo no Prontuário Mestre.");
+    setClinicalJustification("");
+    setMessage(
+      complete
+        ? "Plano Alimentar concluído. Entregáveis liberados."
+        : "Plano Alimentar salvo no Prontuário Mestre.",
+    );
     setSaving(false);
+    router.refresh();
   }
 
   return (
     <form
-      className="space-y-5"
+      className="space-y-4 pb-24"
       id="clinical-form-meal-plan"
       onSubmit={(event) => {
         event.preventDefault();
-        void savePlan();
+        const submitter = (event.nativeEvent as SubmitEvent)
+          .submitter as HTMLButtonElement | null;
+        void savePlan(
+          submitter?.name === "mealPlanAction" &&
+            submitter.value === "complete",
+        );
       }}
     >
-      <Card className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between" variant="info">
+      <div className="flex flex-col gap-3 border-b border-[var(--line)] pb-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <p className="text-sm font-black text-sky-950">
-            Motor de Prescrição Nutricional
+          <p className="text-xs font-black uppercase tracking-[0.16em] text-[var(--primary)]">
+            Plano Alimentar
           </p>
-          <p aria-live="polite" className="mt-1 text-sm text-sky-800">
+          <h2 className="mt-1 text-xl font-black text-[var(--text-primary)]">
+            {NUTRITION_OBJECTIVES[strategy.objective]} · {n(strategy.caloriesKcal, 0)} kcal · {strategy.mealCount} refeições
+          </h2>
+          <p aria-live="polite" className="mt-1 text-sm text-[var(--muted)]">
             {message}
           </p>
         </div>
-        <Badge tone="warning">Decisão exclusiva do nutricionista</Badge>
-      </Card>
-
-      {plan.strategyUpdateAvailable ? (
-        <Card className="space-y-3 p-4" variant="warning">
-          <p className="font-black text-amber-950">
-            A Estratégia Nutricional foi modificada. Deseja atualizar o Plano
-            Alimentar?
-          </p>
-          <div className="flex flex-wrap gap-2">
-            <Button
-              onClick={() => setStrategyDecision("UPDATE")}
-              type="button"
-              variant={strategyDecision === "UPDATE" ? "primary" : "secondary"}
-            >
-              Atualizar Plano
-            </Button>
-            <Button
-              onClick={() => setStrategyDecision("KEEP")}
-              type="button"
-              variant={strategyDecision === "KEEP" ? "primary" : "secondary"}
-            >
-              Manter Plano Atual
-            </Button>
-          </div>
-        </Card>
-      ) : null}
-
-      <Card className="space-y-4 p-4">
-        <SectionHeader
-          description="Origem oficial da prescrição. Campos bloqueados para edição."
-          eyebrow="Somente leitura"
-          title="Parâmetros herdados da Estratégia"
-        />
-        <dl className="grid gap-3 text-sm sm:grid-cols-2 xl:grid-cols-4">
-          {[
-            ["Objetivo", NUTRITION_OBJECTIVES[strategy.objective]],
-            ["Método", strategy.method],
-            ["Protocolo", ENERGY_PROTOCOLS[strategy.protocol]],
-            ["GET", `${n(strategy.totalEnergyExpenditureKcal, 0)} kcal`],
-            ["VET", `${n(strategy.caloriesKcal, 0)} kcal`],
-            [
-              "Déficit / superávit",
-              `${strategy.calorieAdjustmentPercentage > 0 ? "+" : ""}${n(strategy.calorieAdjustmentPercentage)}%`,
-            ],
-            ["Proteínas", `${n(strategy.proteinGrams)} g`],
-            ["Carboidratos", `${n(strategy.carbohydratesGrams)} g`],
-            ["Lipídios", `${n(strategy.fatsGrams)} g`],
-            ["Fibras", `${n(strategy.fiberGrams)} g`],
-            ["Água", `${n(strategy.waterMl, 0)} ml`],
-            ["Refeições", strategy.mealCount],
-          ].map(([label, value]) => (
-            <div className="rounded-xl bg-[var(--surface)] p-3" key={label}>
-              <dt className="text-xs font-bold uppercase text-[var(--muted)]">
-                {label}
-              </dt>
-              <dd className="mt-1 font-black text-[var(--text-primary)]">
-                {value}
-              </dd>
-            </div>
-          ))}
-        </dl>
-        <div className="grid gap-3 text-sm lg:grid-cols-2">
-          <div className="rounded-xl border border-[var(--line)] p-3">
-            <p className="font-bold">Suplementação</p>
-            <p className="mt-1 text-[var(--muted)]">
-              {strategy.supplementation.length
-                ? strategy.supplementation
-                    .map((item) => `${item.name} — ${item.schedule}`)
-                    .join(" · ")
-                : "Nenhuma suplementação prescrita."}
-            </p>
-          </div>
-          <div className="rounded-xl border border-[var(--line)] p-3">
-            <p className="font-bold">Observações clínicas</p>
-            <p className="mt-1 text-[var(--muted)]">
-              {strategy.clinicalObservations || "Sem observações."}
-            </p>
-          </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge tone="warning">Decisão do nutricionista</Badge>
+          <Button
+            onClick={() => setActiveTab(activeTab === "PLAN" ? "HISTORY" : "PLAN")}
+            type="button"
+            variant="secondary"
+          >
+            {activeTab === "PLAN" ? "Histórico" : "Voltar ao plano"}
+          </Button>
         </div>
-      </Card>
+      </div>
 
-      <Card className="space-y-4 p-4">
-        <SectionHeader
-          description="Aderência recalculada em tempo real. Limites padrão: adequado até 5% e próximo da meta até 10% de desvio."
-          eyebrow="Estratégia × Plano"
-          title="Adequação nutricional"
-        />
-        <div className="grid gap-4 lg:grid-cols-[220px_1fr]">
-          <aside className="rounded-2xl border border-sky-200 bg-sky-50 p-4 text-center">
-            <p className="text-xs font-black uppercase tracking-wide text-sky-800">
-              Aderência geral
-            </p>
-            <p
-              aria-live="polite"
-              className="mt-2 text-5xl font-black tabular-nums text-sky-950"
-            >
-              {n(adequacy.overallAdherencePercent)}%
-            </p>
-            <p className="mt-2 text-sm font-bold text-sky-900">
-              {adequacyStatusLabels[adequacy.overallStatus]}
-            </p>
-            <p className="mt-4 text-left text-xs text-sky-800">
-              {adequacy.needsAdjustment.length
-                ? `Ajustar: ${adequacy.needsAdjustment
-                    .map((metric) => adequacyMetricConfig[metric].label)
-                    .join(", ")}.`
-                : "Todos os indicadores estão adequados."}
-            </p>
-          </aside>
-
-          <div className="grid gap-2 sm:grid-cols-2">
-            {(
-              Object.keys(
-                adequacyMetricConfig,
-              ) as NutritionAdequacyMetric[]
-            ).map((metric) => {
-              const result = adequacy.metrics[metric];
-              const config = adequacyMetricConfig[metric];
-              return (
-                <details
-                  className="rounded-xl border border-[var(--line)] bg-white open:bg-[var(--surface)]"
-                  key={metric}
-                >
-                  <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-3 py-3 text-sm font-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]">
-                    <span>{config.label}</span>
-                    <span
-                      className={
-                        result.status === "ADEQUATE"
-                          ? "text-emerald-700"
-                          : result.status === "NEAR_TARGET"
-                            ? "text-amber-700"
-                            : "text-red-700"
-                      }
-                    >
-                      {adequacyStatusLabels[result.status]}
-                    </span>
-                  </summary>
-                  <dl className="grid grid-cols-2 gap-2 border-t border-[var(--line)] p-3 text-xs">
-                    <div>
-                      <dt className="text-[var(--muted)]">Meta</dt>
-                      <dd className="font-black">
-                        {n(result.target)} {config.unit}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt className="text-[var(--muted)]">Realizado</dt>
-                      <dd className="font-black">
-                        {n(result.actual)} {config.unit}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt className="text-[var(--muted)]">
-                        Diferença absoluta
-                      </dt>
-                      <dd className="font-black">
-                        {n(result.absoluteDifference)} {config.unit}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt className="text-[var(--muted)]">
-                        Diferença percentual
-                      </dt>
-                      <dd className="font-black">
-                        {result.percentageDifference > 0 ? "+" : ""}
-                        {n(result.percentageDifference)}%
-                      </dd>
-                    </div>
-                    <div className="col-span-2">
-                      <dt className="text-[var(--muted)]">Status</dt>
-                      <dd className="font-black">
-                        {adequacyStatusLabels[result.status]}
-                      </dd>
-                    </div>
-                  </dl>
-                </details>
-              );
-            })}
-          </div>
-        </div>
-        <p className="text-xs text-[var(--muted)]">
-          Água corresponde à orientação prescrita herdada da Estratégia.
-          Nenhuma decisão clínica ou aprovação é realizada automaticamente.
-        </p>
-      </Card>
-
-      <section className="space-y-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <SectionHeader
-            description="Edite horários, observações e alimentos. Todos os totais são recalculados imediatamente."
-            eyebrow="Prescrição"
-            title="Refeições"
-          />
-          <div className="flex flex-wrap gap-2">
-            <select
-              aria-label="Adicionar refeição padrão"
-              className="rounded-xl border border-[var(--line)] bg-white px-3 py-2 text-sm"
-              defaultValue=""
-              onChange={(event) => {
-                if (event.target.value) addMeal(event.target.value);
-                event.target.value = "";
-              }}
-            >
-              <option value="">Adicionar refeição</option>
-              {STANDARD_MEALS.map((name) => (
-                <option key={name} value={name}>
-                  {name}
-                </option>
-              ))}
-            </select>
-            <Button
-              onClick={() => addMeal(`Refeição personalizada ${meals.length + 1}`)}
-              type="button"
-              variant="secondary"
-            >
-              Refeição personalizada
-            </Button>
-          </div>
-        </div>
-
-        {meals.map((meal, mealIndex) => (
-          <Card className="space-y-4 p-4" key={meal.id}>
-            <div className="grid gap-3 md:grid-cols-[1fr_140px_auto]">
-              <label className="text-sm font-bold">
-                Nome
-                <input
-                  className="mt-1 w-full rounded-xl border border-[var(--line)] px-3 py-2 font-normal"
-                  onChange={(event) =>
-                    updateMeal(meal.id, { name: event.target.value })
-                  }
-                  value={meal.name}
-                />
-              </label>
-              <label className="text-sm font-bold">
-                Horário
-                <input
-                  className="mt-1 w-full rounded-xl border border-[var(--line)] px-3 py-2 font-normal"
-                  onChange={(event) =>
-                    updateMeal(meal.id, {
-                      time: event.target.value || undefined,
-                    })
-                  }
-                  type="time"
-                  value={meal.time ?? ""}
-                />
-              </label>
-              <div className="flex flex-wrap items-end gap-2">
+      {activeTab === "PLAN" ? (
+        <div className="space-y-4">
+          {plan.strategyUpdateAvailable && hasFoods ? (
+            <Card className="space-y-3 p-4" variant="warning">
+              <p className="font-black text-amber-950">
+                A Estratégia Nutricional foi alterada após a criação deste plano.
+              </p>
+              <div className="flex flex-wrap gap-2">
                 <Button
-                  aria-label={`Mover ${meal.name} para cima`}
-                  disabled={mealIndex === 0}
-                  onClick={() => moveMeal(meal.id, -1)}
-                  size="small"
+                  onClick={() => setStrategyDecision("UPDATE")}
                   type="button"
-                  variant="secondary"
+                  variant={strategyDecision === "UPDATE" ? "primary" : "secondary"}
                 >
-                  ↑
+                  Atualizar com a nova estratégia
                 </Button>
                 <Button
-                  aria-label={`Mover ${meal.name} para baixo`}
-                  disabled={mealIndex === meals.length - 1}
-                  onClick={() => moveMeal(meal.id, 1)}
-                  size="small"
+                  onClick={() => setStrategyDecision("KEEP")}
                   type="button"
-                  variant="secondary"
+                  variant={strategyDecision === "KEEP" ? "primary" : "secondary"}
                 >
-                  ↓
-                </Button>
-                <Button
-                  disabled={meals.length === 1}
-                  onClick={() => removeMeal(meal.id)}
-                  size="small"
-                  type="button"
-                  variant="secondary"
-                >
-                  Remover
+                  Manter plano atual
                 </Button>
               </div>
-            </div>
-            <label className="block text-sm font-bold">
-              Observações
-              <textarea
-                className="mt-1 min-h-20 w-full rounded-xl border border-[var(--line)] px-3 py-2 font-normal"
-                onChange={(event) =>
-                  updateMeal(meal.id, {
-                    observations: event.target.value || undefined,
-                  })
-                }
-                value={meal.observations ?? ""}
-              />
-            </label>
+            </Card>
+          ) : null}
 
-            <div className="overflow-x-auto rounded-xl border border-[var(--line)]">
-              <div
-                className="grid min-w-[1180px] grid-cols-[minmax(220px,2fr)_90px_150px_95px_repeat(5,82px)_150px] gap-2 bg-[var(--surface)] px-3 py-2 text-xs font-black uppercase text-[var(--muted)]"
-                role="row"
+          <Card className="space-y-3 p-4">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.14em] text-[var(--primary)]">
+                  Estratégia vinculada
+                </p>
+                <p className="mt-1 text-sm text-[var(--muted)]">
+                  Referência clínica bloqueada para edição.
+                </p>
+              </div>
+              <Button
+                onClick={() => setShowStrategyDetails((current) => !current)}
+                size="small"
+                type="button"
+                variant="secondary"
               >
-                <span>Alimento</span>
-                <span>Qtd.</span>
-                <span>Medida</span>
-                <span>Peso</span>
-                <span>kcal</span>
-                <span>Prot.</span>
-                <span>Carb.</span>
-                <span>Lip.</span>
-                <span>Fibras</span>
-                <span>Ações</span>
+                {showStrategyDetails ? "Ocultar detalhes" : "Ver detalhes"}
+              </Button>
+            </div>
+            <dl className="grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
+              {[
+                ["Objetivo", NUTRITION_OBJECTIVES[strategy.objective]],
+                ["VET", `${n(strategy.caloriesKcal, 0)} kcal`],
+                ["Proteínas", `${n(strategy.proteinGrams)} g`],
+                ["Carboidratos", `${n(strategy.carbohydratesGrams)} g`],
+                ["Lipídios", `${n(strategy.fatsGrams)} g`],
+              ].map(([label, value]) => (
+                <div className="rounded-xl bg-[var(--surface)] px-3 py-2" key={label}>
+                  <dt className="text-[11px] font-black uppercase text-[var(--muted)]">{label}</dt>
+                  <dd className="mt-1 text-sm font-black">{value}</dd>
+                </div>
+              ))}
+            </dl>
+            {showStrategyDetails ? (
+              <div className="grid gap-3 border-t border-[var(--line)] pt-3 text-sm md:grid-cols-2 xl:grid-cols-4">
+                {[
+                  ["Método", strategy.method],
+                  ["Protocolo", ENERGY_PROTOCOLS[strategy.protocol]],
+                  ["GET", `${n(strategy.totalEnergyExpenditureKcal, 0)} kcal`],
+                  ["Ajuste", `${strategy.calorieAdjustmentPercentage > 0 ? "+" : ""}${n(strategy.calorieAdjustmentPercentage)}%`],
+                  ["Fibras", `${n(strategy.fiberGrams)} g`],
+                  ["Água", `${n(strategy.waterMl, 0)} ml`],
+                  ["Suplementação", strategy.supplementation.length ? strategy.supplementation.map((item) => `${item.name} — ${item.schedule}`).join(" · ") : "Nenhuma"],
+                  ["Observações", strategy.clinicalObservations || "Sem observações"],
+                ].map(([label, value]) => (
+                  <div className="rounded-xl border border-[var(--line)] p-3" key={label}>
+                    <p className="text-xs font-black uppercase text-[var(--muted)]">{label}</p>
+                    <p className="mt-1 font-semibold">{value}</p>
+                  </div>
+                ))}
               </div>
-              <div className="divide-y divide-[var(--line)]">
-                {meal.items.map((food) => {
-                  const isSearching =
-                    activePicker?.mealId === meal.id &&
-                    activePicker.foodId === food.id;
-                  return (
-                    <div
-                      className="grid min-w-[1180px] grid-cols-[minmax(220px,2fr)_90px_150px_95px_repeat(5,82px)_150px] items-center gap-2 bg-white px-3 py-2"
-                      key={food.id}
-                      role="row"
-                    >
-                      <div className="min-w-0">
-                        <label className="sr-only" htmlFor={`food-search-${food.id}`}>
-                          Alimento
-                        </label>
-                        <input
-                          aria-describedby={`food-help-${food.id}`}
-                          autoComplete="off"
-                          className="w-full rounded-lg border border-[var(--line)] px-2 py-2 text-sm font-semibold"
-                          id={`food-search-${food.id}`}
-                          list={`food-options-${food.id}`}
-                          onChange={(event) => {
-                            const value = event.target.value;
-                            setQuery(value);
-                            const exact = foodResults.find(
-                              (candidate) =>
-                                candidate.officialName.localeCompare(value, "pt-BR", {
-                                  sensitivity: "base",
-                                }) === 0,
-                            );
-                            if (exact) {
-                              const equivalent = equivalents.find(
-                                (item) => item.food.id === exact.id,
-                              );
-                              chooseFood(
-                                exact,
-                                equivalent?.suggestedGrams,
-                              );
-                            }
-                          }}
-                          onFocus={() => {
-                            setActivePicker({ mealId: meal.id, foodId: food.id });
-                            if (equivalenceFoodId !== food.id) {
-                              setEquivalenceFoodId(undefined);
-                              setEquivalents([]);
-                              setQuery(food.description);
-                            }
-                          }}
-                          placeholder="Digite para buscar"
-                          value={isSearching ? query : food.description}
-                        />
-                        <datalist id={`food-options-${food.id}`}>
-                          {foodResults.map((option) => (
-                            <option
-                              key={option.id}
-                              value={option.officialName}
-                            >
-                              {equivalents.find(
-                                (item) => item.food.id === option.id,
-                              )
-                                ? `${equivalents.find((item) => item.food.id === option.id)!.suggestedGrams} g · ${equivalents.find((item) => item.food.id === option.id)!.score.total}%`
-                                : `${option.foodGroup} · ${option.source.kind}`}
-                            </option>
-                          ))}
-                        </datalist>
-                        <span
-                          className="mt-1 block truncate text-[11px] text-[var(--muted)]"
-                          id={`food-help-${food.id}`}
-                        >
-                          {searching && isSearching
-                            ? "Buscando…"
-                            : food.catalogFoodId
-                              ? `${food.foodGroup} · ${food.source}`
-                              : "Linha vazia — selecione um alimento"}
-                        </span>
-                      </div>
-                      <label className="sr-only" htmlFor={`quantity-${food.id}`}>
-                        Quantidade
-                      </label>
+            ) : null}
+          </Card>
+
+          {!hasFoods ? (
+            <Card className="space-y-4 p-5" variant="info">
+              <div>
+                <p className="text-lg font-black text-sky-950">Plano Alimentar ainda não iniciado</p>
+                <p className="mt-1 text-sm text-sky-800">
+                  Escolha como deseja iniciar a prescrição. Nenhum alimento será incluído sem sua seleção e validação.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button onClick={prepareAssistedAssembly} type="button">
+                  Preparar montagem assistida
+                </Button>
+                <Button
+                  onClick={() => {
+                    if (activeMeal) addFoodLine(activeMeal.id);
+                  }}
+                  type="button"
+                  variant="secondary"
+                >
+                  Montar manualmente
+                </Button>
+              </div>
+            </Card>
+          ) : null}
+
+          <Card className="space-y-4 p-4">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+              <SectionHeader
+                description="Trabalhe em uma refeição por vez. Quantidades e nutrientes são recalculados imediatamente."
+                eyebrow="Prescrição"
+                title="Refeições"
+              />
+              <div className="flex flex-wrap gap-2">
+                <select
+                  aria-label="Adicionar refeição padrão"
+                  className="rounded-xl border border-[var(--line)] bg-white px-3 py-2 text-sm"
+                  defaultValue=""
+                  onChange={(event) => {
+                    if (event.target.value) addMeal(event.target.value);
+                    event.target.value = "";
+                  }}
+                >
+                  <option value="">Adicionar refeição</option>
+                  {STANDARD_MEALS.map((name) => (
+                    <option key={name} value={name}>{name}</option>
+                  ))}
+                </select>
+                <Button
+                  onClick={() => addMeal(`Refeição personalizada ${meals.length + 1}`)}
+                  type="button"
+                  variant="secondary"
+                >
+                  Personalizada
+                </Button>
+              </div>
+            </div>
+
+            <div className="flex gap-2 overflow-x-auto border-b border-[var(--line)] pb-2">
+              {meals.map((meal) => (
+                <button
+                  className={`whitespace-nowrap rounded-xl px-4 py-2 text-sm font-black transition ${
+                    activeMeal?.id === meal.id
+                      ? "bg-[var(--primary)] text-white"
+                      : "bg-[var(--surface)] text-[var(--text-primary)] hover:bg-emerald-50"
+                  }`}
+                  key={meal.id}
+                  onClick={() => setActiveMealId(meal.id)}
+                  type="button"
+                >
+                  {meal.name}
+                </button>
+              ))}
+            </div>
+
+            {activeMeal ? (() => {
+              const mealIndex = meals.findIndex((meal) => meal.id === activeMeal.id);
+              const mealTotals = calculateMealPlanTotals([activeMeal]);
+              return (
+                <div className="space-y-4">
+                  <div className="grid gap-3 md:grid-cols-[1fr_140px_auto]">
+                    <label className="text-sm font-bold">
+                      Nome
                       <input
-                        className="w-full rounded-lg border border-[var(--line)] px-2 py-2 text-sm"
-                        id={`quantity-${food.id}`}
-                        min="0.01"
-                        onChange={(event) => {
-                          const quantity = Number(event.target.value) || 0.01;
-                          const measure = food.measureOptions.find(
-                            (option) => option.name === food.householdMeasure,
-                          );
-                          const grams = measure
-                            ? measure.gramsPerUnit * quantity
-                            : food.grams;
-                          updateFood(meal.id, food.id, { quantity, grams });
-                        }}
-                        step="0.01"
-                        type="number"
-                        value={food.quantity}
+                        className="mt-1 w-full rounded-xl border border-[var(--line)] px-3 py-2 font-normal"
+                        onChange={(event) => updateMeal(activeMeal.id, { name: event.target.value })}
+                        value={activeMeal.name}
                       />
-                      <label className="sr-only" htmlFor={`measure-${food.id}`}>
-                        Unidade de medida
-                      </label>
-                      <select
-                        className="w-full rounded-lg border border-[var(--line)] bg-white px-2 py-2 text-sm"
-                        disabled={!food.catalogFoodId}
-                        id={`measure-${food.id}`}
-                        onChange={(event) =>
-                          updateFoodMeasure(meal.id, food.id, event.target.value)
-                        }
-                        value={food.householdMeasure}
-                      >
-                        {(food.measureOptions.length
-                          ? food.measureOptions
-                          : [
-                              {
-                                name: food.householdMeasure,
-                                gramsPerUnit: Math.max(food.grams, 1),
-                              },
-                            ]
-                        ).map((measure) => (
-                          <option key={measure.name} value={measure.name}>
-                            {measure.name}
-                          </option>
-                        ))}
-                      </select>
-                      <label className="sr-only" htmlFor={`grams-${food.id}`}>
-                        Gramagem
-                      </label>
+                    </label>
+                    <label className="text-sm font-bold">
+                      Horário
                       <input
-                        className="w-full rounded-lg border border-[var(--line)] px-2 py-2 text-sm"
-                        id={`grams-${food.id}`}
-                        min="0"
-                        onChange={(event) =>
-                          updateFood(meal.id, food.id, {
-                            grams: Number(event.target.value) || 0,
-                          })
-                        }
-                        step="0.1"
-                        type="number"
-                        value={food.grams}
+                        className="mt-1 w-full rounded-xl border border-[var(--line)] px-3 py-2 font-normal"
+                        onChange={(event) => updateMeal(activeMeal.id, { time: event.target.value || undefined })}
+                        type="time"
+                        value={activeMeal.time ?? ""}
                       />
-                      {[
-                        food.nutrients.energyKcal,
-                        food.nutrients.proteinGrams,
-                        food.nutrients.carbohydratesGrams,
-                        food.nutrients.fatsGrams,
-                        food.nutrients.fiberGrams,
-                      ].map((value, index) => (
-                        <output
-                          className="rounded-lg bg-[var(--surface)] px-2 py-2 text-right text-sm font-bold tabular-nums"
-                          key={index}
-                        >
-                          {n(value)}
-                        </output>
+                    </label>
+                    <div className="flex flex-wrap items-end gap-2">
+                      <Button disabled={mealIndex === 0} onClick={() => moveMeal(activeMeal.id, -1)} size="small" type="button" variant="secondary">↑</Button>
+                      <Button disabled={mealIndex === meals.length - 1} onClick={() => moveMeal(activeMeal.id, 1)} size="small" type="button" variant="secondary">↓</Button>
+                      <Button disabled={meals.length === 1} onClick={() => removeMeal(activeMeal.id)} size="small" type="button" variant="secondary">Remover</Button>
+                    </div>
+                  </div>
+
+                  <details className="rounded-xl border border-[var(--line)] bg-[var(--surface)]">
+                    <summary className="cursor-pointer px-3 py-2 text-sm font-black">Observações da refeição</summary>
+                    <div className="border-t border-[var(--line)] p-3">
+                      <textarea
+                        className="min-h-20 w-full rounded-xl border border-[var(--line)] bg-white px-3 py-2 text-sm"
+                        onChange={(event) => updateMeal(activeMeal.id, { observations: event.target.value || undefined })}
+                        placeholder="Orientações específicas desta refeição"
+                        value={activeMeal.observations ?? ""}
+                      />
+                    </div>
+                  </details>
+
+                  <div className="overflow-x-auto rounded-xl border border-[var(--line)]">
+                    <div className="grid min-w-[980px] grid-cols-[minmax(240px,2fr)_78px_145px_86px_repeat(4,68px)_170px] gap-2 bg-[var(--surface)] px-3 py-2 text-[11px] font-black uppercase text-[var(--muted)]">
+                      <span>Alimento</span><span>Qtd.</span><span>Medida</span><span>Peso</span><span>kcal</span><span>P</span><span>C</span><span>L</span><span>Ações</span>
+                    </div>
+                    <div className="divide-y divide-[var(--line)]">
+                      {activeMeal.items.filter((food) => food.catalogFoodId).map((food) => (
+                        <div className="grid min-w-[980px] grid-cols-[minmax(240px,2fr)_78px_145px_86px_repeat(4,68px)_170px] items-center gap-2 bg-white px-3 py-2" key={food.id}>
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-black">{food.description}</p>
+                            <p className="truncate text-[11px] text-[var(--muted)]">{food.foodGroup} · {food.source}</p>
+                          </div>
+                          <input className="w-full rounded-lg border border-[var(--line)] px-2 py-2 text-sm" min="0.01" onChange={(event) => {
+                            const quantity = Number(event.target.value) || 0.01;
+                            const measure = food.measureOptions.find((option) => option.name === food.householdMeasure);
+                            updateFood(activeMeal.id, food.id, { quantity, grams: measure ? measure.gramsPerUnit * quantity : food.grams });
+                          }} step="0.01" type="number" value={food.quantity} />
+                          <select className="w-full rounded-lg border border-[var(--line)] bg-white px-2 py-2 text-sm" onChange={(event) => updateFoodMeasure(activeMeal.id, food.id, event.target.value)} value={food.householdMeasure}>
+                            {(food.measureOptions.length ? food.measureOptions : [{ name: food.householdMeasure, gramsPerUnit: Math.max(food.grams, 1) }]).map((measure) => <option key={measure.name} value={measure.name}>{measure.name}</option>)}
+                          </select>
+                          <input className="w-full rounded-lg border border-[var(--line)] px-2 py-2 text-sm" min="0" onChange={(event) => updateFood(activeMeal.id, food.id, { grams: Number(event.target.value) || 0 })} step="0.1" type="number" value={food.grams} />
+                          {[food.nutrients.energyKcal, food.nutrients.proteinGrams, food.nutrients.carbohydratesGrams, food.nutrients.fatsGrams].map((value, index) => <output className="text-right text-sm font-bold tabular-nums" key={index}>{n(value)}</output>)}
+                          <div className="flex gap-1">
+                            <Button onClick={() => { setActivePicker({ mealId: activeMeal.id, foodId: food.id }); setEquivalenceFoodId(food.id); setQuery(""); }} size="small" type="button" variant="secondary">Trocar</Button>
+                            <Button onClick={() => duplicateFood(activeMeal.id, food.id)} size="small" type="button" variant="secondary">Duplicar</Button>
+                            <button className="rounded-lg border border-red-200 px-2 text-red-700" onClick={() => removeFood(activeMeal.id, food.id)} type="button">×</button>
+                          </div>
+                        </div>
                       ))}
-                      <div className="flex items-center gap-1">
-                        <button
-                          aria-label={`Substituir ${food.description || "alimento"}`}
-                          className="rounded-lg border border-[var(--line)] px-2 py-2 text-xs font-bold hover:bg-[var(--surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
-                          onClick={() => {
-                            setActivePicker({ mealId: meal.id, foodId: food.id });
-                            setEquivalenceFoodId(food.id);
-                            setEquivalents([]);
-                            setFoodResults([]);
-                            setQuery("");
-                            setMessage(
-                              "Calculando equivalentes nutricionais. A troca só ocorrerá após sua seleção.",
-                            );
-                          }}
-                          title="Substituir"
-                          type="button"
-                        >
-                          Trocar
-                        </button>
-                        <button
-                          aria-label={`Duplicar ${food.description || "linha"}`}
-                          className="rounded-lg border border-[var(--line)] px-2 py-2 text-xs font-bold hover:bg-[var(--surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
-                          disabled={!food.catalogFoodId}
-                          onClick={() => duplicateFood(meal.id, food.id)}
-                          title="Duplicar"
-                          type="button"
-                        >
-                          Duplicar
-                        </button>
-                        <button
-                          aria-label={`Excluir ${food.description || "linha vazia"}`}
-                          className="rounded-lg border border-red-200 px-2 py-2 text-xs font-bold text-red-700 hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
-                          onClick={() => removeFood(meal.id, food.id)}
-                          title="Excluir"
-                          type="button"
-                        >
-                          ×
-                        </button>
+                      {activeMeal.items.filter((food) => food.catalogFoodId).length === 0 ? (
+                        <div className="px-4 py-8 text-center text-sm text-[var(--muted)]">Nenhum alimento adicionado nesta refeição.</div>
+                      ) : null}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <Button onClick={() => addFoodLine(activeMeal.id)} type="button" variant="secondary">+ Adicionar alimento</Button>
+                    <p className="text-xs font-bold tabular-nums text-[var(--muted)]">
+                      {activeMeal.plannedEnergyKcal ? `Meta ${n(activeMeal.plannedEnergyKcal)} kcal · ` : ""}
+                      Atual {n(mealTotals.energyKcal)} kcal · {n(mealTotals.proteinGrams)} g P · {n(mealTotals.carbohydratesGrams)} g C · {n(mealTotals.fatsGrams)} g L
+                    </p>
+                  </div>
+                </div>
+              );
+            })() : null}
+          </Card>
+
+          <Card className="space-y-4 p-4">
+            <SectionHeader
+              description={hasFoods ? "Comparação atualizada conforme os alimentos prescritos." : "Adicione alimentos para comparar o plano com a estratégia."}
+              eyebrow="Estratégia × Plano"
+              title="Resumo nutricional"
+            />
+            {!hasFoods ? (
+              <div className="rounded-xl border border-dashed border-[var(--line)] bg-[var(--surface)] p-6 text-center text-sm text-[var(--muted)]">
+                Adequação ainda não calculada.
+              </div>
+            ) : (
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+                {(["energyKcal", "proteinGrams", "carbohydratesGrams", "fatsGrams", "fiberGrams"] as NutritionAdequacyMetric[]).map((metric) => {
+                  const result = adequacy.metrics[metric];
+                  const config = adequacyMetricConfig[metric];
+                  return (
+                    <div className="rounded-xl border border-[var(--line)] p-3" key={metric}>
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-xs font-black uppercase text-[var(--muted)]">{config.label}</p>
+                        <span className={result.status === "ADEQUATE" ? "text-emerald-700" : result.status === "NEAR_TARGET" ? "text-amber-700" : "text-red-700"}>{adequacyStatusLabels[result.status]}</span>
                       </div>
+                      <p className="mt-2 text-lg font-black">{n(result.actual)} / {n(result.target)} {config.unit}</p>
                     </div>
                   );
                 })}
               </div>
-            </div>
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <Button
-                onClick={() => addFoodLine(meal.id)}
-                type="button"
-                variant="secondary"
-              >
-                + Adicionar alimento
-              </Button>
-              <p className="text-xs font-bold tabular-nums text-[var(--muted)]">
-                Total da refeição:{" "}
-                {n(calculateMealPlanTotals([meal]).energyKcal)} kcal ·{" "}
-                {n(calculateMealPlanTotals([meal]).proteinGrams)} g P ·{" "}
-                {n(calculateMealPlanTotals([meal]).carbohydratesGrams)} g C ·{" "}
-                {n(calculateMealPlanTotals([meal]).fatsGrams)} g L ·{" "}
-                {n(calculateMealPlanTotals([meal]).fiberGrams)} g fibras
-              </p>
-            </div>
+            )}
           </Card>
-        ))}
-      </section>
 
-      <Card className="space-y-3 p-4" variant="info">
-        <SectionHeader
-          description="Ações demonstrativas: nenhuma delas prescreve ou altera alimentos automaticamente."
-          eyebrow="Simulação identificada"
-          title="Assistência por IA — preparada para etapa futura"
-        />
-        <div className="flex flex-wrap gap-2">
-          {[
-            ["Gerar sugestão", "SUGGESTION_GENERATED"],
-            ["Regenerar", "SUGGESTION_GENERATED"],
-            ["Aprovar", "APPROVED"],
-            ["Rejeitar", "REJECTED"],
-          ].map(([label, decision]) => (
-            <Button
-              key={label}
-              onClick={() => {
-                setAiDecision(decision as MealPlanAiDecision);
-                setMessage(
-                  `${label}: decisão simulada registrada; nenhuma prescrição automática foi executada.`,
-                );
-              }}
-              type="button"
-              variant="secondary"
-            >
-              {label}
-            </Button>
-          ))}
+          <details className="rounded-2xl border border-[var(--line)] bg-white" open={showClinicalJustification} onToggle={(event) => setShowClinicalJustification((event.currentTarget as HTMLDetailsElement).open)}>
+            <summary className="cursor-pointer list-none px-4 py-4 text-sm font-black">Justificativa clínica das alterações <span className="font-normal text-[var(--muted)]">(opcional)</span></summary>
+            <div className="border-t border-[var(--line)] p-4">
+              <textarea className="min-h-28 w-full rounded-xl border border-[var(--line)] px-3 py-2 text-sm" id="clinical-justification" maxLength={10_000} onChange={(event) => setClinicalJustification(event.target.value)} placeholder="Preferência alimentar, intolerância, aderência, rotina ou decisão clínica..." value={clinicalJustification} />
+            </div>
+          </details>
+
+          <div className="sticky bottom-3 z-20 flex flex-col gap-3 rounded-2xl border border-[var(--line)] bg-white/95 p-3 shadow-lg backdrop-blur sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-xs text-[var(--muted)]">{meals.reduce((sum, meal) => sum + meal.items.filter((food) => food.catalogFoodId).length, 0)} alimentos · {n(totals.energyKcal, 0)} kcal · Responsável: {plan.responsibleProfessional}</p>
+            <div className="flex flex-wrap gap-2">
+              <Button disabled={saving || (plan.strategyUpdateAvailable && hasFoods && !strategyDecision) || meals.length === 0} type="submit" variant="secondary">{saving ? "Salvando…" : "Salvar rascunho"}</Button>
+              <Button disabled={saving || !hasFoods || (plan.strategyUpdateAvailable && !strategyDecision)} name="mealPlanAction" type="submit" value="complete">Concluir Plano Alimentar</Button>
+            </div>
+          </div>
         </div>
-        <p className="text-xs text-sky-800">
-          Estado simulado atual: {aiDecision}. A decisão clínica final permanece
-          com o Nutricionista.
-        </p>
-      </Card>
+      ) : (
+        <PrescriptionHistory entries={plan.prescriptionHistory} />
+      )}
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-xs text-[var(--muted)]">
-          Responsável: {plan.responsibleProfessional} · última gravação{" "}
-          {new Intl.DateTimeFormat("pt-BR", {
-            dateStyle: "short",
-            timeStyle: "short",
-          }).format(new Date(plan.updatedAt))}
-        </p>
-        <Button
-          disabled={
-            saving ||
-            (plan.strategyUpdateAvailable && !strategyDecision) ||
-            meals.length === 0
-          }
-          type="submit"
-        >
-          {saving ? "Salvando…" : "Salvar Plano Alimentar"}
-        </Button>
-      </div>
+      {activePicker ? (
+        <div aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-4" role="dialog">
+          <div className="max-h-[90vh] w-full max-w-5xl overflow-y-auto rounded-2xl bg-white shadow-2xl">
+            <div className="flex items-start justify-between gap-4 border-b border-[var(--line)] p-5">
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.14em] text-[var(--primary)]">Catálogo profissional</p>
+                <h3 className="mt-1 text-xl font-black">{equivalenceFoodId ? "Substituir alimento" : "Adicionar alimento"}</h3>
+                <p className="mt-1 text-sm text-[var(--muted)]">{meals.find((meal) => meal.id === activePicker.mealId)?.name}</p>
+              </div>
+              <button aria-label="Fechar" className="rounded-full border border-[var(--line)] px-3 py-1 text-xl" onClick={() => { if (!equivalenceFoodId && activePicker.foodId) removeFood(activePicker.mealId, activePicker.foodId); setActivePicker(undefined); setEquivalenceFoodId(undefined); setQuery(""); }} type="button">×</button>
+            </div>
+            <div className="space-y-4 p-5">
+              <div className="flex flex-wrap gap-2">
+                {["Todos", "TACO", "IBGE", "TBCA", "Meus alimentos", "Favoritos"].map((source) => <span className="rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3 py-2 text-sm font-bold" key={source}>{source}</span>)}
+              </div>
+              <label className="block text-sm font-black">
+                Alimento
+                <input autoFocus className="mt-1 w-full rounded-xl border border-[var(--line)] px-4 py-3 text-base" onChange={(event) => setQuery(event.target.value)} placeholder="Pesquisar alimento..." value={query} />
+              </label>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {searching ? <p className="text-sm text-[var(--muted)]">Buscando alimentos…</p> : null}
+                {!searching && foodResults.length === 0 ? <p className="text-sm text-[var(--muted)]">Digite o nome do alimento para pesquisar no catálogo.</p> : null}
+                {foodResults.map((food) => (
+                  <button className="rounded-xl border border-[var(--line)] p-3 text-left hover:border-[var(--primary)] hover:bg-emerald-50" key={food.id} onClick={() => {
+                    const equivalent = equivalents.find((item) => item.food.id === food.id);
+                    chooseFood(food, equivalent?.suggestedGrams);
+                  }} type="button">
+                    <p className="font-black">{food.officialName}</p>
+                    <p className="mt-1 text-xs text-[var(--muted)]">{food.foodGroup} · {food.source.kind}</p>
+                  </button>
+                ))}
+              </div>
+              <div className="flex justify-end gap-2 border-t border-[var(--line)] pt-4">
+                <Button onClick={() => { if (!equivalenceFoodId && activePicker.foodId) removeFood(activePicker.mealId, activePicker.foodId); setActivePicker(undefined); setEquivalenceFoodId(undefined); setQuery(""); }} type="button" variant="secondary">Cancelar</Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </form>
   );
 }

@@ -73,7 +73,7 @@ export function toMealPlanStrategyInheritance(
     attendanceId: record.attendanceId,
     evaluationEntryId: record.evaluationEntryId,
     objective: record.objective,
-    secondaryObjectives: record.secondaryObjectives,
+    secondaryObjectives: record.secondaryObjectives ?? [],
     method: record.method,
     protocol: record.protocol,
     totalEnergyExpenditureKcal:

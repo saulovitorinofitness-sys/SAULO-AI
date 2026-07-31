@@ -475,13 +475,7 @@ export function CollectionSummary({
       </SectionCard>
 
       <ResponsiveActionBar>
-        <button
-          className="min-h-11 rounded-xl px-4 text-sm font-black text-slate-600 hover:bg-slate-100"
-          onClick={() => onCorrect("POSTURAL_ASSESSMENT")}
-          type="button"
-        >
-          Voltar
-        </button>
+        
         <Link
           className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-200 px-4 text-sm font-black text-slate-700 hover:bg-slate-50"
           href={`/pacientes/${collection.patientId}?scenario=${collection.scenario}`}
