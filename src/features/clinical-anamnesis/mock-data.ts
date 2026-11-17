@@ -8,13 +8,13 @@ export const clinicalHistoryOptions = [["HYPERTENSION", "Hipertensão"], ["DIABE
 export const familyHistoryOptions = [["DIABETES", "Diabetes"], ["HYPERTENSION", "Hipertensão"], ["OBESITY", "Obesidade"], ["HEART_ATTACK", "Infarto"], ["STROKE", "AVC"], ["CANCER", "Câncer"], ["OSTEOPOROSIS", "Osteoporose"], ["OTHER", "Outro"]] as const;
 
 export const emptyAnamnesisData: ClinicalAnamnesisData = {
-  chiefComplaint: "Registro demonstrativo para validação do fluxo da anamnese.",
+  chiefComplaint: "",
   currentIllness: { onset: "", duration: "", evolution: "", previousTreatments: "", currentSituation: "" },
-  primaryObjective: "HEALTH", secondaryObjectives: [], clinicalHistory: [], clinicalHistoryNotes: "", familyHistory: [], surgeries: [], injuries: [], medications: [], supplements: [], allergies: [],
+  primaryObjective: "HEALTH", secondaryObjectives: [], clinicalHistory: [], clinicalHistoryNotes: "", familyHistory: [], surgeries: [], injuries: [], medications: [], supplements: [], allergyStatus: "NOT_INFORMED", allergies: [],
   sleep: { hours: "", quality: "", awakenings: "" }, stressLevel: 0,
   physicalActivity: { frequency: "", duration: "", modality: "" }, habits: { alcohol: "", smoking: "", others: "" }, nutrition: { mealsPerDay: "", water: "", restrictions: "", preferences: "" }, generalNotes: "",
 };
 
 export function createAnamnesisSeed(): ClinicalAnamnesisView {
-  return { patientId: "demo-patient-001", masterRecordId: "demo-master-record-001", patientName: "Paciente de demonstração", patientCode: "DEMO-001", scenario: "complete", status: "COMPLETED", version: 1, data: structuredClone(emptyAnamnesisData), audit: { professionalUserId: BUILT_IN_IDS.users.sauloXavierVitorino, professionalName: "Saulo Xavier Vitorino", updatedAt: "2026-07-16T14:10:00-03:00", version: 1 }, history: [], timeline: [{ id: "anamnesis-timeline-001", occurredAt: "2026-07-16T14:10:00-03:00", actorName: "Saulo Xavier Vitorino", title: "Anamnese registrada", detail: "Registro mockado vinculado ao Prontuário Mestre." }], canRead: true, canEdit: true, canViewNutrition: true };
+  return { patientId: "demo-patient-001", masterRecordId: "demo-master-record-001", patientName: "Paciente de demonstração", patientCode: "DEMO-001", patientSex: "NOT_INFORMED", scenario: "complete", status: "COMPLETED", version: 1, data: structuredClone(emptyAnamnesisData), audit: { professionalUserId: BUILT_IN_IDS.users.sauloXavierVitorino, professionalName: "Saulo Xavier Vitorino", updatedAt: "2026-07-16T14:10:00-03:00", version: 1 }, history: [], timeline: [{ id: "anamnesis-timeline-001", occurredAt: "2026-07-16T14:10:00-03:00", actorName: "Saulo Xavier Vitorino", title: "Anamnese registrada", detail: "Registro mockado vinculado ao Prontuário Mestre." }], canRead: true, canEdit: true, canViewNutrition: true };
 }

@@ -1,9 +1,11 @@
 import type { ReactNode } from "react";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 
 import { AuthenticatedShell } from "@/components/auth/authenticated-shell";
-import { MockNotice } from "@/components/ui/mock-notice";
-import { DevelopmentSessionProvider } from "@/features/development-session";
 import { mvpService } from "@/features/mvp";
+import { loginPathFor } from "@/features/mvp/authentication-navigation";
+import { isSessionAuthenticationError } from "@/features/mvp/session-authentication";
 
 type LayoutProps = {
   children: ReactNode;
@@ -12,14 +14,14 @@ type LayoutProps = {
 export default async function AuthenticatedLayout({
   children,
 }: LayoutProps) {
-  const access = await mvpService.getSession();
+  try {
+    const session = await mvpService.getSession();
+    if (session.user.profileType === "STUDENT") redirect("/portal");
+  } catch (error) {
+    if (!isSessionAuthenticationError(error)) throw error;
+    const requestHeaders = await headers();
+    redirect(loginPathFor(requestHeaders.get("x-saulo-ai-return-to")));
+  }
 
-  return (
-    <>
-      <MockNotice />
-      <DevelopmentSessionProvider initialUser={access.user}>
-        <AuthenticatedShell>{children}</AuthenticatedShell>
-      </DevelopmentSessionProvider>
-    </>
-  );
+  return <AuthenticatedShell>{children}</AuthenticatedShell>;
 }

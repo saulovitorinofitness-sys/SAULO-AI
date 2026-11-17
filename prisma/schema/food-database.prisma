@@ -2,9 +2,12 @@ enum NutritionSourceKind {
   TACO
   TBCA
   IBGE
+  PHILIPPI
+  // Grafia legada preservada para compatibilidade com registros existentes.
   PHILIPS
   USDA
   CLINIC_SV
+  EVONUT
 }
 
 enum FoodDataOrigin {
@@ -16,6 +19,99 @@ enum FoodDataOrigin {
 enum FoodStatus {
   ACTIVE
   INACTIVE
+}
+
+enum FoodMeasureMatchStatus {
+  CONFIRMED
+  PROBABLE
+  UNMATCHED
+  UNLINKED
+}
+
+enum FoodNutrientValueStatus {
+  NUMERIC
+  TRACE
+  NOT_ANALYZED
+  NOT_APPLICABLE
+  MISSING
+}
+
+enum FoodReviewStatus {
+  PENDING
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+}
+
+enum FoodImportBatchStatus {
+  DRAFT
+  VALIDATED
+  IMPORTED
+  FAILED
+  CANCELLED
+}
+
+enum FoodImportItemAction {
+  CREATED
+  UPDATED
+  UNCHANGED
+  CONFLICT
+  REJECTED
+}
+
+enum FoodAssetOrigin {
+  SOURCE_IMPORT
+  PROFESSIONAL
+  LEGACY
+}
+
+enum RecipeStatus {
+  DRAFT
+  CALCULATED
+  FINALIZED
+  ARCHIVED
+}
+
+enum RecipeMeasurementUnit {
+  GRAM
+  MILLILITER
+  UNIT
+}
+
+enum RecipeIngredientQuantityUnit {
+  GRAM
+  MILLILITER
+}
+
+enum RecipeNutritionBasisUnit {
+  GRAM
+  MILLILITER
+}
+
+enum CommercialFoodProductPhysicalType {
+  SOLID
+  SEMISOLID
+  LIQUID
+}
+
+enum CommercialFoodProductContentUnit {
+  GRAM
+  MILLILITER
+}
+
+enum CommercialFoodProductStatus {
+  DRAFT
+  CALCULATED
+  READY_FOR_LABEL
+  ACTIVE
+  ARCHIVED
+}
+
+enum ProductNutritionLabelStatus {
+  DRAFT
+  VALIDATED
+  SUPERSEDED
+  ARCHIVED
 }
 
 model FoodCategory {
@@ -32,51 +128,170 @@ model FoodCategory {
 }
 
 model NutritionSource {
-  id        String              @id @default(uuid()) @db.Uuid
-  kind      NutritionSourceKind
-  name      String
-  version   String?
-  reference String?
-  origin    FoodDataOrigin
-  editable  Boolean             @default(false)
-  active    Boolean             @default(true)
-  createdAt DateTime            @default(now())
-  updatedAt DateTime            @updatedAt
+  id                 String              @id @default(uuid()) @db.Uuid
+  kind               NutritionSourceKind
+  name               String
+  version            String?
+  seriesKey          String?
+  reference          String?
+  licenseName        String?
+  licenseUrl         String?
+  licenseText        String?             @db.Text
+  supersedesSourceId String?             @db.Uuid
+  origin             FoodDataOrigin
+  editable           Boolean             @default(false)
+  active             Boolean             @default(true)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
 
-  foods             Food[]
-  householdMeasures FoodHouseholdMeasure[]
+  foods                   Food[]
+  householdMeasures       FoodHouseholdMeasure[]
+  measureReferences       FoodHouseholdMeasureReference[]
+  measureImportRejections FoodMeasureImportRejection[]
+  references              NutritionSourceReference[]
+  importBatches           FoodImportBatch[]
+  recipeImportBatches     RecipeImportBatch[]
+  importedRecipes         Recipe[]
+  synonyms                FoodSynonym[]
+  supersedesSource        NutritionSource?                @relation("NutritionSourceVersionLineage", fields: [supersedesSourceId], references: [id], onDelete: SetNull)
+  supersededBySources     NutritionSource[]               @relation("NutritionSourceVersionLineage")
 
   @@unique([kind, name, version])
   @@index([kind])
   @@index([name])
+  @@index([seriesKey, version])
+  @@index([supersedesSourceId])
+}
+
+model NutritionSourceReference {
+  id              String   @id @default(uuid()) @db.Uuid
+  sourceId        String   @db.Uuid
+  title           String
+  authors         String?
+  publisher       String?
+  edition         String?
+  publicationYear Int?
+  citation        String?  @db.Text
+  url             String?
+  doi             String?
+  isbn            String?
+  licenseName     String?
+  licenseUrl      String?
+  licenseText     String?  @db.Text
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  source NutritionSource @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+
+  @@index([sourceId])
+  @@index([publicationYear])
+}
+
+model FoodImportBatch {
+  id                 String                @id @default(uuid()) @db.Uuid
+  sourceId           String                @db.Uuid
+  sourceVersion      String?
+  fileName           String
+  fileHash           String
+  hashAlgorithm      String                @default("SHA-256")
+  parserVersion      String
+  status             FoodImportBatchStatus @default(DRAFT)
+  reviewStatus       FoodReviewStatus      @default(PENDING)
+  reviewedBy         String?
+  reviewedAt         DateTime?
+  reviewNotes        String?               @db.Text
+  startedAt          DateTime              @default(now())
+  completedAt        DateTime?
+  importedAt         DateTime?
+  offlineAvailable   Boolean               @default(false)
+  offlinePublishedAt DateTime?
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+
+  source               NutritionSource           @relation(fields: [sourceId], references: [id], onDelete: Restrict)
+  foods                Food[]                    @relation("FoodLatestImportBatch")
+  items                FoodImportBatchItem[]
+  nutrientObservations FoodNutrientObservation[]
+  householdMeasures    FoodHouseholdMeasure[]
+  synonyms             FoodSynonym[]
+
+  @@unique([sourceId, fileHash, parserVersion])
+  @@index([sourceId, sourceVersion])
+  @@index([status, reviewStatus])
+  @@index([reviewStatus, offlineAvailable])
+}
+
+model RecipeImportBatch {
+  id            String                @id @default(uuid()) @db.Uuid
+  sourceId      String                @db.Uuid
+  sourceVersion String?
+  fileName      String
+  fileHash      String
+  hashAlgorithm String                @default("SHA-256")
+  parserVersion String
+  status        FoodImportBatchStatus @default(DRAFT)
+  startedAt     DateTime              @default(now())
+  completedAt   DateTime?
+  importedAt    DateTime?
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+
+  source  NutritionSource @relation(fields: [sourceId], references: [id], onDelete: Restrict)
+  recipes Recipe[]
+
+  @@unique([sourceId, fileHash, parserVersion])
+  @@index([sourceId, sourceVersion])
+  @@index([status])
 }
 
 model Food {
-  id                    String     @id @default(uuid()) @db.Uuid
+  id                    String           @id @default(uuid()) @db.Uuid
   officialName          String
+  sourceOriginalName    String?
+  professionalName      String?
   normalizedName        String
   description           String?
-  categoryId            String     @db.Uuid
+  categoryId            String           @db.Uuid
   foodGroup             String
-  sourceId              String     @db.Uuid
+  sourceId              String           @db.Uuid
   sourceCode            String?
   preparationState      String?
+  preparationMethod     String?
+  foodState             String?
   presentation          String?
-  referenceServingGrams Decimal    @default(100) @db.Decimal(10, 3)
-  status                FoodStatus @default(ACTIVE)
-  createdAt             DateTime   @default(now())
-  updatedAt             DateTime   @updatedAt
+  referenceServingGrams Decimal          @default(100) @db.Decimal(10, 3)
+  referenceServingUnit  String?
+  status                FoodStatus       @default(ACTIVE)
+  reviewStatus          FoodReviewStatus @default(PENDING)
+  reviewedBy            String?
+  reviewedAt            DateTime?
+  reviewNotes           String?          @db.Text
+  importBatchId         String?          @db.Uuid
+  importedFrom          String?
+  importedAt            DateTime?
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
 
-  category          FoodCategory           @relation(fields: [categoryId], references: [id], onDelete: Restrict)
-  source            NutritionSource        @relation(fields: [sourceId], references: [id], onDelete: Restrict)
-  nutrients         FoodNutrients?
-  householdMeasures FoodHouseholdMeasure[]
-  synonyms          FoodSynonym[]
+  category             FoodCategory                    @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  source               NutritionSource                 @relation(fields: [sourceId], references: [id], onDelete: Restrict)
+  importBatch          FoodImportBatch?                @relation("FoodLatestImportBatch", fields: [importBatchId], references: [id], onDelete: SetNull)
+  nutrients            FoodNutrients?
+  nutrientObservations FoodNutrientObservation[]
+  householdMeasures    FoodHouseholdMeasure[]
+  measureReferences    FoodHouseholdMeasureReference[]
+  synonyms             FoodSynonym[]
+  importConflicts      FoodImportConflict[]
+  importBatchItems     FoodImportBatchItem[]
+  recipeIngredients    RecipeIngredient[]
 
+  @@unique([sourceId, sourceCode])
   @@index([normalizedName])
+  @@index([normalizedName(ops: raw("gin_trgm_ops"))], type: Gin, map: "Food_normalizedName_trgm_idx")
   @@index([categoryId])
   @@index([sourceId])
   @@index([sourceCode])
+  @@index([importBatchId])
+  @@index([reviewStatus])
   @@index([normalizedName, preparationState, sourceId, sourceCode])
 }
 
@@ -113,44 +328,460 @@ model FoodNutrients {
   vitaminB6Mg              Decimal? @db.Decimal(12, 6)
   folateMcg                Decimal? @db.Decimal(12, 6)
   vitaminB12Mcg            Decimal? @db.Decimal(12, 6)
+  additionalNutrients      Json?
   createdAt                DateTime @default(now())
   updatedAt                DateTime @updatedAt
 
   food Food @relation(fields: [foodId], references: [id], onDelete: Cascade)
 }
 
-model FoodHouseholdMeasure {
-  id             String   @id @default(uuid()) @db.Uuid
-  foodId         String   @db.Uuid
-  sourceId       String   @db.Uuid
-  name           String
-  normalizedName String
-  variation      String?
-  quantity       Decimal  @default(1) @db.Decimal(10, 3)
-  grams          Decimal  @db.Decimal(10, 3)
-  isDefault      Boolean  @default(false)
-  active         Boolean  @default(true)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+model FoodNutrientObservation {
+  id                 String                  @id @default(uuid()) @db.Uuid
+  foodId             String                  @db.Uuid
+  importBatchId      String?                 @db.Uuid
+  nutrientKey        String
+  sourceNutrientName String?
+  numericValue       Decimal?                @db.Decimal(18, 8)
+  valueStatus        FoodNutrientValueStatus @default(MISSING)
+  rawValue           String?                 @db.Text
+  unit               String?
+  analyticalMethod   String?
+  dataOrigin         String?
+  sourceReference    String?                 @db.Text
+  createdAt          DateTime                @default(now())
+  updatedAt          DateTime                @updatedAt
 
-  food   Food            @relation(fields: [foodId], references: [id], onDelete: Cascade)
-  source NutritionSource @relation(fields: [sourceId], references: [id], onDelete: Restrict)
+  food        Food             @relation(fields: [foodId], references: [id], onDelete: Cascade)
+  importBatch FoodImportBatch? @relation(fields: [importBatchId], references: [id], onDelete: Restrict)
+
+  @@unique([foodId, nutrientKey, importBatchId])
+  @@index([foodId, nutrientKey])
+  @@index([importBatchId])
+  @@index([valueStatus])
+}
+
+model FoodImportBatchItem {
+  id                 String               @id @default(uuid()) @db.Uuid
+  batchId            String               @db.Uuid
+  foodId             String?              @db.Uuid
+  sourceCode         String?
+  sourceOriginalName String
+  sourceRow          Int?
+  action             FoodImportItemAction
+  contentHash        String?
+  notes              String?              @db.Text
+  createdAt          DateTime             @default(now())
+
+  batch FoodImportBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  food  Food?           @relation(fields: [foodId], references: [id], onDelete: SetNull)
+
+  @@unique([batchId, sourceCode])
+  @@index([batchId, action])
+  @@index([foodId])
+}
+
+model FoodHouseholdMeasure {
+  id              String           @id @default(uuid()) @db.Uuid
+  foodId          String           @db.Uuid
+  sourceId        String           @db.Uuid
+  importBatchId   String?          @db.Uuid
+  name            String
+  normalizedName  String
+  variation       String?
+  quantity        Decimal          @default(1) @db.Decimal(10, 3)
+  grams           Decimal          @db.Decimal(10, 3)
+  dataOrigin      FoodAssetOrigin?
+  sourceRecordKey String?
+  isDefault       Boolean          @default(false)
+  active          Boolean          @default(true)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  food              Food               @relation(fields: [foodId], references: [id], onDelete: Cascade)
+  source            NutritionSource    @relation(fields: [sourceId], references: [id], onDelete: Restrict)
+  importBatch       FoodImportBatch?   @relation(fields: [importBatchId], references: [id], onDelete: SetNull)
+  recipeIngredients RecipeIngredient[]
 
   @@unique([foodId, normalizedName, variation, quantity, grams])
   @@index([foodId])
   @@index([sourceId])
+  @@index([importBatchId])
   @@index([normalizedName])
 }
 
+model FoodHouseholdMeasureReference {
+  id                    String                 @id @default(uuid()) @db.Uuid
+  sourceId              String                 @db.Uuid
+  foodId                String?                @db.Uuid
+  sourceFoodCode        String
+  foodName              String
+  normalizedFoodName    String
+  preparationCode       String
+  preparationName       String
+  measureCode           String
+  measureName           String
+  normalizedMeasureName String?
+  standardMeasureCode   String
+  standardMeasureName   String
+  quantityValue         Decimal?               @db.Decimal(12, 3)
+  quantityUnit          String?
+  referenceCode         String?
+  referenceDescription  String?
+  sourceVersion         String
+  matchStatus           FoodMeasureMatchStatus @default(UNMATCHED)
+  matchReason           String?
+  foodSource            String?
+  linkMethod            String?
+  importedFrom          String?
+  sourcePage            Int
+  importedAt            DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+
+  source NutritionSource @relation(fields: [sourceId], references: [id], onDelete: Restrict)
+  food   Food?           @relation(fields: [foodId], references: [id], onDelete: SetNull)
+
+  @@unique([sourceId, sourceFoodCode, preparationCode, measureCode], map: "FoodHouseholdMeasureReference_sourceId_sourceFoodCode_preparati")
+  @@index([foodId, preparationCode])
+  @@index([normalizedFoodName])
+  @@index([matchStatus])
+  @@index([sourceFoodCode])
+  @@index([foodSource, sourceFoodCode])
+  @@index([normalizedMeasureName])
+}
+
+model FoodImportConflict {
+  id               String   @id @default(uuid()) @db.Uuid
+  importedFrom     String
+  foodSource       String
+  sourceFoodCode   String
+  incomingFoodName String
+  existingFoodId   String?  @db.Uuid
+  conflictType     String
+  details          String?  @db.Text
+  fingerprint      String   @unique
+  importedAt       DateTime @default(now())
+
+  existingFood Food? @relation(fields: [existingFoodId], references: [id], onDelete: SetNull)
+
+  @@index([importedFrom])
+  @@index([foodSource, sourceFoodCode])
+  @@index([existingFoodId])
+}
+
+model FoodMeasureImportRejection {
+  id          String   @id @default(uuid()) @db.Uuid
+  sourceId    String   @db.Uuid
+  sourcePage  Int
+  rawText     String   @db.Text
+  reason      String
+  fingerprint String
+  importedAt  DateTime @default(now())
+
+  source NutritionSource @relation(fields: [sourceId], references: [id], onDelete: Restrict)
+
+  @@unique([sourceId, fingerprint])
+  @@index([sourceId, sourcePage])
+}
+
 model FoodSynonym {
-  id             String   @id @default(uuid()) @db.Uuid
-  foodId         String   @db.Uuid
+  id             String           @id @default(uuid()) @db.Uuid
+  foodId         String           @db.Uuid
+  sourceId       String?          @db.Uuid
+  importBatchId  String?          @db.Uuid
   name           String
   normalizedName String
-  createdAt      DateTime @default(now())
+  dataOrigin     FoodAssetOrigin?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
 
-  food Food @relation(fields: [foodId], references: [id], onDelete: Cascade)
+  food        Food             @relation(fields: [foodId], references: [id], onDelete: Cascade)
+  source      NutritionSource? @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+  importBatch FoodImportBatch? @relation(fields: [importBatchId], references: [id], onDelete: SetNull)
 
   @@unique([foodId, normalizedName])
+  @@index([sourceId])
+  @@index([importBatchId])
   @@index([normalizedName])
+}
+
+model Recipe {
+  id                       String                             @id @default(uuid()) @db.Uuid
+  businessUnitId           String                             @db.Uuid
+  ownerUserId              String                             @db.Uuid
+  createdByUserId          String                             @db.Uuid
+  updatedByUserId          String                             @db.Uuid
+  importBatchId            String?                            @db.Uuid
+  importSourceId           String?                            @db.Uuid
+  sourceRecordCode         String?
+  sourceContentHash        String?
+  importedStateHash        String?
+  sourceLocation           Json?
+  sourceOriginalData       Json?
+  sourcePendings           Json?
+  importedAt               DateTime?
+  title                    String
+  normalizedTitle          String
+  description              String?                            @db.Text
+  notes                    String?                            @db.Text
+  category                 String?
+  preparationMethod        String?                            @db.Text
+  preparationTimeMinutes   Int?
+  yieldDescription         String?
+  finalYieldAmount         Decimal?                           @db.Decimal(12, 3)
+  finalYieldUnit           RecipeMeasurementUnit?
+  yieldAmount              Decimal?                           @db.Decimal(12, 3)
+  yieldUnit                RecipeMeasurementUnit?
+  finalWeightGrams         Decimal?                           @db.Decimal(12, 3)
+  servings                 Int?
+  servingSize              Decimal?                           @db.Decimal(12, 3)
+  servingSizeUnit          RecipeMeasurementUnit?
+  servingHouseholdMeasure  String?
+  servingWeightGrams       Decimal?                           @db.Decimal(12, 3)
+  physicalType             CommercialFoodProductPhysicalType?
+  status                   RecipeStatus                       @default(DRAFT)
+  calculatedAt             DateTime?
+  finalizedAt              DateTime?
+  archivedAt               DateTime?
+  offlineAvailable         Boolean                            @default(true)
+  offlinePublishedAt       DateTime?
+  createdAt                DateTime                           @default(now())
+  updatedAt                DateTime                           @updatedAt
+
+  importBatch       RecipeImportBatch?       @relation(fields: [importBatchId], references: [id], onDelete: Restrict)
+  importSource      NutritionSource?          @relation(fields: [importSourceId], references: [id], onDelete: Restrict)
+  ingredients       RecipeIngredient[]
+  preparationSteps  RecipePreparationStep[]
+  nutritionSnapshots RecipeNutritionSnapshot[]
+  commercialProducts CommercialFoodProduct[]
+
+  @@unique([businessUnitId, ownerUserId, importSourceId, sourceRecordCode], map: "Recipe_origin_identity_key")
+  @@index([businessUnitId, status])
+  @@index([ownerUserId, status])
+  @@index([ownerUserId, normalizedTitle])
+  @@index([importBatchId])
+  @@index([importSourceId, sourceRecordCode])
+  @@index([createdByUserId])
+  @@index([updatedByUserId])
+  @@index([normalizedTitle])
+  @@index([offlineAvailable, updatedAt])
+}
+
+model RecipeIngredient {
+  id                          String                        @id @default(uuid()) @db.Uuid
+  recipeId                    String                        @db.Uuid
+  foodId                      String                        @db.Uuid
+  householdMeasureId          String?                       @db.Uuid
+  position                    Int
+  quantityGrams               Decimal                       @db.Decimal(12, 3)
+  grossQuantity               Decimal?                      @db.Decimal(12, 3)
+  netQuantity                 Decimal?                      @db.Decimal(12, 3)
+  quantityUnit                RecipeIngredientQuantityUnit?
+  householdMeasureQuantity    Decimal?                      @db.Decimal(12, 3)
+  householdMeasureDescription String?
+  correctionFactor            Decimal?                      @db.Decimal(12, 6)
+  cookingYieldFactor          Decimal?                      @db.Decimal(12, 6)
+  notes                       String?                       @db.Text
+  createdAt                   DateTime                      @default(now())
+  updatedAt                   DateTime                      @updatedAt
+
+  recipe           Recipe                @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  food             Food                  @relation(fields: [foodId], references: [id], onDelete: Restrict)
+  householdMeasure FoodHouseholdMeasure? @relation(fields: [householdMeasureId], references: [id], onDelete: Restrict)
+
+  @@unique([recipeId, position])
+  @@index([recipeId])
+  @@index([foodId])
+  @@index([householdMeasureId])
+}
+
+model RecipePreparationStep {
+  id          String   @id @default(uuid()) @db.Uuid
+  recipeId    String   @db.Uuid
+  position    Int
+  instruction String   @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  recipe Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  @@unique([recipeId, position])
+  @@index([recipeId])
+}
+
+model RecipeNutritionSnapshot {
+  id                                   String                   @id @default(uuid()) @db.Uuid
+  recipeId                             String                   @db.Uuid
+  version                              Int
+  ingredientCount                     Int
+  totalIngredientWeightGrams           Decimal?                 @db.Decimal(12, 3)
+  totalIngredientMassGrams             Decimal?                 @db.Decimal(12, 3)
+  totalIngredientVolumeMilliliters     Decimal?                 @db.Decimal(12, 3)
+  finalWeightGrams                     Decimal?                 @db.Decimal(12, 3)
+  finalYieldAmount                     Decimal?                 @db.Decimal(12, 3)
+  finalYieldUnit                       RecipeNutritionBasisUnit @default(GRAM)
+  servings                             Int
+  servingWeightGrams                   Decimal?                 @db.Decimal(12, 3)
+  servingSize                          Decimal?                 @db.Decimal(12, 3)
+  servingSizeUnit                      RecipeNutritionBasisUnit @default(GRAM)
+  calculationBasisAmount               Decimal                  @default(100) @db.Decimal(12, 3)
+  calculationBasisUnit                 RecipeNutritionBasisUnit @default(GRAM)
+  energyKcal                           Decimal?                 @db.Decimal(18, 6)
+  proteinGrams                         Decimal?                 @db.Decimal(18, 6)
+  carbohydratesGrams                   Decimal?                 @db.Decimal(18, 6)
+  fatsGrams                            Decimal?                 @db.Decimal(18, 6)
+  fiberGrams                           Decimal?                 @db.Decimal(18, 6)
+  sugarsGrams                          Decimal?                 @db.Decimal(18, 6)
+  addedSugarsGrams                     Decimal?                 @db.Decimal(18, 6)
+  cholesterolMg                       Decimal?                 @db.Decimal(18, 6)
+  saturatedFatsGrams                   Decimal?                 @db.Decimal(18, 6)
+  transFatsGrams                       Decimal?                 @db.Decimal(18, 6)
+  monounsaturatedFatsGrams             Decimal?                 @db.Decimal(18, 6)
+  polyunsaturatedFatsGrams             Decimal?                 @db.Decimal(18, 6)
+  sodiumMg                             Decimal?                 @db.Decimal(18, 6)
+  calciumMg                            Decimal?                 @db.Decimal(18, 6)
+  ironMg                               Decimal?                 @db.Decimal(18, 6)
+  magnesiumMg                          Decimal?                 @db.Decimal(18, 6)
+  phosphorusMg                         Decimal?                 @db.Decimal(18, 6)
+  potassiumMg                          Decimal?                 @db.Decimal(18, 6)
+  zincMg                               Decimal?                 @db.Decimal(18, 6)
+  copperMg                             Decimal?                 @db.Decimal(18, 6)
+  manganeseMg                         Decimal?                 @db.Decimal(18, 6)
+  seleniumMcg                          Decimal?                 @db.Decimal(18, 6)
+  vitaminAMcg                          Decimal?                 @db.Decimal(18, 6)
+  vitaminCMg                           Decimal?                 @db.Decimal(18, 6)
+  vitaminDMcg                          Decimal?                 @db.Decimal(18, 6)
+  vitaminEMg                           Decimal?                 @db.Decimal(18, 6)
+  vitaminKMcg                          Decimal?                 @db.Decimal(18, 6)
+  thiamineMg                           Decimal?                 @db.Decimal(18, 6)
+  riboflavinMg                         Decimal?                 @db.Decimal(18, 6)
+  niacinMg                             Decimal?                 @db.Decimal(18, 6)
+  vitaminB6Mg                          Decimal?                 @db.Decimal(18, 6)
+  folateMcg                            Decimal?                 @db.Decimal(18, 6)
+  vitaminB12Mcg                        Decimal?                 @db.Decimal(18, 6)
+  additionalNutrients                  Json?
+  recipeContentSnapshot                Json?
+  calculatedAt                         DateTime                 @default(now())
+  finalizedAt                          DateTime?
+  createdByUserId                      String                   @db.Uuid
+  createdAt                            DateTime                 @default(now())
+
+  recipe             Recipe                  @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  commercialProducts CommercialFoodProduct[]
+  productLabels      ProductNutritionLabel[]
+
+  @@unique([recipeId, version])
+  @@index([recipeId, finalizedAt])
+  @@index([createdByUserId])
+}
+
+model CommercialFoodProduct {
+  id                                   String                            @id @default(uuid()) @db.Uuid
+  businessUnitId                       String                            @db.Uuid
+  ownerUserId                          String                            @db.Uuid
+  recipeId                             String                            @db.Uuid
+  recipeNutritionSnapshotId            String                            @db.Uuid
+  commercialName                       String
+  normalizedCommercialName             String
+  brand                                String?
+  description                          String?                           @db.Text
+  category                             String?
+  physicalType                         CommercialFoodProductPhysicalType
+  netContent                           Decimal                           @db.Decimal(12, 3)
+  netContentUnit                       CommercialFoodProductContentUnit
+  servingsPerPackage                   Decimal                           @db.Decimal(12, 3)
+  servingSize                          Decimal                           @db.Decimal(12, 3)
+  servingSizeUnit                      CommercialFoodProductContentUnit
+  servingHouseholdMeasure              String?
+  status                               CommercialFoodProductStatus       @default(DRAFT)
+  sku                                  String?
+  shelfLifeDays                        Int?
+  storageInstructions                  String?                           @db.Text
+  preparationOrConsumptionInstructions String?                           @db.Text
+  createdByUserId                      String                            @db.Uuid
+  updatedByUserId                      String                            @db.Uuid
+  activatedAt                          DateTime?
+  archivedAt                           DateTime?
+  offlineAvailable                     Boolean                           @default(true)
+  offlinePublishedAt                   DateTime?
+  createdAt                            DateTime                          @default(now())
+  updatedAt                            DateTime                          @updatedAt
+
+  recipe                  Recipe                  @relation(fields: [recipeId], references: [id], onDelete: Restrict)
+  recipeNutritionSnapshot RecipeNutritionSnapshot @relation(fields: [recipeNutritionSnapshotId], references: [id], onDelete: Restrict)
+  nutritionLabels         ProductNutritionLabel[]
+
+  @@unique([businessUnitId, sku])
+  @@index([businessUnitId, status])
+  @@index([ownerUserId, status])
+  @@index([recipeId])
+  @@index([recipeNutritionSnapshotId])
+  @@index([normalizedCommercialName])
+  @@index([createdByUserId])
+  @@index([updatedByUserId])
+  @@index([offlineAvailable, updatedAt])
+}
+
+model ProductNutritionLabel {
+  id                             String                           @id @default(uuid()) @db.Uuid
+  commercialFoodProductId        String                           @db.Uuid
+  recipeNutritionSnapshotId      String                           @db.Uuid
+  version                        Int
+  status                         ProductNutritionLabelStatus      @default(DRAFT)
+  calculatedAt                   DateTime                         @default(now())
+  legislationReference           String?
+  regulatoryInput                Json?
+  calculationResult              Json?
+  calculationPendings            Json?
+  rulesSnapshot                  Json?
+  productInputSnapshot           Json?
+  servingsPerPackage             Decimal                          @db.Decimal(12, 3)
+  servingSize                    Decimal                          @db.Decimal(12, 3)
+  servingSizeUnit                CommercialFoodProductContentUnit
+  servingHouseholdMeasure        String?
+  energyKcalPerServing           Decimal?                         @db.Decimal(18, 6)
+  carbohydratesGramsPerServing   Decimal?                         @db.Decimal(18, 6)
+  totalSugarsGramsPerServing     Decimal?                         @db.Decimal(18, 6)
+  addedSugarsGramsPerServing     Decimal?                         @db.Decimal(18, 6)
+  proteinGramsPerServing         Decimal?                         @db.Decimal(18, 6)
+  totalFatsGramsPerServing       Decimal?                         @db.Decimal(18, 6)
+  saturatedFatsGramsPerServing   Decimal?                         @db.Decimal(18, 6)
+  transFatsGramsPerServing       Decimal?                         @db.Decimal(18, 6)
+  fiberGramsPerServing           Decimal?                         @db.Decimal(18, 6)
+  sodiumMgPerServing             Decimal?                         @db.Decimal(18, 6)
+  energyKcalPer100               Decimal?                         @db.Decimal(18, 6)
+  carbohydratesGramsPer100       Decimal?                         @db.Decimal(18, 6)
+  totalSugarsGramsPer100         Decimal?                         @db.Decimal(18, 6)
+  addedSugarsGramsPer100         Decimal?                         @db.Decimal(18, 6)
+  proteinGramsPer100             Decimal?                         @db.Decimal(18, 6)
+  totalFatsGramsPer100           Decimal?                         @db.Decimal(18, 6)
+  saturatedFatsGramsPer100       Decimal?                         @db.Decimal(18, 6)
+  transFatsGramsPer100           Decimal?                         @db.Decimal(18, 6)
+  fiberGramsPer100               Decimal?                         @db.Decimal(18, 6)
+  sodiumMgPer100                 Decimal?                         @db.Decimal(18, 6)
+  energyDailyValuePercent        Decimal?                         @db.Decimal(9, 3)
+  carbohydratesDailyValuePercent Decimal?                         @db.Decimal(9, 3)
+  addedSugarsDailyValuePercent   Decimal?                         @db.Decimal(9, 3)
+  proteinDailyValuePercent       Decimal?                         @db.Decimal(9, 3)
+  totalFatsDailyValuePercent     Decimal?                         @db.Decimal(9, 3)
+  saturatedFatsDailyValuePercent Decimal?                         @db.Decimal(9, 3)
+  fiberDailyValuePercent         Decimal?                         @db.Decimal(9, 3)
+  sodiumDailyValuePercent        Decimal?                         @db.Decimal(9, 3)
+  highAddedSugars                Boolean?
+  highSaturatedFats              Boolean?
+  highSodium                     Boolean?
+  validatedAt                    DateTime?
+  supersededAt                   DateTime?
+  archivedAt                     DateTime?
+  createdByUserId                String                           @db.Uuid
+  validatedByUserId              String?                          @db.Uuid
+  createdAt                      DateTime                         @default(now())
+
+  commercialFoodProduct   CommercialFoodProduct   @relation(fields: [commercialFoodProductId], references: [id], onDelete: Restrict)
+  recipeNutritionSnapshot RecipeNutritionSnapshot @relation(fields: [recipeNutritionSnapshotId], references: [id], onDelete: Restrict)
+
+  @@unique([commercialFoodProductId, version])
+  @@index([commercialFoodProductId, status])
+  @@index([recipeNutritionSnapshotId])
+  @@index([createdByUserId])
+  @@index([validatedByUserId])
 }

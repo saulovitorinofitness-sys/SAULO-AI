@@ -4,10 +4,16 @@ import type {
   MealPlanAiDecision,
   MealPlanNutritionValues,
   MealPlanRecordMeal,
+  MealPlanReuseMode,
   StoredMealPlanPayload,
 } from "./record";
 import type { NutritionAdequacyResult } from "./adequacy-engine";
 import type { PrescriptionHistoryEntry } from "./prescription-history";
+import type {
+  MealPlanProfessionalReview,
+  MealPlanTargetDeviationAuthorization,
+} from "./completion-policy";
+import type { DietaryReferenceProfile, DietaryReferenceValue } from "./dietary-reference";
 
 export type MealPlanStatus =
   | "DRAFT"
@@ -71,15 +77,29 @@ export interface MealPlanView {
   readonly meals: readonly MealPlanMeal[];
 }
 export interface MealPlanPrescriptionView extends MealPlanView {
-  readonly strategy: MealPlanStrategyInheritance;
-  readonly latestStrategy: MealPlanStrategyInheritance;
+  readonly revision: number;
+  readonly strategy?: MealPlanStrategyInheritance;
+  readonly latestStrategy?: MealPlanStrategyInheritance;
   readonly strategyUpdateAvailable: boolean;
   readonly totals: MealPlanNutritionValues;
   readonly comparison: StoredMealPlanPayload["comparison"];
   readonly aiDecision: MealPlanAiDecision;
-  readonly adequacy: NutritionAdequacyResult;
+  readonly smartGenerationVersion?: number;
+  readonly adequacy?: NutritionAdequacyResult;
   readonly prescriptionMeals: readonly MealPlanRecordMeal[];
   readonly prescriptionSupplements: StoredMealPlanPayload["supplements"];
   readonly prescriptionHistory: readonly PrescriptionHistoryEntry[];
+  readonly sourcePlanEntryId?: string;
+  readonly sourcePlanAttendanceId?: string;
+  readonly sourcePlanRevision?: number;
+  readonly reuseMode?: MealPlanReuseMode;
+  readonly patientBirthDate: string;
+  readonly patientSex: "FEMALE" | "MALE" | "INTERSEX" | "NOT_INFORMED";
+  readonly attendanceDate: string;
+  readonly dietaryReferenceProfile?: DietaryReferenceProfile;
+  readonly dietaryReferences?: readonly DietaryReferenceValue[];
+  readonly professionalReview?: MealPlanProfessionalReview;
+  readonly targetDeviationAuthorization?: MealPlanTargetDeviationAuthorization;
+  readonly currentWeightKg?: number;
 }
 export interface GetMealPlanInput { readonly patientId: string; readonly scenario: ClinicalCollectionScenarioKey; }

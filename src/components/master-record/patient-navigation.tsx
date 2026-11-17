@@ -1,15 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 
 import { PatientBreadcrumb } from "@/components/attendance/patient-breadcrumb";
 import { ButtonLink } from "@/components/ui";
-import type { MasterRecordModuleId } from "@/features/master-record-navigation";
-import {
-  patientHubService,
-  type PatientHubView,
-} from "@/features/patient-hub";
+import type { MasterRecordModuleId } from "@/features/master-record-navigation/contracts";
+import type { PatientHubView } from "@/features/patient-hub/contracts";
 
 export type PatientNavigationModule = MasterRecordModuleId;
 
@@ -32,33 +28,11 @@ export function PatientNavigation({
   };
   currentModule: PatientNavigationModule;
 }) {
-  const [hub, setHub] = useState(initialHub);
-
-  useEffect(() => {
-    if (!initialHub) return;
-    let active = true;
-
-    void patientHubService
-      .get({
-        patientId: initialHub.header.patientId,
-        scenario: initialHub.scenario,
-      })
-      .then((updated) => {
-        if (active && updated) {
-          setHub(updated);
-        }
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [initialHub]);
-
-  const navigationContext = hub
+  const navigationContext = initialHub
     ? {
-        patientId: hub.header.patientId,
-        fullName: hub.header.fullName,
-        scenario: hub.scenario,
+        patientId: initialHub.header.patientId,
+        fullName: initialHub.header.fullName,
+        scenario: initialHub.scenario,
       }
     : patientContext;
   if (!navigationContext) return null;
@@ -83,6 +57,11 @@ export function PatientNavigation({
       label: "Antropometria",
       href: `/pacientes/${patientId}/antropometria${scenarioQuery}`,
       moduleKeys: ["ANTHROPOMETRY", "ANTROPOMETRIA"],
+    },
+    {
+      label: "Evolução e comparativos",
+      href: `/pacientes/${patientId}/evolucao-avaliacoes${scenarioQuery}`,
+      moduleKeys: ["EVOLUTION", "EVOLUCAO_AVALIACOES"],
     },
     {
       label: "Exames",
@@ -222,12 +201,13 @@ export function PatientNavigation({
                 </p>
               </div>
 
-              <div className="grid gap-2 sm:grid-cols-3">
+              <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
                 {navigationItems
                   .filter((item) =>
                     [
                       "Anamnese",
                       "Antropometria",
+                      "Evolução e comparativos",
                       "Exames",
                     ].includes(item.label),
                   )

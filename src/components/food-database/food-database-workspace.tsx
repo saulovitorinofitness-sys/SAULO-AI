@@ -18,18 +18,34 @@ import type {
   FoodSearchResult,
   NutritionSourceKind,
   ProfessionalFood,
-} from "@/features/food-database";
-import { FOOD_CATEGORY_FILTER_OPTIONS } from "@/features/food-database";
+} from "@/features/food-database/contracts";
+import { FOOD_CATEGORY_FILTER_OPTIONS } from "@/features/food-database/contracts";
 
-const sourceOptions: readonly (NutritionSourceKind | "ALL")[] = [
-  "ALL",
-  "TACO",
-  "TBCA",
-  "IBGE",
-  "PHILIPS",
-  "USDA",
-  "CLINIC_SV",
+const sourceOptions: readonly {
+  value: NutritionSourceKind | "ALL";
+  label: string;
+}[] = [
+  { value: "ALL", label: "Todas" },
+  { value: "TACO", label: "TACO" },
+  { value: "TBCA", label: "TBCA" },
+  { value: "IBGE", label: "IBGE" },
+  { value: "EVONUT", label: "Tucunduva" },
+  { value: "PHILIPS", label: "PHILIPS" },
+  { value: "USDA", label: "USDA" },
+  { value: "CLINIC_SV", label: "Clínica SV" },
 ];
+
+function scientificSourceLabel(
+  source: Pick<ProfessionalFood["source"], "kind" | "name">,
+) {
+  if (source.kind !== "EVONUT") {
+    return source.kind === "CLINIC_SV" ? source.name : source.kind;
+  }
+
+  return ["TACO", "TBCA", "IBGE", "Tucunduva"].includes(source.name)
+    ? source.name
+    : "Fonte não identificada";
+}
 const formatter = new Intl.NumberFormat("pt-BR", {
   maximumFractionDigits: 2,
 });
@@ -292,8 +308,8 @@ export function FoodDatabaseWorkspace({
               value={source}
             >
               {sourceOptions.map((item) => (
-                <option key={item} value={item}>
-                  {item === "ALL" ? "Todas" : item}
+                <option key={item.value} value={item.value}>
+                  {item.label}
                 </option>
               ))}
             </Select>
@@ -351,7 +367,7 @@ export function FoodDatabaseWorkspace({
                   >
                     {food.source.origin === "DEMONSTRATIVE"
                       ? "Demonstrativo"
-                      : food.source.kind}
+                      : scientificSourceLabel(food.source)}
                   </Badge>
                 </div>
                 <p className="mt-2 text-xs font-bold text-[var(--text-secondary)]">

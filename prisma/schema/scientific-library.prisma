@@ -1,0 +1,151 @@
+enum ScientificLibraryDataNature {
+  SCIENTIFIC
+  OFFICIAL_DATABASE
+  PROFESSIONAL_PROTOCOL
+  OPERATIONAL
+  DEMONSTRATIVE
+  LEGACY
+}
+
+enum ScientificLibraryEditorialStatus {
+  DRAFT
+  UNDER_REVIEW
+  APPROVED
+  SUPERSEDED
+  ARCHIVED
+  REJECTED
+}
+
+enum ScientificLibraryPublicationType {
+  GUIDELINE_OR_CONSENSUS
+  SYSTEMATIC_REVIEW_META_ANALYSIS
+  CLINICAL_TRIAL
+  OBSERVATIONAL_STUDY
+  DIAGNOSTIC_STUDY
+  BIOMECHANICAL_STUDY
+  TECHNICAL_BOOK_OR_MANUAL
+  OFFICIAL_DATABASE
+  PROFESSIONAL_PROTOCOL
+  OTHER
+  UNCLASSIFIED
+}
+
+enum ScientificLibraryEvidenceCategory {
+  GUIDELINE_OR_CONSENSUS
+  SYSTEMATIC_REVIEW_META_ANALYSIS
+  CLINICAL_TRIAL
+  OBSERVATIONAL_STUDY
+  DIAGNOSTIC_STUDY
+  BIOMECHANICAL_STUDY
+  TECHNICAL_REFERENCE
+  OFFICIAL_DATABASE
+  PROFESSIONAL_EXPERIENCE
+  UNCLASSIFIED
+}
+
+model ScientificLibraryRecord {
+  id                      String                           @id @default(uuid()) @db.Uuid
+  createdByUserId         String                           @db.Uuid
+  updatedByUserId         String                           @db.Uuid
+  reviewedByUserId        String?                          @db.Uuid
+  area                    String
+  domain                  String
+  name                    String
+  normalizedName          String
+  /// Resumo técnico do conteúdo; preserva a semântica do campo legado.
+  description             String?
+  tags                    Json?
+  /// Origem declarada legada. As fontes estruturadas ficam em `references`.
+  source                  String?
+  professionalNotes       String?
+  /// Status operacional legado, independente de `editorialStatus`.
+  status                  String                           @default("DRAFT")
+  originKind              String                           @default("MANUAL")
+  externalCode            String?
+  classificationSystem    String?
+  /// Versão ou edição declarada da fonte principal no contrato legado.
+  sourceVersion           String?
+  metadata                Json?
+  importFileName          String?
+  reviewedAt              DateTime?
+  createdAt               DateTime                         @default(now())
+  updatedAt               DateTime                         @updatedAt
+  dataNature              ScientificLibraryDataNature      @default(DEMONSTRATIVE)
+  editorialStatus         ScientificLibraryEditorialStatus @default(DRAFT)
+  technicalContent        String?
+  professionalApplication String?
+  targetPopulation        String?
+  indications             String?
+  contraindications       String?
+  precautions             String?
+  limitations             String?
+  submittedForReviewAt    DateTime?
+  approvedAt              DateTime?
+  /// Identificador opcional do aprovador. A relação com `User` será avaliada em etapa futura.
+  approvedByUserId        String?                          @db.Uuid
+  editorialVersion        Int                              @default(1)
+  changeReason            String?
+  reviewNotes             String?
+
+  createdBy  User  @relation("ScientificLibraryCreator", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  updatedBy  User  @relation("ScientificLibraryUpdater", fields: [updatedByUserId], references: [id], onDelete: Restrict)
+  reviewedBy User? @relation("ScientificLibraryReviewer", fields: [reviewedByUserId], references: [id], onDelete: Restrict)
+
+  references ScientificLibraryReference[]
+  revisions  ScientificLibraryRevision[]
+
+  @@unique([createdByUserId, area, domain, normalizedName], map: "ScientificLibraryRecord_createdByUserId_area_domain_normalizedN")
+  @@index([createdByUserId, area, domain, status])
+  @@index([name])
+  @@index([originKind, createdAt])
+  @@index([area, domain, dataNature, editorialStatus], map: "ScientificLibraryRecord_area_domain_nature_editorial_idx")
+  @@index([editorialStatus, reviewedAt], map: "ScientificLibraryRecord_editorial_reviewedAt_idx")
+}
+
+model ScientificLibraryReference {
+  id                     String                            @id @default(uuid()) @db.Uuid
+  recordId               String                            @db.Uuid
+  sourceTitle            String?
+  fullCitation           String?
+  authorsOrInstitution   String?
+  publicationYear        Int?
+  doi                    String?
+  pmid                   String?
+  isbn                   String?
+  officialUrl            String?
+  sourceVersion          String?
+  evidenceDate           DateTime?
+  accessedAt             DateTime?
+  publicationType        ScientificLibraryPublicationType  @default(UNCLASSIFIED)
+  evidenceCategory       ScientificLibraryEvidenceCategory @default(UNCLASSIFIED)
+  recommendationStrength String?
+  evidenceLimitations    String?
+  isPrimary              Boolean                           @default(false)
+  sortOrder              Int                               @default(0)
+  createdAt              DateTime                          @default(now())
+  updatedAt              DateTime                          @updatedAt
+
+  record ScientificLibraryRecord @relation(fields: [recordId], references: [id], onDelete: Restrict)
+
+  @@index([recordId, sortOrder], map: "ScientificLibraryReference_recordId_sortOrder_idx")
+  @@index([doi], map: "ScientificLibraryReference_doi_idx")
+  @@index([pmid], map: "ScientificLibraryReference_pmid_idx")
+  @@index([isbn], map: "ScientificLibraryReference_isbn_idx")
+}
+
+model ScientificLibraryRevision {
+  id              String                           @id @default(uuid()) @db.Uuid
+  recordId        String                           @db.Uuid
+  version         Int
+  snapshot        Json
+  editorialStatus ScientificLibraryEditorialStatus @default(DRAFT)
+  /// Identificador opcional do autor. A relação com `User` será avaliada em etapa futura.
+  changedByUserId String?                          @db.Uuid
+  changeReason    String?
+  createdAt       DateTime                         @default(now())
+
+  record ScientificLibraryRecord @relation(fields: [recordId], references: [id], onDelete: Restrict)
+
+  @@unique([recordId, version], map: "ScientificLibraryRevision_recordId_version_key")
+  @@index([recordId, editorialStatus, createdAt], map: "ScientificLibraryRevision_record_status_createdAt_idx")
+}

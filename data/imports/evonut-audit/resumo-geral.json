@@ -1,0 +1,58 @@
+{
+  "generatedAt": "2026-08-03T20:05:30.690733+00:00",
+  "source": {
+    "path": "C:\\Users\\Saulo\\SAULO-AI\\data\\imports\\food\\raw\\Evonut.xlsm",
+    "sizeBytes": 7760625,
+    "lastModifiedAt": "2026-07-30T23:13:15.079164+00:00",
+    "sha256Before": "DC2D9F78AD34205D4734DC656B54F30EB26752711B8A083B5E63F4B5C1A0CE81",
+    "sha256After": "DC2D9F78AD34205D4734DC656B54F30EB26752711B8A083B5E63F4B5C1A0CE81",
+    "unchanged": true,
+    "macrosExecuted": false,
+    "protectionChanged": false,
+    "workbookWritten": false
+  },
+  "privacy": {
+    "personalOrClinicalRowsExported": 0,
+    "personalValuesIncluded": false,
+    "formulaCachedValuesExported": false
+  },
+  "inventory": {
+    "sheetCount": 43,
+    "visible": 6,
+    "veryHidden": 37,
+    "formulaCells": 2885,
+    "excelTableObjects": 0,
+    "classifications": {
+      "B": 5,
+      "A": 6,
+      "D": 22,
+      "E": 6,
+      "C": 4
+    }
+  },
+  "technicalContent": {
+    "nutritionMethodsDocumented": 30,
+    "readyDiets": 13,
+    "mealTemplates": 10,
+    "recipes": 14,
+    "formulations": 56,
+    "formulationSubtypes": {
+      "Fitoterápicos": 19,
+      "Fórmulas": 37
+    },
+    "substitutionRecords": 16,
+    "deliverableStructures": 6
+  },
+  "highestTechnicalValue": [
+    "Calc_GastoEnerg",
+    "Calc_Antropometria",
+    "BD_DRIs",
+    "BD_Percentis",
+    "Calc_PlanAlimentar",
+    "BD_Alimentos",
+    "BD_Medidas"
+  ],
+  "notImported": true,
+  "databaseChanged": false,
+  "interfaceChanged": false
+}

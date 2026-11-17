@@ -1,8 +1,13 @@
-import type {
-  MealPlanRecordDraft,
-  MealPlanRecordFood,
-  MealPlanRecordMeal,
-  MealPlanRecordSupplement,
+import {
+  isMealPlanFoodItem,
+  isMealPlanRecipeItem,
+  type MealPlanRecipeNutrients,
+  type MealPlanRecordDraft,
+  type MealPlanRecordFood,
+  type MealPlanRecordItem,
+  type MealPlanRecordMeal,
+  type MealPlanRecordRecipe,
+  type MealPlanRecordSupplement,
 } from "./record";
 
 export const PRESCRIPTION_ACTION_TYPES = [
@@ -11,6 +16,11 @@ export const PRESCRIPTION_ACTION_TYPES = [
   "FOOD_SUBSTITUTED",
   "GRAMS_CHANGED",
   "MEASURE_CHANGED",
+  "RECIPE_ADDED",
+  "RECIPE_REMOVED",
+  "RECIPE_REPLACED",
+  "RECIPE_SNAPSHOT_CHANGED",
+  "RECIPE_PORTION_CHANGED",
   "TIME_CHANGED",
   "SUPPLEMENT_ADDED",
   "SUPPLEMENT_REMOVED",
@@ -26,8 +36,13 @@ export const PRESCRIPTION_ACTION_LABELS: Record<
   FOOD_ADDED: "Alimento adicionado",
   FOOD_REMOVED: "Alimento removido",
   FOOD_SUBSTITUTED: "Alimento substituído",
-  GRAMS_CHANGED: "Gramagem alterada",
+  GRAMS_CHANGED: "Quantidade alterada",
   MEASURE_CHANGED: "Medida alterada",
+  RECIPE_ADDED: "Receita adicionada",
+  RECIPE_REMOVED: "Receita removida",
+  RECIPE_REPLACED: "Receita substituída",
+  RECIPE_SNAPSHOT_CHANGED: "Versão nutricional da receita alterada",
+  RECIPE_PORTION_CHANGED: "Porção da receita alterada",
   TIME_CHANGED: "Horário alterado",
   SUPPLEMENT_ADDED: "Suplementação incluída",
   SUPPLEMENT_REMOVED: "Suplementação removida",
@@ -48,7 +63,96 @@ export interface PrescriptionHistoryEntry extends PrescriptionChange {
 }
 
 function foodValue(meal: MealPlanRecordMeal, food: MealPlanRecordFood) {
-  return `${food.description} · ${food.grams} g · ${food.quantity} ${food.householdMeasure} · ${meal.name}`;
+  const amount = food.prescribedAmount ?? food.grams;
+  const unit = food.prescribedUnit ?? "g";
+  return `${food.description} · ${amount} ${unit} · ${food.quantity} ${food.householdMeasure} · ${meal.name}`;
+}
+
+const recipeNutrientKeys = [
+  "energyKcal",
+  "proteinGrams",
+  "carbohydratesGrams",
+  "fatsGrams",
+  "fiberGrams",
+  "sugarsGrams",
+  "cholesterolMg",
+  "saturatedFatsGrams",
+  "monounsaturatedFatsGrams",
+  "polyunsaturatedFatsGrams",
+  "sodiumMg",
+  "calciumMg",
+  "ironMg",
+  "magnesiumMg",
+  "phosphorusMg",
+  "potassiumMg",
+  "zincMg",
+  "copperMg",
+  "manganeseMg",
+  "seleniumMcg",
+  "vitaminAMcg",
+  "vitaminCMg",
+  "vitaminDMcg",
+  "vitaminEMg",
+  "vitaminKMcg",
+  "thiamineMg",
+  "riboflavinMg",
+  "niacinMg",
+  "vitaminB6Mg",
+  "folateMcg",
+  "vitaminB12Mcg",
+] as const satisfies readonly (keyof MealPlanRecipeNutrients)[];
+
+function recipeValue(meal: MealPlanRecordMeal, recipe: MealPlanRecordRecipe) {
+  return `${recipe.recipeTitle} · receita ${recipe.recipeId} · snapshot ${recipe.recipeNutritionSnapshotId} v${recipe.recipeNutritionSnapshotVersion} · ${recipe.portion.prescribedServings} de ${recipe.portion.recipeServings} porções · ${meal.name} · referência ${JSON.stringify(recipe.snapshotNutrients)} · prescrito ${JSON.stringify(recipe.prescribedNutrients)} · completude ${recipe.nutritionCompleteness}`;
+}
+
+function recipeNutrientsEqual(
+  current: MealPlanRecipeNutrients,
+  next: MealPlanRecipeNutrients,
+) {
+  return recipeNutrientKeys.every((key) => current[key] === next[key]);
+}
+
+function stringSetsEqual(
+  current: readonly string[],
+  next: readonly string[],
+) {
+  return (
+    current.length === next.length &&
+    current.every((value) => next.includes(value))
+  );
+}
+
+function recipeSnapshotEqual(
+  current: MealPlanRecordRecipe,
+  next: MealPlanRecordRecipe,
+) {
+  return (
+    current.recipeNutritionSnapshotId === next.recipeNutritionSnapshotId &&
+    current.recipeNutritionSnapshotVersion ===
+      next.recipeNutritionSnapshotVersion &&
+    current.nutritionCompleteness === next.nutritionCompleteness &&
+    stringSetsEqual(current.missingNutrients, next.missingNutrients) &&
+    recipeNutrientsEqual(current.snapshotNutrients, next.snapshotNutrients)
+  );
+}
+
+function recipePortionEqual(
+  current: MealPlanRecordRecipe,
+  next: MealPlanRecordRecipe,
+) {
+  return (
+    current.portion.kind === next.portion.kind &&
+    current.portion.prescribedServings === next.portion.prescribedServings &&
+    current.portion.recipeServings === next.portion.recipeServings &&
+    current.portion.description === next.portion.description &&
+    current.portion.servingSize?.amount === next.portion.servingSize?.amount &&
+    current.portion.servingSize?.unit === next.portion.servingSize?.unit &&
+    recipeNutrientsEqual(
+      current.prescribedNutrients,
+      next.prescribedNutrients,
+    )
+  );
 }
 
 function supplementValue(supplement: MealPlanRecordSupplement) {
@@ -59,12 +163,15 @@ function mealMap(meals: readonly MealPlanRecordMeal[]) {
   return new Map(meals.map((meal) => [meal.id, meal]));
 }
 
-function foodMap(meals: readonly MealPlanRecordMeal[]) {
-  return new Map(
-    meals.flatMap((meal) =>
-      meal.items.map((food) => [food.id, { meal, food }] as const),
-    ),
-  );
+function itemMap(meals: readonly MealPlanRecordMeal[]) {
+  const items = new Map<
+    string,
+    { readonly meal: MealPlanRecordMeal; readonly item: MealPlanRecordItem }
+  >();
+  for (const meal of meals) {
+    for (const item of meal.items) items.set(item.id, { meal, item });
+  }
+  return items;
 }
 
 function supplementMap(supplements: readonly MealPlanRecordSupplement[]) {
@@ -78,51 +185,116 @@ export function detectPrescriptionChanges(
   const changes: PrescriptionChange[] = [];
   const currentMeals = mealMap(current.meals);
   const nextMeals = mealMap(next.meals);
-  const currentFoods = foodMap(current.meals);
-  const nextFoods = foodMap(next.meals);
+  const currentItems = itemMap(current.meals);
+  const nextItems = itemMap(next.meals);
 
-  for (const [foodId, { meal, food }] of currentFoods) {
-    const nextFood = nextFoods.get(foodId);
-    if (!nextFood) {
+  for (const [itemId, { meal, item }] of currentItems) {
+    const nextItem = nextItems.get(itemId);
+    if (!nextItem) {
       changes.push({
-        type: "FOOD_REMOVED",
-        previousValue: foodValue(meal, food),
+        type: isMealPlanRecipeItem(item) ? "RECIPE_REMOVED" : "FOOD_REMOVED",
+        previousValue: isMealPlanRecipeItem(item)
+          ? recipeValue(meal, item)
+          : foodValue(meal, item),
         currentValue: null,
       });
       continue;
     }
-    if (food.catalogFoodId !== nextFood.food.catalogFoodId) {
+    if (isMealPlanRecipeItem(item) !== isMealPlanRecipeItem(nextItem.item)) {
       changes.push({
-        type: "FOOD_SUBSTITUTED",
-        previousValue: foodValue(meal, food),
-        currentValue: foodValue(nextFood.meal, nextFood.food),
+        type: isMealPlanRecipeItem(item) ? "RECIPE_REMOVED" : "FOOD_REMOVED",
+        previousValue: isMealPlanRecipeItem(item)
+          ? recipeValue(meal, item)
+          : foodValue(meal, item),
+        currentValue: null,
       });
+      changes.push({
+        type: isMealPlanRecipeItem(nextItem.item)
+          ? "RECIPE_ADDED"
+          : "FOOD_ADDED",
+        previousValue: null,
+        currentValue: isMealPlanRecipeItem(nextItem.item)
+          ? recipeValue(nextItem.meal, nextItem.item)
+          : foodValue(nextItem.meal, nextItem.item),
+      });
+      continue;
     }
-    if (food.grams !== nextFood.food.grams) {
-      changes.push({
-        type: "GRAMS_CHANGED",
-        previousValue: `${food.description} · ${food.grams} g · ${meal.name}`,
-        currentValue: `${nextFood.food.description} · ${nextFood.food.grams} g · ${nextFood.meal.name}`,
-      });
+
+    if (isMealPlanFoodItem(item) && isMealPlanFoodItem(nextItem.item)) {
+      if (item.catalogFoodId !== nextItem.item.catalogFoodId) {
+        changes.push({
+          type: "FOOD_SUBSTITUTED",
+          previousValue: foodValue(meal, item),
+          currentValue: foodValue(nextItem.meal, nextItem.item),
+        });
+      }
+      const previousAmount = item.prescribedAmount ?? item.grams;
+      const currentAmount =
+        nextItem.item.prescribedAmount ?? nextItem.item.grams;
+      const previousUnit = item.prescribedUnit ?? "g";
+      const currentUnit = nextItem.item.prescribedUnit ?? "g";
+      if (
+        previousAmount !== currentAmount ||
+        previousUnit !== currentUnit
+      ) {
+        changes.push({
+          type: "GRAMS_CHANGED",
+          previousValue: `${item.description} · ${previousAmount} ${previousUnit} · ${meal.name}`,
+          currentValue: `${nextItem.item.description} · ${currentAmount} ${currentUnit} · ${nextItem.meal.name}`,
+        });
+      }
+      if (
+        item.householdMeasure !== nextItem.item.householdMeasure ||
+        item.quantity !== nextItem.item.quantity
+      ) {
+        changes.push({
+          type: "MEASURE_CHANGED",
+          previousValue: `${item.description} · ${item.quantity} ${item.householdMeasure} · ${meal.name}`,
+          currentValue: `${nextItem.item.description} · ${nextItem.item.quantity} ${nextItem.item.householdMeasure} · ${nextItem.meal.name}`,
+        });
+      }
+      continue;
+    }
+
+    if (!isMealPlanRecipeItem(item) || !isMealPlanRecipeItem(nextItem.item)) {
+      continue;
     }
     if (
-      food.householdMeasure !== nextFood.food.householdMeasure ||
-      food.quantity !== nextFood.food.quantity
+      item.recipeId !== nextItem.item.recipeId ||
+      item.recipeTitle !== nextItem.item.recipeTitle
     ) {
       changes.push({
-        type: "MEASURE_CHANGED",
-        previousValue: `${food.description} · ${food.quantity} ${food.householdMeasure} · ${meal.name}`,
-        currentValue: `${nextFood.food.description} · ${nextFood.food.quantity} ${nextFood.food.householdMeasure} · ${nextFood.meal.name}`,
+        type: "RECIPE_REPLACED",
+        previousValue: recipeValue(meal, item),
+        currentValue: recipeValue(nextItem.meal, nextItem.item),
+      });
+      continue;
+    }
+    if (!recipeSnapshotEqual(item, nextItem.item)) {
+      changes.push({
+        type: "RECIPE_SNAPSHOT_CHANGED",
+        previousValue: recipeValue(meal, item),
+        currentValue: recipeValue(nextItem.meal, nextItem.item),
+      });
+      continue;
+    }
+    if (!recipePortionEqual(item, nextItem.item)) {
+      changes.push({
+        type: "RECIPE_PORTION_CHANGED",
+        previousValue: recipeValue(meal, item),
+        currentValue: recipeValue(nextItem.meal, nextItem.item),
       });
     }
   }
 
-  for (const [foodId, { meal, food }] of nextFoods) {
-    if (!currentFoods.has(foodId)) {
+  for (const [itemId, { meal, item }] of nextItems) {
+    if (!currentItems.has(itemId)) {
       changes.push({
-        type: "FOOD_ADDED",
+        type: isMealPlanRecipeItem(item) ? "RECIPE_ADDED" : "FOOD_ADDED",
         previousValue: null,
-        currentValue: foodValue(meal, food),
+        currentValue: isMealPlanRecipeItem(item)
+          ? recipeValue(meal, item)
+          : foodValue(meal, item),
       });
     }
   }
@@ -170,4 +342,3 @@ export function detectPrescriptionChanges(
 
   return changes;
 }
-

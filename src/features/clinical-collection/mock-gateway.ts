@@ -332,10 +332,10 @@ export const mockClinicalCollectionGateway: ClinicalCollectionGateway = {
       ...collection,
       completed: true,
       firstIncompleteStep: "SUMMARY" as const,
-      nextAttendanceStep: "Painel Clínico Integrado",
+      nextAttendanceStep: "Estratégia Nutricional",
     };
     storeCollection(scenario, completed);
-    return { collection: clone(completed), persisted: false, nextAttendanceStep: "Painel Clínico Integrado" };
+    return { collection: clone(completed), persisted: false, nextAttendanceStep: "Estratégia Nutricional" };
   },
   async getCurrentAttendance({ patientId, attendanceId, scenario = "complete" }) {
     if (patientId !== CLINICAL_DEMO_PATIENT_ID || attendanceId !== CLINICAL_DEMO_ATTENDANCE_ID) return null;

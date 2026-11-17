@@ -4,16 +4,20 @@ import { useMemo } from "react";
 import { Badge, Card, FormField, NumberInput, Select } from "@/components/ui";
 import {
   calculateMacroTarget,
-  energyTargetModeOptions,
   hasValidMacroPercentageTotal,
   MACRONUTRIENT_KCAL_PER_GRAM,
   macroPercentageTotal,
+} from "@/features/nutrition-strategy/calculations";
+import type {
+  AssembledDietNutrition,
+  EnergyTargetMode,
+  NutritionGoals,
+  NutritionMethod,
+} from "@/features/nutrition-strategy/contracts";
+import {
+  energyTargetModeOptions,
   nutritionMethodOptions,
-  type AssembledDietNutrition,
-  type EnergyTargetMode,
-  type NutritionGoals,
-  type NutritionMethod,
-} from "@/features/nutrition-strategy";
+} from "@/features/nutrition-strategy/mock-data";
 
 export type MacroKey = "carbohydrates" | "protein" | "fats";
 

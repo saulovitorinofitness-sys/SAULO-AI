@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 
 import { ClinicalCollectionFlow } from "@/components/clinical-collection/clinical-collection-flow";
+import { PermissionDeniedState } from "@/components/clinical-collection/clinical-states";
 import type { ClinicalCollectionStepKey } from "@/features/clinical-collection";
 import { clinicalCollectionStepByFlowStep } from "@/features/nutrition-clinical-flow";
 import { nutritionClinicalFlowRepository } from "@/features/nutrition-clinical-flow/repository";
@@ -40,6 +41,20 @@ export default async function ClinicalCollectionPage({
   )
     ? (query.step as ClinicalCollectionStepKey)
     : undefined;
+  if (
+    requestedStep === "POSTURAL_ASSESSMENT" &&
+    (!canAccess(access, "POSTURAL_ASSESSMENT", "READ") ||
+      !canOperatePosturalAssessment(access.user.id))
+  ) {
+    return <PermissionDeniedState />;
+  }
+  if (
+    requestedStep === "SUMMARY" &&
+    !canAccess(access, "MASTER_RECORD", "READ")
+  ) {
+    return <PermissionDeniedState />;
+  }
+
   const result = await nutritionClinicalFlowRepository.getFlow({
     patientId,
     attendanceId,
@@ -65,6 +80,12 @@ export default async function ClinicalCollectionPage({
 
   return (
     <ClinicalCollectionFlow
+      canCompleteSummary={canAccess(access, "MASTER_RECORD", "UPDATE")}
+      canContinueSummaryToNutrition={canAccess(
+        access,
+        "NUTRITION_STRATEGY",
+        "READ",
+      )}
       editableSteps={validSteps.filter(
         (step): step is Exclude<ClinicalCollectionStepKey, "SUMMARY"> =>
           step !== "SUMMARY" &&
@@ -78,15 +99,7 @@ export default async function ClinicalCollectionPage({
             "UPDATE",
           ),
       )}
-      initialCollection={{
-        ...collection,
-        connectedProfessional: {
-          professionalUserId: access.user.id,
-          professionalName: access.user.fullName,
-          updatedAt: new Date().toISOString(),
-          version: collection.connectedProfessional.version,
-        },
-      }}
+      initialCollection={collection}
       initialFlow={result.flow}
       initialStep={initialStep}
       scenarios={[]}

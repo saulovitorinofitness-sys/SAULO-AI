@@ -9,6 +9,73 @@ enum ProfileType {
   SYSTEM_OWNER
   PROFESSIONAL
   ADMINISTRATIVE
+  STUDENT
+}
+
+enum BusinessUnitStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum FinancialEntryType {
+  REVENUE
+  EXPENSE
+}
+
+enum FinancialReferenceStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum FinancialAccountType {
+  CASH
+  BANK
+  DIGITAL_WALLET
+  OTHER
+}
+
+enum PaymentMethodType {
+  CASH
+  PIX
+  DEBIT_CARD
+  CREDIT_CARD
+  BANK_TRANSFER
+  BANK_DEPOSIT
+  BOLETO
+  OTHER
+}
+
+enum FinancialEntryStatus {
+  PENDING
+  PARTIALLY_SETTLED
+  SETTLED
+  CANCELLED
+}
+
+enum FinancialEntryOrigin {
+  MANUAL
+  EXTERNAL_IMPORT
+  INTERNAL_INTEGRATION
+}
+
+enum FinancialSourceSystem {
+  NEXTFIT
+  CLINICA_SV
+  GESTAO_SV
+}
+
+enum FinancialManagementNature {
+  PLANNED
+  FORECAST
+  REALIZED
+}
+
+enum FinancialImportBatchStatus {
+  PENDING
+  VALIDATED
+  IMPORTED
+  FAILED
+  CANCELLED
 }
 
 enum IdentityProvider {
@@ -77,25 +144,13 @@ enum RecordEntryStatus {
   VOIDED
 }
 
-enum MasterRecordEntryType {
-  CLINICAL_ANAMNESIS
-  ANTHROPOMETRY
-  PERIMETRY
-  BIOIMPEDANCE
-  PHYSICAL_ASSESSMENT
-  POSTURAL_ASSESSMENT
-  NUTRITION_STRATEGY
-  MEAL_PLAN
-  PERFORMANCE
-  WORKOUT_PLAN
-}
-
 enum AppointmentStatus {
   SCHEDULED
   CONFIRMED
   COMPLETED
   CANCELLED
   NO_SHOW
+  RESCHEDULED
 }
 
 enum AttendanceStatus {
@@ -103,6 +158,19 @@ enum AttendanceStatus {
   IN_PROGRESS
   COMPLETED
   CANCELLED
+}
+
+enum ClinicalAttendanceType {
+  FIRST_CONSULTATION
+  RETURN
+  REASSESSMENT
+  FOLLOW_UP
+  SINGLE_CONSULTATION
+}
+
+enum AppointmentOrigin {
+  MANUAL
+  CLINICAL_RETURN
 }
 
 enum ConsultationType {
@@ -412,4 +480,31 @@ enum ContinuityStepStatus {
 enum ContinuitySuggestionSource {
   MANUAL
   WORKFLOW
+}
+
+enum PerformanceModality {
+  STRENGTH
+  RUNNING
+  CYCLING
+  OTHER
+}
+
+enum WorkoutScheduleStatus {
+  SCHEDULED
+  RESCHEDULED
+  COMPLETED
+  SKIPPED
+  CANCELLED
+}
+
+enum WorkoutExecutionStatus {
+  IN_PROGRESS
+  COMPLETED
+  ABORTED
+}
+
+enum WorkoutExecutionSource {
+  MANUAL
+  FILE_IMPORT
+  DEVICE
 }

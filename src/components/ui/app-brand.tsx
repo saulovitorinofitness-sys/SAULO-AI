@@ -2,7 +2,7 @@ import type { CSSProperties } from "react";
 
 import { BRAND_IDENTITIES, getBrandIdentity, type BrandContext } from "@/config/branding";
 
-export type AppBrandVariant = "full" | "compact" | "sidebar" | "header" | "footer";
+export type AppBrandVariant = "full" | "compact" | "sidebar" | "header" | "footer" | "document";
 
 const variantStyles: Readonly<Record<AppBrandVariant, { wrapper: string; mark: string; name: string; subtitle: string }>> = {
   full: { wrapper: "inline-flex items-center gap-3", mark: "size-12 rounded-2xl text-base", name: "text-lg", subtitle: "text-[11px]" },
@@ -10,14 +10,18 @@ const variantStyles: Readonly<Record<AppBrandVariant, { wrapper: string; mark: s
   sidebar: { wrapper: "inline-flex items-center gap-3", mark: "size-10 rounded-xl text-sm", name: "text-base", subtitle: "text-[10px]" },
   header: { wrapper: "inline-flex items-center gap-3", mark: "size-10 rounded-xl text-sm", name: "text-base", subtitle: "text-[10px]" },
   footer: { wrapper: "inline-flex items-center gap-2", mark: "size-8 rounded-lg text-xs", name: "text-sm", subtitle: "text-[10px]" },
+  document: { wrapper: "inline-flex flex-col items-start gap-1", mark: "size-12 rounded-xl text-base", name: "text-[10px]", subtitle: "sr-only" },
 };
 
-export function AppBrand({ context, variant = "full", className = "" }: { context: BrandContext; variant?: AppBrandVariant; className?: string }) {
+export function AppBrand({ context, variant = "full", className = "", markColor }: { context: BrandContext; variant?: AppBrandVariant; className?: string; markColor?: string }) {
   const identity = getBrandIdentity(context);
   const platform = BRAND_IDENTITIES.platform;
   const styles = variantStyles[variant];
   const logoSource = variant === "compact" ? identity.logoCompactPath ?? identity.logoPath : identity.logoPath;
-  const markStyle = logoSource ? { backgroundImage: `url(${logoSource})` } satisfies CSSProperties : undefined;
+  const markStyle = logoSource || markColor ? {
+    ...(logoSource ? { backgroundImage: `url(${logoSource})` } : {}),
+    ...(markColor ? { backgroundColor: markColor } : {}),
+  } satisfies CSSProperties : undefined;
   const accessibleLabel = `${identity.displayName}${identity.subtitle ? `, ${identity.subtitle}` : ""}${identity.isProvisional ? ", identidade provisória" : ""}`;
 
   return <span aria-label={accessibleLabel} className={`${styles.wrapper} ${className}`} data-brand-context={context} data-brand-provisional={identity.isProvisional || undefined}>

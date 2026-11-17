@@ -5,12 +5,15 @@ import { prisma } from "@/lib/database/prisma";
 
 import {
   canApproveNutritionStrategy,
+  shouldCreateNutritionStrategyVersion,
   type MacronutrientDraftInput,
   type NutritionStrategyMealAllocation,
   type NutritionStrategyDraft,
   type NutritionStrategyRecordView,
   type NutritionStrategySupplement,
 } from "./strategy-record";
+import { NUTRITION_METHOD_OPTIONS } from "./prescription";
+import { presentMealSchedules } from "./meal-schedule";
 
 const STRATEGY_ENTRY_TYPE = "NUTRITION_STRATEGY";
 const strategyEntrySelect = {
@@ -25,8 +28,8 @@ const strategyEntrySelect = {
   updatedBy: { select: { id: true, fullName: true } },
 } satisfies Prisma.MasterRecordEntrySelect;
 
-interface StoredStrategyPayload extends NutritionStrategyDraft {
-  readonly schemaVersion: 1 | 2 | 3 | 4;
+export interface StoredStrategyPayload extends NutritionStrategyDraft {
+  readonly schemaVersion: 1 | 2 | 3 | 4 | 5;
   readonly approvedAt?: string;
   readonly approvedByUserId?: string;
   readonly approvedByName?: string;
@@ -61,15 +64,6 @@ function macroInput(
       : undefined;
   return { mode, value: inputValue };
 }
-
-const standardMeals = [
-  ["Desjejum", "07:00"],
-  ["Lanche da manhã", "10:00"],
-  ["Almoço", "12:30"],
-  ["Lanche da tarde", "16:00"],
-  ["Jantar", "19:30"],
-  ["Ceia", "22:00"],
-] as const;
 
 function rounded(value: number) {
   return Math.round(value * 10) / 10;
@@ -116,36 +110,37 @@ function mealDistribution(
 
   return Array.from({ length: count }, (_, index) => {
     const meal = source[index] ?? {};
-    const [fallbackName, fallbackTime] =
-      standardMeals[index] ?? [`Refeição ${index + 1}`, ""];
     const percentage = percentages[index];
     return {
       mealNumber: index + 1,
       name:
         typeof meal.name === "string" && meal.name.trim()
           ? meal.name.trim()
-          : fallbackName,
+          : "",
       time:
         typeof meal.time === "string" &&
         /^([01]\d|2[0-3]):[0-5]\d$/.test(meal.time)
           ? meal.time
-          : fallbackTime,
+          : "",
       vetPercentage: percentage,
       plannedCaloriesKcal:
         finalCaloriesKcal && finalCaloriesKcal > 0
           ? rounded(finalCaloriesKcal * (percentage / 100))
-          : 0,
+          : undefined,
     };
   });
 }
 
-function storedPayload(value: unknown): StoredStrategyPayload | null {
+export function parseStoredNutritionStrategyPayload(
+  value: unknown,
+): StoredStrategyPayload | null {
   const source = objectValue(value);
   if (
     source.schemaVersion !== 1 &&
     source.schemaVersion !== 2 &&
     source.schemaVersion !== 3 &&
-    source.schemaVersion !== 4
+    source.schemaVersion !== 4 &&
+    source.schemaVersion !== 5
   ) {
     return null;
   }
@@ -165,12 +160,11 @@ function storedPayload(value: unknown): StoredStrategyPayload | null {
   const supplementation = Array.isArray(source.supplementation)
     ? (source.supplementation as NutritionStrategySupplement[])
     : [];
-  const method =
-    source.method === "STANDARD" ||
-    source.method === "LOW_CARB" ||
-    source.method === "CARB_CYCLING"
-      ? source.method
-      : undefined;
+  const method = NUTRITION_METHOD_OPTIONS.some(
+    ([code]) => code === source.method,
+  )
+    ? (source.method as NutritionStrategyDraft["method"])
+    : undefined;
 
   return {
     ...(source as unknown as StoredStrategyPayload),
@@ -199,6 +193,7 @@ async function findStrategy(patientId: string, attendanceId: string) {
     where: {
       type: STRATEGY_ENTRY_TYPE,
       attendanceId,
+      status: { in: ["DRAFT", "FINALIZED"] },
       deletedAt: null,
       masterRecord: {
         patientId,
@@ -207,7 +202,10 @@ async function findStrategy(patientId: string, attendanceId: string) {
       },
     },
     select: strategyEntrySelect,
-    orderBy: { createdAt: "asc" },
+    // Uma versão oficial nunca pode ser encoberta por um rascunho legado
+    // duplicado. Entre registros no mesmo estado, usa o mais recentemente
+    // persistido como registro canônico do atendimento.
+    orderBy: [{ status: "desc" }, { updatedAt: "desc" }],
   });
 }
 
@@ -234,7 +232,7 @@ function toRecordView(
   entry: NonNullable<Awaited<ReturnType<typeof findStrategy>>>,
 ): NutritionStrategyRecordView | null {
   if (!entry.attendanceId) return null;
-  const payload = storedPayload(entry.payload);
+  const payload = parseStoredNutritionStrategyPayload(entry.payload);
   if (!payload) return null;
 
   return {
@@ -262,6 +260,15 @@ export const nutritionStrategyRepository = {
   ): Promise<NutritionStrategyRecordView | null> {
     const entry = await findStrategy(patientId, attendanceId);
     return entry ? toRecordView(patientId, entry) : null;
+  },
+
+  async getForClinicalAttendance(
+    patientId: string,
+    attendanceId: string,
+  ): Promise<NutritionStrategyRecordView | null> {
+    // O estado operacional do atendimento não herda a conclusão de outra
+    // consulta. Todas as telas devem observar a mesma entrada e attendanceId.
+    return this.get(patientId, attendanceId);
   },
 
   async getLatestApproved(
@@ -304,6 +311,147 @@ export const nutritionStrategyRepository = {
     });
   },
 
+  async prepareForEditing(
+    patientId: string,
+    attendanceId: string,
+    professionalUserId: string,
+  ): Promise<NutritionStrategyRecordView | null> {
+    const currentEntry = await findStrategy(patientId, attendanceId);
+    if (currentEntry) {
+      const current = toRecordView(patientId, currentEntry);
+      if (!current) throw new Error("STRATEGY_INVALID");
+      if (current.status === "DRAFT") return current;
+      return this.reopen(patientId, attendanceId, professionalUserId);
+    }
+
+    throw new Error("STRATEGY_NOT_FOUND");
+  },
+
+  async updateApprovedMealSchedules(
+    patientId: string,
+    attendanceId: string,
+    schedules: readonly { readonly mealNumber: number; readonly time: string }[],
+    professionalUserId: string,
+  ): Promise<NutritionStrategyRecordView> {
+    await prisma.$transaction(async (transaction) => {
+      await transaction.$executeRaw`
+        SELECT pg_advisory_xact_lock(hashtext(${attendanceId}))
+      `;
+      const [entry, professional] = await Promise.all([
+        transaction.masterRecordEntry.findFirst({
+          where: {
+            type: STRATEGY_ENTRY_TYPE,
+            attendanceId,
+            status: "FINALIZED",
+            deletedAt: null,
+            masterRecord: {
+              patientId,
+              status: "ACTIVE",
+              patient: { deletedAt: null },
+            },
+          },
+          select: {
+            id: true,
+            moduleId: true,
+            revision: true,
+            payload: true,
+          },
+        }),
+        transaction.user.findUnique({
+          where: { id: professionalUserId },
+          select: { id: true },
+        }),
+      ]);
+      if (!entry) throw new Error("STRATEGY_NOT_APPROVED");
+      if (!professional) throw new Error("STRATEGY_CONTEXT_NOT_FOUND");
+
+      const current = parseStoredNutritionStrategyPayload(entry.payload);
+      if (!current) throw new Error("STRATEGY_INVALID");
+      const presentedMeals = presentMealSchedules(current.mealDistribution);
+      const scheduleByNumber = new Map(
+        schedules.map((schedule) => [schedule.mealNumber, schedule.time]),
+      );
+      if (
+        schedules.length !== presentedMeals.length ||
+        scheduleByNumber.size !== presentedMeals.length ||
+        presentedMeals.some((meal) => !scheduleByNumber.has(meal.mealNumber))
+      ) {
+        throw new Error("STRATEGY_MEAL_SCHEDULE_MISMATCH");
+      }
+
+      const updatedMeals = presentedMeals.map((meal) => ({
+        ...meal,
+        time: scheduleByNumber.get(meal.mealNumber)!,
+      }));
+      const changes = updatedMeals.flatMap((meal, index) => {
+        const previous = current.mealDistribution[index];
+        return [
+          ...(previous.name !== meal.name
+            ? [{
+                fieldPath: `mealDistribution.${meal.mealNumber}.name`,
+                previousValue: previous.name,
+                newValue: meal.name,
+              }]
+            : []),
+          ...(previous.time !== meal.time
+            ? [{
+                fieldPath: `mealDistribution.${meal.mealNumber}.time`,
+                previousValue: previous.time,
+                newValue: meal.time,
+              }]
+            : []),
+        ];
+      });
+      if (!changes.length) return;
+
+      const revision = entry.revision + 1;
+      const payload: StoredStrategyPayload = {
+        ...current,
+        schemaVersion: 5,
+        mealDistribution: updatedMeals,
+      };
+      const now = new Date();
+      await transaction.masterRecordEntry.update({
+        where: { id: entry.id },
+        data: {
+          revision,
+          occurredAt: now,
+          updatedByUserId: professional.id,
+          payload: toJson(payload),
+        },
+      });
+      await transaction.recordVersion.create({
+        data: {
+          entityType: STRATEGY_ENTRY_TYPE,
+          entityId: entry.id,
+          moduleId: entry.moduleId,
+          responsibleUserId: professional.id,
+          version: revision,
+          status: "FINALIZED",
+          snapshot: toJson(payload),
+          reason: "Atualização auditável dos horários das refeições.",
+        },
+      });
+      await transaction.auditEvent.create({
+        data: {
+          entityType: STRATEGY_ENTRY_TYPE,
+          entityId: entry.id,
+          moduleId: entry.moduleId,
+          action: "UPDATE",
+          createdByUserId: professional.id,
+          changedByUserId: professional.id,
+          occurredAt: now,
+          reason: "Correção dos horários da distribuição diária.",
+          changes: { create: changes },
+        },
+      });
+    });
+
+    const updated = await this.get(patientId, attendanceId);
+    if (!updated) throw new Error("STRATEGY_NOT_FOUND");
+    return updated;
+  },
+
   async reopen(
     patientId: string,
     attendanceId: string,
@@ -330,11 +478,12 @@ export const nutritionStrategyRepository = {
       });
       if (!entry) throw new Error("STRATEGY_NOT_APPROVED");
 
-      const payload = storedPayload(entry.payload);
+      const payload = parseStoredNutritionStrategyPayload(entry.payload);
       if (!payload) throw new Error("STRATEGY_INVALID");
       const revision = entry.revision + 1;
       const nextPayload: StoredStrategyPayload = {
         ...payload,
+        vetDecisionState: "EDITED",
         approvedAt: undefined,
         approvedByUserId: undefined,
         approvedByName: undefined,
@@ -348,18 +497,6 @@ export const nutritionStrategyRepository = {
           revision,
           updatedByUserId: professionalUserId,
           payload: toJson(nextPayload),
-        },
-      });
-      await transaction.recordVersion.create({
-        data: {
-          entityType: STRATEGY_ENTRY_TYPE,
-          entityId: entry.id,
-          moduleId: entry.moduleId,
-          responsibleUserId: professionalUserId,
-          version: revision,
-          status: "DRAFT",
-          snapshot: toJson(nextPayload),
-          reason: "Estratégia reaberta para edição profissional.",
         },
       });
       await transaction.auditEvent.create({
@@ -429,6 +566,7 @@ async function persistStrategy(input: {
         where: {
           id: input.strategy.evaluationEntryId,
           masterRecordId: attendance.masterRecordId,
+          attendanceId: attendance.id,
           type: "ASSESSMENT",
           deletedAt: null,
         },
@@ -442,6 +580,7 @@ async function persistStrategy(input: {
         type: STRATEGY_ENTRY_TYPE,
         attendanceId: attendance.id,
         masterRecordId: attendance.masterRecordId,
+        status: { in: ["DRAFT", "FINALIZED"] },
         deletedAt: null,
       },
       select: {
@@ -450,16 +589,16 @@ async function persistStrategy(input: {
         revision: true,
         moduleId: true,
       },
-      orderBy: { createdAt: "asc" },
+      orderBy: [{ status: "desc" }, { updatedAt: "desc" }],
     });
-    if (existing?.status === "FINALIZED" && !input.approve) {
+    if (existing?.status === "FINALIZED") {
       throw new Error("STRATEGY_APPROVED");
     }
 
     const now = new Date();
     const payload: StoredStrategyPayload = {
       ...input.strategy,
-      schemaVersion: 4,
+      schemaVersion: 5,
       approvedAt: input.approve ? now.toISOString() : undefined,
       approvedByUserId: input.approve ? professional.id : undefined,
       approvedByName: input.approve ? professional.fullName : undefined,
@@ -495,20 +634,20 @@ async function persistStrategy(input: {
           select: { id: true },
         });
 
-    await transaction.recordVersion.create({
-      data: {
-        entityType: STRATEGY_ENTRY_TYPE,
-        entityId: entry.id,
-        moduleId: strategyModule.id,
-        responsibleUserId: professional.id,
-        version: revision,
-        status,
-        snapshot: toJson(payload),
-        reason: input.approve
-          ? "Estratégia nutricional aprovada."
-          : "Estratégia nutricional salva.",
-      },
-    });
+    if (shouldCreateNutritionStrategyVersion(input.approve)) {
+      await transaction.recordVersion.create({
+        data: {
+          entityType: STRATEGY_ENTRY_TYPE,
+          entityId: entry.id,
+          moduleId: strategyModule.id,
+          responsibleUserId: professional.id,
+          version: revision,
+          status,
+          snapshot: toJson(payload),
+          reason: "Estratégia nutricional aprovada.",
+        },
+      });
+    }
     await transaction.auditEvent.create({
       data: {
         entityType: STRATEGY_ENTRY_TYPE,

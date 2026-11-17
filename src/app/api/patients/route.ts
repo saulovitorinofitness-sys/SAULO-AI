@@ -2,10 +2,17 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { patientRegistrationRepository } from "@/features/patient-registration";
+import { CpfOwnershipError } from "@/features/identity/cpf-ownership";
 import { canAccess, mvpService } from "@/features/mvp";
 
 const optionalText = (maximum: number) =>
   z.string().trim().max(maximum).optional();
+
+const patientListQuerySchema = z.object({
+  query: z.string().trim().max(180).optional(),
+  page: z.coerce.number().int().positive().default(1),
+  status: z.enum(["ACTIVE", "INACTIVE", "ARCHIVED"]).optional(),
+});
 
 const registrationSchema = z.object({
   fullName: z.string().trim().min(2).max(180),
@@ -89,10 +96,29 @@ export async function GET(request: Request) {
     );
   }
 
-  const query = new URL(request.url).searchParams.get("query") ?? undefined;
-  const patients = await patientRegistrationRepository.list(query);
+  const searchParams = new URL(request.url).searchParams;
+  const parsed = patientListQuerySchema.safeParse({
+    query: searchParams.get("query") ?? undefined,
+    page: searchParams.get("page") ?? undefined,
+    status: searchParams.get("status") || undefined,
+  });
 
-  return NextResponse.json({ patients });
+  if (!parsed.success) {
+    return NextResponse.json(
+      { message: "Parâmetros de consulta inválidos." },
+      { status: 400 },
+    );
+  }
+
+  const result = await patientRegistrationRepository.listPage(parsed.data);
+
+  return NextResponse.json({
+    patients: result.items,
+    page: result.page,
+    pageSize: result.pageSize,
+    total: result.total,
+    totalPages: result.totalPages,
+  });
 }
 
 export async function POST(request: Request) {
@@ -136,6 +162,12 @@ export async function POST(request: Request) {
 
     return NextResponse.json(result, { status: 201 });
   } catch (error) {
+    if (error instanceof CpfOwnershipError) {
+      return NextResponse.json(
+        { code: error.code, message: error.message },
+        { status: 409 },
+      );
+    }
     if (databaseErrorCode(error) === "P2002") {
       return NextResponse.json(
         { message: "Já existe um paciente cadastrado com este CPF." },

@@ -10,13 +10,14 @@ import {
 } from "@/features/clinical-collection";
 import { mealPlanFoundationService } from "@/features/meal-plan/foundation-service";
 import { nutritionClinicalFlowRepository } from "@/features/nutrition-clinical-flow/repository";
+import { nutritionClinicalFlowHref } from "@/features/nutrition-clinical-flow";
 import { nutritionClinicalPanelRepository } from "@/features/nutrition-strategy/clinical-panel-repository";
 import { nutritionStrategyService } from "@/features/nutrition-strategy";
+import { mealPlanStrategyInheritanceIssues } from "@/features/nutrition-strategy/inheritance";
+import { nutritionStrategyRepository } from "@/features/nutrition-strategy/strategy-repository";
 import { canAccess, mvpService } from "@/features/mvp";
-import {
-  DEVELOPMENT_PROFESSIONALS,
-  isDevelopmentUserKey,
-} from "@/features/development-session";
+
+import { SkipMealPlanAction } from "./skip-meal-plan-action";
 
 export const metadata: Metadata = { title: "Plano Alimentar" };
 
@@ -31,18 +32,16 @@ export default async function MealPlanPage({
   searchParams,
 }: {
   params: Promise<{ patientId: string }>;
-  searchParams: Promise<{ scenario?: string; devUser?: string }>;
+  searchParams: Promise<{
+    attendanceId?: string;
+    scenario?: string;
+  }>;
 }) {
   const [{ patientId }, query, access] = await Promise.all([
     params,
     searchParams,
     mvpService.getSession(),
   ]);
-  const selectedAccess =
-    process.env.NODE_ENV === "development" &&
-    isDevelopmentUserKey(query.devUser)
-      ? DEVELOPMENT_PROFESSIONALS[query.devUser].access
-      : access;
   const scenario = CLINICAL_COLLECTION_SCENARIO_KEYS.includes(
     query.scenario as ClinicalCollectionScenarioKey,
   )
@@ -50,8 +49,8 @@ export default async function MealPlanPage({
     : "complete";
 
   if (
-    !canAccess(selectedAccess, "MEAL_PLAN", "READ") ||
-    !nutritionStrategyService.canAccess(selectedAccess.user)
+    !canAccess(access, "MEAL_PLAN", "READ") ||
+    !nutritionStrategyService.canAccess(access.user)
   ) {
     return (
       <PageState
@@ -63,21 +62,43 @@ export default async function MealPlanPage({
   }
 
   const patientContext =
-    await nutritionClinicalPanelRepository.get(patientId);
+    await nutritionClinicalPanelRepository.get(
+      patientId,
+      query.attendanceId,
+    );
   if (!patientContext) notFound();
 
-  const foundation = await mealPlanFoundationService.getOrCreate({
-    patientId,
-    attendanceId: patientContext.attendanceId,
-    scenario,
-    professionalUserId: selectedAccess.user.id,
-  });
   const flow = await nutritionClinicalFlowRepository.getFlow({
     patientId,
     attendanceId: patientContext.attendanceId,
     scenario,
   });
   if (!flow) notFound();
+  const mealPlanStep = flow.flow.find((step) => step.id === "MEAL_PLAN");
+  const strategyStep = flow.flow.find((step) => step.id === "NUTRITION_STRATEGY");
+  const strategyWasSkipped = strategyStep?.status === "SKIPPED";
+  const foundation = await mealPlanFoundationService.getOrCreate({
+    patientId,
+    attendanceId: patientContext.attendanceId,
+    scenario,
+    professionalUserId: access.user.id,
+    strategySkipped: strategyWasSkipped,
+  });
+  const blockingStrategy =
+    !foundation && !strategyWasSkipped
+      ? await nutritionStrategyRepository.get(
+          patientId,
+          patientContext.attendanceId,
+        )
+      : null;
+  const blockingIssues = blockingStrategy
+    ? mealPlanStrategyInheritanceIssues(blockingStrategy)
+    : [];
+  const mealPlanWasSkipped = mealPlanStep?.status === "SKIPPED";
+  const mealPlanCanBeSkipped =
+    mealPlanStep?.status === "NOT_STARTED" ||
+    mealPlanStep?.status === "IN_PROGRESS" ||
+    mealPlanStep?.status === "BLOCKED";
 
   return (
     <ClinicalFlowNavigation
@@ -104,17 +125,54 @@ export default async function MealPlanPage({
       }
     >
       {foundation ? (
-        <MealPlanWorkspaceLazy initialPlan={foundation.plan} />
+        <>
+          {strategyWasSkipped ? (
+            <div className="mb-4 rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm font-bold text-amber-950" role="status">
+              Estratégia nutricional não realizada neste atendimento. O Plano Alimentar pode ser elaborado manualmente, sem metas de GET, VET ou macronutrientes presumidas.
+            </div>
+          ) : null}
+          <MealPlanWorkspaceLazy
+            initialPlan={{
+              ...foundation.plan,
+              currentWeightKg:
+                patientContext.anthropometry.weightKg &&
+                patientContext.anthropometry.weightKg > 0
+                  ? patientContext.anthropometry.weightKg
+                  : undefined,
+            }}
+          />
+        </>
+      ) : mealPlanWasSkipped ? (
+        <PageState
+          description="Esta etapa foi registrada como não realizada somente neste atendimento. Nenhum dado clínico vazio foi criado."
+          title="Plano Alimentar · Não realizada"
+        />
       ) : (
         <PageState
           action={
-            <ButtonLink
-              href={`/pacientes/${patientId}/estrategia-nutricional?scenario=${scenario}`}
-            >
-              Abrir Estratégia Nutricional
-            </ButtonLink>
+            <div className="mx-auto flex max-w-sm flex-col gap-3">
+              <ButtonLink
+                href={nutritionClinicalFlowHref("NUTRITION_STRATEGY", {
+                  patientId,
+                  attendanceId: patientContext.attendanceId,
+                  scenario,
+                })}
+              >
+                Abrir Estratégia Nutricional
+              </ButtonLink>
+              {mealPlanCanBeSkipped ? (
+                <SkipMealPlanAction
+                  attendanceId={patientContext.attendanceId}
+                  patientId={patientId}
+                />
+              ) : null}
+            </div>
           }
-          description="A Estratégia Nutricional da consulta atual precisa ser aprovada antes de iniciar uma prescrição definitiva."
+          description={
+            blockingIssues.length
+              ? `A Estratégia Nutricional deste atendimento não pode liberar o Plano enquanto estes dados estiverem ausentes ou pendentes: ${blockingIssues.join("; ")}. Abra a estratégia e escolha conscientemente como completar os campos; nenhum valor foi presumido.`
+              : "Finalize primeiro a Estratégia Nutricional deste atendimento."
+          }
           title="Plano Alimentar bloqueado"
           tone="blocked"
         />

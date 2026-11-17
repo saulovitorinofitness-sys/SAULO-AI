@@ -1,6 +1,6 @@
 import type { NutritionClinicalPanelView } from "@/features/nutrition-strategy/clinical-panel-contracts";
 
-const NOT_INFORMED = "NÃO INFORMADO";
+const NOT_INFORMED = "Não informado";
 
 function textValue(value?: string) {
   return value?.trim() || NOT_INFORMED;
@@ -71,6 +71,35 @@ function DecisionList({
   );
 }
 
+function InheritedList({
+  items,
+  title,
+}: {
+  items: readonly string[];
+  title: string;
+}) {
+  return (
+    <div>
+      <h3 className="text-xs font-black uppercase tracking-wide text-slate-600">
+        {title}
+      </h3>
+      {items.length ? (
+        <ul className="mt-2 space-y-1.5">
+          {items.map((item, index) => (
+            <li className="text-xs leading-5 text-slate-700" key={`${item}-${index}`}>
+              {item}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-2 text-xs font-semibold text-slate-400">
+          {NOT_INFORMED}
+        </p>
+      )}
+    </div>
+  );
+}
+
 export function NutritionClinicalPanel({
   activityFactor,
   view,
@@ -98,12 +127,17 @@ export function NutritionClinicalPanel({
             {view.patient.name}
           </h2>
           <p className="mt-1 text-sm font-semibold text-emerald-100">
-            {view.patient.code} · {view.patient.age} anos · {view.patient.sex}
+            {view.patient.code} · {view.patient.age !== undefined
+              ? `${view.patient.age} anos`
+              : NOT_INFORMED} · {view.patient.sex}
           </p>
         </div>
         <div className="max-w-xl text-sm sm:text-right">
           <p className="font-black">
             {textValue(view.patient.primaryObjective)}
+          </p>
+          <p className="mt-1 text-xs text-emerald-100">
+            Profissional responsável: {textValue(view.responsibleProfessional)}
           </p>
         </div>
       </header>
@@ -135,6 +169,41 @@ export function NutritionClinicalPanel({
             value={numberValue(resolvedActivityFactor, undefined, 3)}
           />
         </dl>
+
+        <div className="grid gap-4 border-b border-slate-200 py-4 sm:grid-cols-2 lg:grid-cols-4">
+          <InheritedList
+            items={view.inheritedClinicalContext.diagnoses}
+            title="Diagnósticos e patologias"
+          />
+          <InheritedList
+            items={view.inheritedClinicalContext.allergies}
+            title="Alergias"
+          />
+          <InheritedList
+            items={view.inheritedClinicalContext.restrictions}
+            title="Restrições e intolerâncias"
+          />
+          <InheritedList
+            items={view.inheritedClinicalContext.foodPreferences}
+            title="Preferências e aversões"
+          />
+          <InheritedList
+            items={view.inheritedClinicalContext.medications}
+            title="Medicamentos"
+          />
+          <InheritedList
+            items={view.inheritedClinicalContext.supplements}
+            title="Suplementos registrados"
+          />
+          <InheritedList
+            items={view.inheritedClinicalContext.injuriesAndLimitations}
+            title="Lesões e limitações"
+          />
+          <InheritedList
+            items={view.inheritedClinicalContext.laboratoryExams}
+            title="Exames laboratoriais reais"
+          />
+        </div>
 
         {view.decisionSupport.positivePoints.length ||
         view.decisionSupport.attentionPoints.length ||

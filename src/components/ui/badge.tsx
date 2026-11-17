@@ -9,7 +9,7 @@ const toneStyles = {
 };
 
 export function Badge({ children, tone = "neutral" }: { children: ReactNode; tone?: keyof typeof toneStyles }) {
-  return <span className={`inline-flex items-center gap-1 rounded-[var(--radius-full)] border px-2.5 py-1 text-xs font-bold ${toneStyles[tone]}`}>{children}</span>;
+  return <span className={`inline-flex max-w-full flex-wrap items-center gap-1 whitespace-normal break-words rounded-[var(--radius-full)] border px-2.5 py-1 text-xs font-bold ${toneStyles[tone]}`}>{children}</span>;
 }
 
 export type StatusBadgeStatus = "active" | "inactive" | "completed" | "pending" | "in_progress" | "reviewed" | "blocked" | "unavailable" | "informative" | "attention" | "priority" | "success" | "error";

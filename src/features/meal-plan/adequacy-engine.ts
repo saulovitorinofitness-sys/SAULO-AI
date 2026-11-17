@@ -29,6 +29,19 @@ export type NutritionAdequacyValues = Readonly<
   Record<NutritionAdequacyMetric, number>
 >;
 
+export const FINAL_NUTRITION_TARGET_METRICS = [
+  "energyKcal",
+  "proteinGrams",
+  "carbohydratesGrams",
+  "fatsGrams",
+] as const satisfies readonly NutritionAdequacyMetric[];
+
+export type FinalNutritionTargetMetric =
+  (typeof FINAL_NUTRITION_TARGET_METRICS)[number];
+export type FinalNutritionTargetValues = Readonly<
+  Record<FinalNutritionTargetMetric, number>
+>;
+
 export interface NutritionAdequacyThreshold {
   readonly adequateMaximumDeviationPercent: number;
   readonly nearTargetMaximumDeviationPercent: number;
@@ -59,8 +72,12 @@ export interface NutritionAdequacyResult {
   readonly calculationVersion: 1;
 }
 
+export const FINAL_NUTRITION_TARGET_TOLERANCE_PERCENT = 5;
+export const FINAL_NUTRITION_TARGET_TOLERANCE_ORIGIN =
+  "Regra de adequação do Plano Alimentar (cálculo v1, vigente desde 27/07/2026)";
+
 const defaultThreshold = {
-  adequateMaximumDeviationPercent: 5,
+  adequateMaximumDeviationPercent: FINAL_NUTRITION_TARGET_TOLERANCE_PERCENT,
   nearTargetMaximumDeviationPercent: 10,
 } as const;
 
@@ -97,11 +114,14 @@ function metricResult(
   target: number,
   actual: number,
   threshold: NutritionAdequacyThreshold,
+  minimumOnly = false,
 ): NutritionAdequacyMetricResult {
   const signedDifference = actual - target;
   const percentageDifference =
     target > 0 ? (signedDifference / target) * 100 : actual === 0 ? 0 : 100;
-  const absolutePercentageDifference = Math.abs(percentageDifference);
+  const absolutePercentageDifference = minimumOnly && percentageDifference >= 0
+    ? 0
+    : Math.abs(percentageDifference);
 
   return {
     target: round(target),
@@ -114,6 +134,27 @@ function metricResult(
       threshold,
     ),
   };
+}
+
+export function nutritionTargetsOutsideTolerance(input: {
+  readonly target: FinalNutritionTargetValues;
+  readonly actual: FinalNutritionTargetValues;
+}) {
+  return FINAL_NUTRITION_TARGET_METRICS.filter(
+    (metric) =>
+      metricResult(
+        input.target[metric],
+        input.actual[metric],
+        defaultThreshold,
+      ).status !== "ADEQUATE",
+  );
+}
+
+export function canFinalizeMealPlanNutrition(input: {
+  readonly target: FinalNutritionTargetValues;
+  readonly actual: FinalNutritionTargetValues;
+}) {
+  return nutritionTargetsOutsideTolerance(input).length === 0;
 }
 
 export function calculateNutritionAdequacy(input: {
@@ -131,6 +172,7 @@ export function calculateNutritionAdequacy(input: {
         input.target[metric],
         input.actual[metric],
         thresholds[metric],
+        metric === "fiberGrams",
       ),
     ]),
   ) as unknown as NutritionAdequacyResult["metrics"];

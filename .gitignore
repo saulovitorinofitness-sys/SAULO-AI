@@ -22,6 +22,7 @@
 next-env.d.ts
 /.tmp
 /tmp
+/.local-backups/
 
 # Logs
 /logs

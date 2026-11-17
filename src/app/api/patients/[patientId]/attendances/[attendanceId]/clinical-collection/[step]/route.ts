@@ -2,13 +2,16 @@ import { NextResponse } from "next/server";
 
 import {
   bioimpedanceGroups,
-  isPosturalImageMimeType,
   perimetryGroups,
-  POSTURAL_IMAGE_MAX_DATA_URL_LENGTH,
-  POSTURAL_IMAGE_MAX_SIZE_BYTES,
+  validatePosturalAssessmentData,
+  type BioimpedanceAvanutriData,
   type EditableClinicalData,
   type EditableClinicalStepKey,
+  type PerimetryData,
 } from "@/features/clinical-collection";
+import { validateAnthropometryMeasurements } from "@/features/clinical-collection/anthropometry-calculations";
+import { validateBioimpedanceMeasurements } from "@/features/clinical-collection/bioimpedance-measurements";
+import { validatePerimetryMeasurements } from "@/features/clinical-collection/perimetry-measurements";
 import { clinicalCollectionRepository } from "@/features/clinical-collection/repository";
 import { resolveDevelopmentAccess } from "@/features/development-session";
 import { canAccess, mvpService } from "@/features/mvp";
@@ -29,12 +32,6 @@ const moduleByStep: Readonly<
   PERIMETRY: "PERIMETRY",
   POSTURAL_ASSESSMENT: "POSTURAL_ASSESSMENT",
 };
-const findingStates = new Set([
-  "NOT_ASSESSED",
-  "NO_FINDING_RECORDED",
-  "FINDING_RECORDED",
-]);
-
 function isObject(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
@@ -64,67 +61,6 @@ function validNumericFields(
     Object.keys(data).every((key) => allowed.has(key)) &&
     fields.every((key) => validNumber(data[key])) &&
     (!allowNotes || validText(data.notes))
-  );
-}
-
-function validPostural(data: Record<string, unknown>) {
-  if (!isObject(data.views)) return false;
-  const views = data.views;
-
-  const viewKeys = [
-    "ANTERIOR",
-    "POSTERIOR",
-    "RIGHT_LATERAL",
-    "LEFT_LATERAL",
-  ];
-  const viewsValid = viewKeys.every((key) => {
-    const view = views[key];
-    const image = isObject(view) ? view.image : undefined;
-    const symmetrograph = isObject(view)
-      ? view.symmetrograph
-      : undefined;
-    const imageValid =
-      image === undefined ||
-      (isObject(image) &&
-        typeof image.dataUrl === "string" &&
-        image.dataUrl.length <=
-          POSTURAL_IMAGE_MAX_DATA_URL_LENGTH &&
-        /^data:image\/(jpeg|png|webp);base64,/.test(image.dataUrl) &&
-        typeof image.fileName === "string" &&
-        image.fileName.length > 0 &&
-        image.fileName.length <= 255 &&
-        isPosturalImageMimeType(image.mimeType) &&
-        typeof image.sizeBytes === "number" &&
-        Number.isInteger(image.sizeBytes) &&
-        image.sizeBytes > 0 &&
-        image.sizeBytes <= POSTURAL_IMAGE_MAX_SIZE_BYTES &&
-        typeof image.uploadedAt === "string" &&
-        !Number.isNaN(Date.parse(image.uploadedAt)));
-    const symmetrographValid =
-      symmetrograph === undefined ||
-      (isObject(symmetrograph) &&
-        typeof symmetrograph.enabled === "boolean" &&
-        typeof symmetrograph.opacity === "number" &&
-        Number.isFinite(symmetrograph.opacity) &&
-        symmetrograph.opacity >= 0.1 &&
-        symmetrograph.opacity <= 1);
-    return (
-      isObject(view) &&
-      findingStates.has(String(view.state)) &&
-      validText(view.observation) &&
-      imageValid &&
-      symmetrographValid
-    );
-  });
-
-  return (
-    viewsValid &&
-    findingStates.has(String(data.identifiedChanges)) &&
-    findingStates.has(String(data.functionalLimitations)) &&
-    validText(data.identifiedChangesNotes) &&
-    validText(data.functionalLimitationsNotes) &&
-    validText(data.notes) &&
-    validText(data.futureCorrectiveExercisesNote)
   );
 }
 
@@ -163,7 +99,75 @@ function validData(step: EditableClinicalStepKey, value: unknown) {
     );
   }
 
-  return validPostural(value);
+  return validatePosturalAssessmentData(value).valid;
+}
+
+function anthropometryValidationMessage(value: unknown) {
+  if (!isObject(value)) return "Dados da Antropometria inválidos.";
+
+  const allowed = new Set(["weightKg", "heightCm", "bmi", "notes"]);
+  if (
+    !Object.keys(value).every((key) => allowed.has(key)) ||
+    !validNumber(value.bmi) ||
+    !validText(value.notes)
+  ) {
+    return "Revise os campos da Antropometria.";
+  }
+
+  const errors = validateAnthropometryMeasurements({
+    weightKg:
+      value.weightKg === undefined
+        ? undefined
+        : typeof value.weightKg === "number"
+          ? value.weightKg
+          : Number.NaN,
+    heightCm:
+      value.heightCm === undefined
+        ? undefined
+        : typeof value.heightCm === "number"
+          ? value.heightCm
+          : Number.NaN,
+  });
+
+  return Object.values(errors)[0];
+}
+
+function perimetryValidationMessage(value: unknown) {
+  if (!isObject(value)) return "Dados da Perimetria inválidos.";
+
+  const allowed = new Set([
+    ...perimetryGroups.flatMap((group) =>
+      group.fields.map((field) => String(field.key)),
+    ),
+    "notes",
+  ]);
+  if (
+    !Object.keys(value).every((key) => allowed.has(key)) ||
+    !validText(value.notes)
+  ) {
+    return "Revise os campos da Perimetria.";
+  }
+
+  const errors = validatePerimetryMeasurements(value as PerimetryData);
+  return Object.values(errors)[0];
+}
+
+function bioimpedanceValidationMessage(value: unknown) {
+  if (!isObject(value)) return "Dados da Bioimpedância inválidos.";
+
+  const allowed = new Set(
+    bioimpedanceGroups.flatMap((group) =>
+      group.fields.map((field) => String(field.key)),
+    ),
+  );
+  if (!Object.keys(value).every((key) => allowed.has(key))) {
+    return "Revise os campos da Bioimpedância.";
+  }
+
+  const errors = validateBioimpedanceMeasurements(
+    value as BioimpedanceAvanutriData,
+  );
+  return Object.values(errors)[0];
 }
 
 export async function PUT(
@@ -214,6 +218,49 @@ export async function PUT(
 
   const step = candidateStep;
   const data = isObject(body) ? body.data : undefined;
+  const saveMode = isObject(body) && body.autosave === true
+    ? "AUTOSAVE"
+    : "MANUAL";
+
+  if (step === "ANTHROPOMETRY") {
+    const validationMessage = anthropometryValidationMessage(data);
+    if (validationMessage) {
+      return NextResponse.json(
+        { message: validationMessage },
+        { status: 400 },
+      );
+    }
+  }
+
+  if (step === "PERIMETRY") {
+    const validationMessage = perimetryValidationMessage(data);
+    if (validationMessage) {
+      return NextResponse.json(
+        { message: validationMessage },
+        { status: 400 },
+      );
+    }
+  }
+
+  if (step === "BIOIMPEDANCE") {
+    const validationMessage = bioimpedanceValidationMessage(data);
+    if (validationMessage) {
+      return NextResponse.json(
+        { message: validationMessage },
+        { status: 400 },
+      );
+    }
+  }
+
+  if (step === "POSTURAL_ASSESSMENT") {
+    const validation = validatePosturalAssessmentData(data);
+    if (!validation.valid) {
+      return NextResponse.json(
+        { message: validation.message },
+        { status: 400 },
+      );
+    }
+  }
 
   if (!validData(step, data)) {
     return NextResponse.json(
@@ -230,12 +277,53 @@ export async function PUT(
         scenario: "complete",
         step,
         data: data as EditableClinicalData,
+        saveMode,
       },
       activeAccess.user.id,
     );
 
     return NextResponse.json(result);
   } catch (error) {
+    if (
+      error instanceof Error &&
+      error.message.startsWith("INVALID_ANTHROPOMETRY:")
+    ) {
+      return NextResponse.json(
+        { message: error.message.slice("INVALID_ANTHROPOMETRY:".length) },
+        { status: 400 },
+      );
+    }
+
+    if (
+      error instanceof Error &&
+      error.message.startsWith("INVALID_PERIMETRY:")
+    ) {
+      return NextResponse.json(
+        { message: error.message.slice("INVALID_PERIMETRY:".length) },
+        { status: 400 },
+      );
+    }
+
+    if (
+      error instanceof Error &&
+      error.message.startsWith("INVALID_BIOIMPEDANCE:")
+    ) {
+      return NextResponse.json(
+        { message: error.message.slice("INVALID_BIOIMPEDANCE:".length) },
+        { status: 400 },
+      );
+    }
+
+    if (
+      error instanceof Error &&
+      error.message.startsWith("INVALID_POSTURAL:")
+    ) {
+      return NextResponse.json(
+        { message: error.message.slice("INVALID_POSTURAL:".length) },
+        { status: 400 },
+      );
+    }
+
     console.error("Falha ao salvar avaliação.", error);
     return NextResponse.json(
       { message: "Não foi possível salvar a avaliação." },

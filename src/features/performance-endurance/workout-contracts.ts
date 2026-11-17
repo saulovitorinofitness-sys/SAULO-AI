@@ -1,3 +1,17 @@
+import type {
+  ExerciseCatalogSource,
+  ExerciseLibraryItemView,
+} from "./exercise-library-contracts";
+import type {
+  EnduranceCycleWeek,
+  EnduranceEnvironment,
+  EnduranceModality,
+  EndurancePlanConfiguration,
+  EnduranceSession,
+} from "./endurance-workout-contracts";
+
+export type { ExerciseLibraryItemView } from "./exercise-library-contracts";
+
 export const PERFORMANCE_SERVICE_OPTIONS = [
   "STRENGTH_TRAINING",
   "STRENGTH_FOR_RUNNING",
@@ -43,6 +57,11 @@ export const PHYSICAL_VALENCE_OPTIONS = [
   "Core",
   "Prevenção de lesões",
   "Exercício corretivo",
+] as const;
+
+export const PROGRAM_FOCUS_OPTIONS = [
+  ...PHYSICAL_VALENCE_OPTIONS,
+  "Recuperação / regenerativo",
 ] as const;
 
 export const WORKOUT_START_MODES = [
@@ -108,6 +127,52 @@ export interface PeriodizationCycle {
   readonly observations: string;
 }
 
+export type WorkoutProtocolSource = "SCIENTIFIC_LIBRARY";
+export type WorkoutProtocolArea = "PERFORMANCE";
+
+export interface WorkoutProtocolReference {
+  readonly protocolId: string;
+  readonly protocolName: string;
+  readonly source: WorkoutProtocolSource;
+  readonly version?: string;
+  readonly area: WorkoutProtocolArea;
+  readonly professionalNotes?: string;
+}
+
+export type WorkoutWeekday =
+  | "MONDAY"
+  | "TUESDAY"
+  | "WEDNESDAY"
+  | "THURSDAY"
+  | "FRIDAY"
+  | "SATURDAY"
+  | "SUNDAY";
+
+export type WeeklyTrainingEntryKind =
+  | "TRAINING"
+  | "REST"
+  | "ACTIVE_RECOVERY";
+
+export interface WeeklyTrainingDivisionEntry {
+  readonly weekday: WorkoutWeekday;
+  readonly weeklyOrder: number;
+  readonly sessionName: string;
+  readonly primaryFocus: string;
+  readonly prioritizedGroupsOrCapacities: readonly string[];
+  readonly sessionId?: string;
+  readonly kind: WeeklyTrainingEntryKind;
+  readonly observations?: string;
+}
+
+export interface WorkoutPlanningTransition {
+  readonly effectiveDate: string;
+  readonly recordedAt: string;
+  readonly phaseBefore?: string;
+  readonly phaseAfter?: string;
+  readonly focusBefore?: string;
+  readonly focusAfter?: string;
+}
+
 export interface WorkoutProgramStrategy {
   readonly programName: string;
   readonly startDate: string;
@@ -121,9 +186,15 @@ export interface WorkoutProgramStrategy {
   readonly mesocycle: string;
   readonly microcycle: string;
   readonly currentPhase: string;
+  readonly currentFocus?: string;
+  readonly nextPhase?: string;
+  readonly nextFocus?: string;
   readonly currentWeek?: number;
   readonly observations: string;
   readonly cycles: readonly PeriodizationCycle[];
+  readonly transitions?: readonly WorkoutPlanningTransition[];
+  readonly baseProtocol?: WorkoutProtocolReference;
+  readonly weeklyDivision?: readonly WeeklyTrainingDivisionEntry[];
 }
 
 export interface TrainingMethodDefinition {
@@ -141,10 +212,14 @@ export interface WorkoutExercise {
   readonly order: number;
   readonly name: string;
   readonly libraryExerciseId?: string;
+  readonly libraryExerciseSource?: ExerciseCatalogSource;
   readonly prescription: string;
   readonly sets: string;
   readonly repetitions: string;
   readonly load: string;
+  readonly loadUnit: string;
+  readonly rir: string;
+  readonly rpe: string;
   readonly intensityType: "" | "PERCENT_1RM" | "RPE" | "RIR";
   readonly intensityValue: string;
   readonly restInterval: string;
@@ -152,6 +227,7 @@ export interface WorkoutExercise {
   readonly rangeOfMotion: string;
   readonly methodId: string;
   readonly observations: string;
+  readonly patientInstructions: string;
   readonly substituteExercise: string;
 }
 
@@ -159,8 +235,35 @@ export interface WorkoutSession {
   readonly id: string;
   readonly name: string;
   readonly objective: string;
+  readonly estimatedDuration: string;
   readonly observations: string;
   readonly exercises: readonly WorkoutExercise[];
+}
+
+export type WorkoutPlanEnduranceSession<
+  Modality extends EnduranceModality,
+> = EnduranceSession & {
+  readonly modality: Modality;
+  readonly environment: EnduranceEnvironment<Modality>;
+};
+
+export type WorkoutPlanEnduranceWeek<Modality extends EnduranceModality> = Omit<
+  EnduranceCycleWeek,
+  "sessions"
+> & {
+  readonly sessions: readonly WorkoutPlanEnduranceSession<Modality>[];
+};
+
+export interface WorkoutPlanEnduranceModality<
+  Modality extends EnduranceModality,
+> {
+  readonly configuration: EndurancePlanConfiguration<Modality>;
+  readonly weeks: readonly WorkoutPlanEnduranceWeek<Modality>[];
+}
+
+export interface WorkoutPlanEndurance {
+  readonly running?: WorkoutPlanEnduranceModality<"RUNNING">;
+  readonly cycling?: WorkoutPlanEnduranceModality<"CYCLING">;
 }
 
 export interface WorkoutPlanDraft {
@@ -170,6 +273,7 @@ export interface WorkoutPlanDraft {
   readonly startMode: WorkoutStartMode;
   readonly sessions: readonly WorkoutSession[];
   readonly customMethods: readonly TrainingMethodDefinition[];
+  readonly endurance?: WorkoutPlanEndurance;
 }
 
 export type WorkoutPlanStatus = "DRAFT" | "FINALIZED";
@@ -189,12 +293,48 @@ export interface StoredWorkoutPlanPayload extends WorkoutPlanDraft {
   readonly methodGlossary: readonly WorkoutMethodGlossaryEntry[];
 }
 
-export interface ExerciseLibraryItemView {
-  readonly id: string;
-  readonly name: string;
-  readonly muscleGroup?: string;
-  readonly equipment?: string;
-  readonly description?: string;
+export interface WorkoutPhysicalAssessmentContext {
+  readonly assessmentId: string;
+  readonly assessmentName: string;
+  readonly performedAt: string;
+  readonly evaluatedCapacity: string;
+  readonly resultSummary: string;
+  readonly professionalInterpretation?: string;
+  readonly sourceRecordId: string;
+}
+
+export type PreviousWorkoutSessionReference = Pick<
+  WorkoutSession,
+  "id" | "name" | "objective" | "estimatedDuration" | "observations"
+>;
+
+export interface PreviousWorkoutPlanReference {
+  readonly recordId: string;
+  readonly version: number;
+  readonly status: WorkoutPlanStatus;
+  readonly createdAt: string;
+  readonly objective?: PerformanceServiceContext["trainingObjective"];
+  readonly weeklyDivision?: readonly WeeklyTrainingDivisionEntry[];
+  readonly sessions: readonly PreviousWorkoutSessionReference[];
+  readonly professionalSummary?: string;
+}
+
+export interface WorkoutProfessionalContext {
+  readonly masterRecordId: string;
+  readonly patientId: string;
+  readonly objective?: PerformanceServiceContext["trainingObjective"];
+  readonly trainingExperience?: string;
+  readonly trainingRoutine?: string;
+  readonly weeklyAvailability?: string;
+  readonly sessionDurationMinutes?: number;
+  readonly practicedModalities?: readonly string[];
+  readonly painAndLimitations?: readonly string[];
+  readonly relevantInjuries?: readonly string[];
+  readonly relevantContraindications?: readonly string[];
+  readonly relevantPosturalFindings?: readonly string[];
+  readonly physicalAssessments?: readonly WorkoutPhysicalAssessmentContext[];
+  readonly activeProtocol?: WorkoutProtocolReference;
+  readonly previousWorkoutPlan?: PreviousWorkoutPlanReference;
 }
 
 export interface PerformanceWorkoutView {
@@ -206,10 +346,13 @@ export interface PerformanceWorkoutView {
   readonly masterRecordId: string;
   readonly attendanceId: string;
   readonly entryId?: string;
+  readonly workoutPlanVersionId?: string;
   readonly status: WorkoutPlanStatus;
   readonly draft: WorkoutPlanDraft;
+  readonly professionalContext?: WorkoutProfessionalContext;
   readonly inheritedFacts: readonly InheritedTrainingFact[];
   readonly exerciseLibrary: readonly ExerciseLibraryItemView[];
+  readonly responsibleProfessionalId: string;
   readonly responsibleProfessional: string;
   readonly updatedAt?: string;
   readonly version: number;

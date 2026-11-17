@@ -14,22 +14,29 @@ import type {
   ClinicalStepRecord,
   PosturalCompletionStatus,
   PosturalAssessmentData,
+  PosturalAnnotationLayer,
   PosturalFollowUpConduct,
   PosturalOverallRelevance,
   PosturalSegmentAssessment,
   PosturalSegmentGrade,
   PosturalSegmentRelevance,
   PosturalSymmetrograph,
+  PosturalReferenceLines,
   PosturalTechnicalSummary,
   PosturalViewImage,
   PosturalViewKey,
+  ProfessionalAudit,
   StructuredFindingState,
 } from "@/features/clinical-collection";
+import type { NutritionClinicalFlowStepStatus } from "@/features/nutrition-clinical-flow/flow";
 
 import { ClinicalField, clinicalInputClass } from "./clinical-field";
 import { focusFirstInvalidField } from "./focus-invalid-field";
 import { PendingFieldsAlert } from "./pending-fields-alert";
-import { PosturalImageViewer } from "./postural-image-viewer";
+import {
+  DEFAULT_POSTURAL_REFERENCE_LINES,
+  PosturalImageViewer,
+} from "./postural-image-viewer";
 import { PosturalEvolutionSection } from "./postural-evolution-section";
 import { PosturalSegmentCard } from "./postural-segment-card";
 import { PosturalTechnicalSummarySection } from "./postural-technical-summary-section";
@@ -82,42 +89,84 @@ type PosturalMediaState = Readonly<
     {
       readonly image?: PosturalViewImage;
       readonly symmetrograph: PosturalSymmetrograph;
+      readonly referenceLines: PosturalReferenceLines;
+      readonly annotations: readonly PosturalAnnotationLayer[];
     }
   >
 >;
 
+type SelectedAnnotationByView = Partial<
+  Record<PosturalViewKey, string | undefined>
+>;
+
+function defaultReferenceLines(): PosturalReferenceLines {
+  return {
+    ...DEFAULT_POSTURAL_REFERENCE_LINES,
+    horizontal: [
+      { ...DEFAULT_POSTURAL_REFERENCE_LINES.horizontal[0] },
+      { ...DEFAULT_POSTURAL_REFERENCE_LINES.horizontal[1] },
+    ],
+    vertical: [
+      { ...DEFAULT_POSTURAL_REFERENCE_LINES.vertical[0] },
+      { ...DEFAULT_POSTURAL_REFERENCE_LINES.vertical[1] },
+    ],
+  };
+}
+
 function PosturalImageBlock({
+  annotations,
   assessmentId,
   image,
+  onAnnotationsChange,
   onChangeImage,
   onChangeSymmetrograph,
+  onReferenceLinesChange,
+  onSelectedAnnotationChange,
   patientId,
+  referenceLines,
+  selectedAnnotationId,
   symmetrograph,
   title,
   viewKey,
 }: {
+  annotations: readonly PosturalAnnotationLayer[];
   assessmentId?: string;
   image?: PosturalViewImage;
+  onAnnotationsChange: (
+    annotations: readonly PosturalAnnotationLayer[],
+  ) => void;
   onChangeImage: (image?: PosturalViewImage) => void;
   onChangeSymmetrograph: (
     symmetrograph: PosturalSymmetrograph,
   ) => void;
+  onReferenceLinesChange: (
+    referenceLines: PosturalReferenceLines,
+  ) => void;
+  onSelectedAnnotationChange: (id?: string) => void;
   patientId: string;
+  referenceLines: PosturalReferenceLines;
+  selectedAnnotationId?: string;
   symmetrograph: PosturalSymmetrograph;
   title: string;
   viewKey: PosturalViewKey;
 }) {
   return (
     <PosturalImageViewer
+      annotations={annotations}
       assessmentId={assessmentId}
       gridEnabled={symmetrograph.enabled}
       gridOpacity={symmetrograph.opacity}
       image={image}
+      onAnnotationsChange={onAnnotationsChange}
       onChange={onChangeImage}
       onGridChange={onChangeSymmetrograph}
+      onReferenceLinesChange={onReferenceLinesChange}
       onRemove={() => onChangeImage(undefined)}
+      onSelectedAnnotationChange={onSelectedAnnotationChange}
       patientId={patientId}
       readOnly={false}
+      referenceLines={referenceLines}
+      selectedAnnotationId={selectedAnnotationId}
       title={title}
       viewType={viewKey}
     />
@@ -234,26 +283,35 @@ function posturalSegments(
 }
 
 export function PosturalStep({
+  assessedAt,
   assessmentId,
   evaluatorName,
+  onBack,
+  operationalStatus,
   patientId,
   record,
+  responsibleProfessional,
   saving,
   onDirty,
   onSave,
 }: {
+  assessedAt?: string;
   assessmentId?: string;
-  evaluatorName: string;
+  evaluatorName?: string;
+  onBack: () => void;
+  operationalStatus?: NutritionClinicalFlowStepStatus;
   patientId: string;
   record: ClinicalStepRecord<PosturalAssessmentData>;
+  responsibleProfessional?: ProfessionalAudit;
   saving: boolean;
-  onDirty: () => void;
-  onSave: (data: PosturalAssessmentData) => Promise<void>;
+  onDirty: (data: PosturalAssessmentData) => void;
+  onSave: (
+    data: PosturalAssessmentData,
+    continueAfterSave: boolean,
+  ) => Promise<void>;
 }) {
   const formRef = useRef<HTMLFormElement>(null);
-  const completionIntent = useRef<PosturalCompletionStatus>(
-    record.data.completionStatus ?? "IN_PROGRESS",
-  );
+  const assessmentWasSkipped = operationalStatus === "SKIPPED";
   const [openSection, setOpenSection] = useState("anterior");
   const [confirmCompletion, setConfirmCompletion] =
     useState(false);
@@ -273,6 +331,7 @@ export function PosturalStep({
     return () =>
       document.removeEventListener("keydown", closeOnEscape);
   }, [confirmCompletion]);
+
   const [mediaByView, setMediaByView] =
     useState<PosturalMediaState>(() =>
       Object.fromEntries(
@@ -283,10 +342,34 @@ export function PosturalStep({
             symmetrograph:
               record.data.views[key].symmetrograph ??
               DEFAULT_POSTURAL_SYMMETROGRAPH,
+            referenceLines:
+              record.data.referenceLines?.[key] ??
+              defaultReferenceLines(),
+            annotations:
+              record.data.annotationLayers?.[key] ?? [],
           },
         ]),
       ) as unknown as PosturalMediaState,
     );
+  const mediaByViewRef = useRef(mediaByView);
+  const [selectedAnnotationByView, setSelectedAnnotationByView] =
+    useState<SelectedAnnotationByView>({});
+
+  function updateMediaView(
+    viewKey: PosturalViewKey,
+    updater: (
+      current: PosturalMediaState[PosturalViewKey],
+    ) => PosturalMediaState[PosturalViewKey],
+  ) {
+    const current = mediaByViewRef.current;
+    const next = {
+      ...current,
+      [viewKey]: updater(current[viewKey]),
+    };
+
+    mediaByViewRef.current = next;
+    setMediaByView(next);
+  }
 
   function toggleSection(section: string) {
     setOpenSection((current) =>
@@ -294,7 +377,11 @@ export function PosturalStep({
     );
   }
 
-  function assessmentData(form: FormData): PosturalAssessmentData {
+  function assessmentData(
+    form: FormData,
+    completionStatus: PosturalCompletionStatus =
+      record.data.completionStatus ?? "IN_PROGRESS",
+  ): PosturalAssessmentData {
     const state = (key: string) =>
       String(form.get(key)) as StructuredFindingState;
     const viewData = (
@@ -303,8 +390,8 @@ export function PosturalStep({
     ) => ({
       state: state(`${formKey}-state`),
       observation: text(form, `${formKey}-observation`),
-      image: mediaByView[viewKey].image,
-      symmetrograph: mediaByView[viewKey].symmetrograph,
+      image: mediaByViewRef.current[viewKey].image,
+      symmetrograph: mediaByViewRef.current[viewKey].symmetrograph,
       segments: posturalSegments(form, formKey, viewKey),
     });
     const overallRelevance = text(
@@ -366,6 +453,18 @@ export function PosturalStep({
       notes: text(form, "posturalNotes"),
       futureCorrectiveExercisesNote:
         record.data.futureCorrectiveExercisesNote,
+      referenceLines: Object.fromEntries(
+        viewDefinitions.map(({ key }) => [
+          key,
+          mediaByViewRef.current[key].referenceLines,
+        ]),
+      ) as PosturalAssessmentData["referenceLines"],
+      annotationLayers: Object.fromEntries(
+        viewDefinitions.map(({ key }) => [
+          key,
+          mediaByViewRef.current[key].annotations,
+        ]),
+      ) as PosturalAssessmentData["annotationLayers"],
       technicalSummary:
         technicalSummary.generatedOriginal ||
         technicalSummary.editedSummary
@@ -377,14 +476,35 @@ export function PosturalStep({
       ),
       overallRelevance,
       followUp,
-      completionStatus: completionIntent.current,
+      completionStatus,
     };
+  }
+
+  function markDirty() {
+    const form = formRef.current;
+    if (!form) return;
+    onDirty(
+      assessmentData(
+        new FormData(form),
+        record.data.completionStatus ?? "IN_PROGRESS",
+      ),
+    );
   }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setConfirmCompletion(false);
-    await onSave(assessmentData(new FormData(event.currentTarget)));
+
+    const submitter = (event.nativeEvent as SubmitEvent)
+      .submitter as HTMLButtonElement | null;
+    const continueAfterSave = submitter?.value !== "SAVE";
+    await onSave(
+      assessmentData(
+        new FormData(event.currentTarget),
+        continueAfterSave ? "COMPLETED" : "IN_PROGRESS",
+      ),
+      continueAfterSave,
+    );
   }
 
   function generateCurrentSummary() {
@@ -396,8 +516,7 @@ export function PosturalStep({
     return generatePosturalTechnicalSummary(
       assessmentData(new FormData(form)),
       {
-        assessedAt:
-          record.audit?.updatedAt ?? new Date().toISOString(),
+        assessedAt: assessedAt ?? record.audit?.updatedAt,
         evaluatorName,
       },
     );
@@ -406,25 +525,93 @@ export function PosturalStep({
   return (
     <form
       id="clinical-form-postural_assessment"
-      onChange={onDirty}
+      onChange={markDirty}
       onInvalid={focusFirstInvalidField}
       onSubmit={submit}
       ref={formRef}
     >
-      <div className="space-y-4">
-        <div className="flex flex-col gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="space-y-6">
+        <section className="m-0 overflow-hidden rounded-2xl border border-blue-200 bg-white shadow-sm xl:max-h-full">
+          <div className="bg-gradient-to-r from-[#0f4c81] via-[#1768a6] to-[#2386c8] px-5 py-5 text-white sm:px-6">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <p className="text-[11px] font-black uppercase tracking-[0.2em] text-blue-100">
+                  Avaliação física • CREF
+                </p>
+                <h1 className="mt-1 text-xl font-black tracking-tight sm:text-2xl">
+                  Avaliação Postural Profissional
+                </h1>
+                <p className="mt-2 max-w-3xl text-sm leading-6 text-blue-50">
+                  Registro postural integrado ao Prontuário Mestre, com documentação
+                  fotográfica, análise segmentar, síntese técnica e acompanhamento
+                  de evolução.
+                </p>
+              </div>
+
+              <div className="flex shrink-0 flex-wrap gap-2">
+                <span className="rounded-full border border-white/30 bg-white/10 px-3 py-1.5 text-xs font-black text-white">
+                  Prontuário Mestre
+                </span>
+                <span className="rounded-full border border-white/30 bg-white/10 px-3 py-1.5 text-xs font-black text-white">
+                  Avaliação Postural
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid gap-px bg-blue-100 sm:grid-cols-2">
+            <div className="bg-white px-5 py-4">
+              <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                Profissional responsável
+              </p>
+              <p className="mt-1 text-sm font-black text-slate-900">
+                {evaluatorName?.trim() || "Profissional vinculado"}
+              </p>
+            </div>
+
+            <div className="bg-white px-5 py-4">
+              <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                Status da avaliação
+              </p>
+              <div className="mt-1 flex items-center gap-2">
+                <span
+                  className={`h-2.5 w-2.5 rounded-full ${
+                    assessmentWasSkipped
+                      ? "bg-amber-500"
+                      : record.data.completionStatus === "COMPLETED"
+                      ? "bg-emerald-500"
+                      : "bg-amber-400"
+                  }`}
+                />
+                <p
+                  className={`text-sm font-black ${
+                    assessmentWasSkipped ? "text-amber-900" : "text-slate-900"
+                  }`}
+                >
+                  {assessmentWasSkipped
+                    ? "Avaliação não realizada"
+                    : record.data.completionStatus === "COMPLETED"
+                      ? "Avaliação concluída"
+                      : "Avaliação em andamento"}
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div className="flex flex-col gap-3 rounded-2xl border border-blue-100 bg-blue-50/70 p-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-sm font-black text-amber-950">
+            <p className="text-sm font-black text-blue-950">
               Documentação clínica flexível
             </p>
 
-            <p className="mt-1 text-xs text-amber-800">
+            <p className="mt-1 text-xs text-blue-700">
               Utilize somente as vistas e os itens que considerar
               necessários para este atendimento.
             </p>
           </div>
 
-          <span className="shrink-0 rounded-full bg-amber-100 px-3 py-1 text-xs font-black text-amber-900">
+          <span className="shrink-0 rounded-full bg-blue-100 px-3 py-1.5 text-xs font-black text-blue-800">
             Campos opcionais
           </span>
         </div>
@@ -436,7 +623,20 @@ export function PosturalStep({
         <ProfessionalAuditInfo
           audit={record.audit}
           origin={record.origin}
+          responsible={responsibleProfessional}
         />
+
+        <div className="rounded-2xl border border-blue-100 bg-gradient-to-r from-blue-50 via-white to-sky-50 px-5 py-4">
+          <p className="text-[11px] font-black uppercase tracking-[0.18em] text-blue-600">
+            Etapa 01
+          </p>
+          <h2 className="mt-1 text-base font-black text-slate-950 sm:text-lg">
+            Registro fotográfico e avaliação por vistas
+          </h2>
+          <p className="mt-1 text-sm leading-6 text-slate-600">
+            Registre as imagens necessárias e documente os achados observados em cada vista.
+          </p>
+        </div>
 
         {viewDefinitions.map((view, index) => {
           const sectionKey = view.key.toLocaleLowerCase("en-US");
@@ -449,70 +649,169 @@ export function PosturalStep({
               open={openSection === sectionKey}
               title={view.title}
             >
-              <div>
-                <PosturalImageBlock
-                  assessmentId={assessmentId}
-                  image={mediaByView[view.key].image}
-                  onChangeImage={(image) => {
-                    setMediaByView((current) => ({
-                      ...current,
-                      [view.key]: {
-                        ...current[view.key],
-                        image,
-                      },
-                    }));
-                    onDirty();
-                  }}
-                  onChangeSymmetrograph={(symmetrograph) => {
-                    setMediaByView((current) => ({
-                      ...current,
-                      [view.key]: {
-                        ...current[view.key],
-                        symmetrograph,
-                      },
-                    }));
-                    onDirty();
-                  }}
-                  patientId={patientId}
-                  symmetrograph={
-                    mediaByView[view.key].symmetrograph
-                  }
-                  title={view.title}
-                  viewKey={view.key}
-                />
-              </div>
+              <div className="grid items-stretch gap-5 xl:grid-cols-[minmax(340px,42%)_minmax(0,1fr)] xl:[&>*]:mt-0">
+                <aside className="m-0 self-start xl:sticky xl:top-28 xl:self-start xl:pt-0">
+                  <div className="overflow-hidden rounded-2xl border border-blue-200 bg-white shadow-sm">
+                    <div className="flex items-center justify-between gap-3 border-b border-blue-100 bg-blue-50/80 px-4 py-3">
+                      <div>
+                        <p className="text-[10px] font-black uppercase tracking-[0.16em] text-blue-600">
+                          Imagem de referência
+                        </p>
+                        <p className="mt-0.5 text-sm font-black text-blue-950">
+                          {view.title}
+                        </p>
+                      </div>
 
-              <div className="mt-4">
-                <PosturalArea
-                  id={sectionKey}
-                  observation={
-                    record.data.views[view.key].observation
-                  }
-                  onDirty={onDirty}
-                  state={record.data.views[view.key].state}
-                />
-              </div>
+                      <span className="shrink-0 rounded-full bg-blue-100 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-blue-700">
+                        Fixa durante a análise
+                      </span>
+                    </div>
 
-              <div className="mt-5 space-y-4">
-                {posturalSegmentsByView[view.key].map(
-                  (definition) => (
-                    <PosturalSegmentCard
-                      definition={definition}
-                      key={definition.key}
-                      namePrefix={sectionKey}
-                      onDirty={onDirty}
-                      value={
-                        record.data.views[view.key].segments?.[
-                          definition.key
-                        ]
+                    <div className="bg-blue-50/30 p-3 sm:p-4">
+                      <PosturalImageBlock
+                        annotations={
+                          mediaByView[view.key].annotations
+                        }
+                        assessmentId={assessmentId}
+                        image={mediaByView[view.key].image}
+                        onAnnotationsChange={(annotations) => {
+                          updateMediaView(
+                            view.key,
+                            (current) => ({
+                              ...current,
+                              annotations,
+                            }),
+                          );
+                          markDirty();
+                        }}
+                        onChangeImage={(image) => {
+                          updateMediaView(
+                            view.key,
+                            (current) => ({
+                              ...current,
+                              image,
+                            }),
+                          );
+                          markDirty();
+                        }}
+                        onChangeSymmetrograph={(symmetrograph) => {
+                          updateMediaView(
+                            view.key,
+                            (current) => ({
+                              ...current,
+                              symmetrograph,
+                            }),
+                          );
+                          markDirty();
+                        }}
+                        onReferenceLinesChange={(referenceLines) => {
+                          updateMediaView(
+                            view.key,
+                            (current) => ({
+                              ...current,
+                              referenceLines,
+                            }),
+                          );
+                          markDirty();
+                        }}
+                        onSelectedAnnotationChange={(id) => {
+                          setSelectedAnnotationByView(
+                            (current) => ({
+                              ...current,
+                              [view.key]: id,
+                            }),
+                          );
+                        }}
+                        patientId={patientId}
+                        referenceLines={
+                          mediaByView[view.key].referenceLines
+                        }
+                        selectedAnnotationId={
+                          selectedAnnotationByView[view.key]
+                        }
+                        symmetrograph={
+                          mediaByView[view.key].symmetrograph
+                        }
+                        title={view.title}
+                        viewKey={view.key}
+                      />
+                    </div>
+                  </div>
+                </aside>
+
+                <div className="m-0 min-w-0 self-stretch xl:relative xl:min-h-0">
+                  <div className="space-y-5 xl:absolute xl:inset-0 xl:overflow-y-auto xl:overscroll-contain xl:pr-2">
+                  <div className="m-0 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                    <div className="mb-4">
+                      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-blue-600">
+                        Vista atual
+                      </p>
+                      <h3 className="mt-1 text-base font-black text-slate-950">
+                        {view.title}
+                      </h3>
+                      <p className="mt-1 text-xs leading-5 text-slate-500">
+                        Responda os campos abaixo mantendo a fotografia
+                        visível ao lado durante toda a análise.
+                      </p>
+                    </div>
+
+                    <PosturalArea
+                      id={sectionKey}
+                      observation={
+                        record.data.views[view.key].observation
                       }
+                      onDirty={markDirty}
+                      state={record.data.views[view.key].state}
                     />
-                  ),
-                )}
+                  </div>
+
+                  <div>
+                    <div className="mb-3 rounded-xl border border-blue-100 bg-blue-50/60 px-4 py-3">
+                      <p className="text-sm font-black text-blue-950">
+                        Avaliação segmentar
+                      </p>
+                      <p className="mt-1 text-xs leading-5 text-blue-700">
+                        A fotografia permanece fixa à esquerda enquanto
+                        você percorre todos os segmentos desta vista.
+                      </p>
+                    </div>
+
+                    <div className="space-y-4">
+                      {posturalSegmentsByView[view.key].map(
+                        (definition) => (
+                          <PosturalSegmentCard
+                            definition={definition}
+                            key={definition.key}
+                            namePrefix={sectionKey}
+                            onDirty={markDirty}
+                            value={
+                              record.data.views[view.key].segments?.[
+                                definition.key
+                              ]
+                            }
+                          />
+                        ),
+                      )}
+                    </div>
+                  </div>
+                  </div>
+                </div>
               </div>
             </AccordionSection>
           );
         })}
+
+        <div className="rounded-2xl border border-blue-100 bg-gradient-to-r from-blue-50 via-white to-sky-50 px-5 py-4">
+          <p className="text-[11px] font-black uppercase tracking-[0.18em] text-blue-600">
+            Etapa 02
+          </p>
+          <h2 className="mt-1 text-base font-black text-slate-950 sm:text-lg">
+            Diagnóstico e síntese postural
+          </h2>
+          <p className="mt-1 text-sm leading-6 text-slate-600">
+            Consolidação técnica dos achados registrados durante a avaliação.
+          </p>
+        </div>
 
         <AccordionSection
           number={5}
@@ -522,12 +821,24 @@ export function PosturalStep({
         >
           <PosturalTechnicalSummarySection
             data={record.data}
-            onDirty={onDirty}
+            onDirty={markDirty}
             onGenerate={generateCurrentSummary}
             onSummaryChange={setTechnicalSummary}
             summary={technicalSummary}
           />
         </AccordionSection>
+
+        <div className="rounded-2xl border border-blue-100 bg-gradient-to-r from-blue-50 via-white to-sky-50 px-5 py-4">
+          <p className="text-[11px] font-black uppercase tracking-[0.18em] text-blue-600">
+            Etapa 03
+          </p>
+          <h2 className="mt-1 text-base font-black text-slate-950 sm:text-lg">
+            Achados clínicos e limitações funcionais
+          </h2>
+          <p className="mt-1 text-sm leading-6 text-slate-600">
+            Registre alterações globais, limitações funcionais e observações relevantes.
+          </p>
+        </div>
 
         <AccordionSection
           number={6}
@@ -545,7 +856,7 @@ export function PosturalStep({
                 defaultValue={record.data.identifiedChanges}
                 id="identifiedChanges"
                 name="identifiedChanges"
-                onChange={onDirty}
+                onChange={markDirty}
               >
                 {stateOptions.map((option) => (
                   <option
@@ -569,7 +880,7 @@ export function PosturalStep({
                 }
                 id="identifiedChangesNotes"
                 name="identifiedChangesNotes"
-                onChange={onDirty}
+                onChange={markDirty}
               />
             </ClinicalField>
           </div>
@@ -593,7 +904,7 @@ export function PosturalStep({
                 }
                 id="functionalLimitations"
                 name="functionalLimitations"
-                onChange={onDirty}
+                onChange={markDirty}
               >
                 {stateOptions.map((option) => (
                   <option
@@ -617,7 +928,7 @@ export function PosturalStep({
                 }
                 id="functionalLimitationsNotes"
                 name="functionalLimitationsNotes"
-                onChange={onDirty}
+                onChange={markDirty}
               />
             </ClinicalField>
           </div>
@@ -638,10 +949,22 @@ export function PosturalStep({
               defaultValue={record.data.notes}
               id="posturalNotes"
               name="posturalNotes"
-              onChange={onDirty}
+              onChange={markDirty}
             />
           </ClinicalField>
         </AccordionSection>
+
+        <div className="rounded-2xl border border-blue-100 bg-gradient-to-r from-blue-50 via-white to-sky-50 px-5 py-4">
+          <p className="text-[11px] font-black uppercase tracking-[0.18em] text-blue-600">
+            Etapa 04
+          </p>
+          <h2 className="mt-1 text-base font-black text-slate-950 sm:text-lg">
+            Conduta e plano corretivo
+          </h2>
+          <p className="mt-1 text-sm leading-6 text-slate-600">
+            Área preparada para o vínculo futuro entre achados posturais e condutas corretivas.
+          </p>
+        </div>
 
         <AccordionSection
           description="Vínculo preparado apenas visualmente; nenhum plano de treino é gerado nesta Sprint."
@@ -654,9 +977,21 @@ export function PosturalStep({
         >
           <p className="rounded-xl bg-slate-50 p-4 text-sm font-semibold text-slate-500">
             {record.data.futureCorrectiveExercisesNote ??
-              "Nenhum exercício vinculado nesta Sprint."}
+              "Não informado"}
           </p>
         </AccordionSection>
+
+        <div className="rounded-2xl border border-blue-100 bg-gradient-to-r from-blue-50 via-white to-sky-50 px-5 py-4">
+          <p className="text-[11px] font-black uppercase tracking-[0.18em] text-blue-600">
+            Etapa 05
+          </p>
+          <h2 className="mt-1 text-base font-black text-slate-950 sm:text-lg">
+            Evolução postural
+          </h2>
+          <p className="mt-1 text-sm leading-6 text-slate-600">
+            Consulte avaliações anteriores preservadas por atendimento para acompanhar a evolução.
+          </p>
+        </div>
 
         <AccordionSection
           description="Registros preservados por avaliação, com comparação observacional entre datas."
@@ -671,23 +1006,31 @@ export function PosturalStep({
 
       <ResponsiveActionBar>
         <button
-          className="min-h-11 rounded-xl border border-[#12664f] bg-white px-5 text-sm font-black text-[#12664f] hover:bg-emerald-50 disabled:opacity-60"
+          className="min-h-11 rounded-xl border border-slate-300 bg-white px-5 text-sm font-black text-slate-700 hover:bg-slate-50 disabled:opacity-60"
           disabled={saving}
-          onClick={() => {
-            completionIntent.current = "IN_PROGRESS";
-          }}
-          type="submit"
+          onClick={onBack}
+          type="button"
         >
-          {saving ? "Salvando..." : "Salvar como em andamento"}
+          Voltar
         </button>
 
         <button
-          className="min-h-11 rounded-xl bg-[#12664f] px-6 text-sm font-black text-white hover:bg-[#0a4938] disabled:opacity-60"
+          className="min-h-11 rounded-xl border border-[#1768a6] bg-white px-5 text-sm font-black text-[#1768a6] hover:bg-blue-50 disabled:opacity-60"
+          disabled={saving}
+          name="saveIntent"
+          type="submit"
+          value="SAVE"
+        >
+          {saving ? "Salvando..." : "Salvar"}
+        </button>
+
+        <button
+          className="min-h-11 rounded-xl bg-[#1768a6] px-6 text-sm font-black text-white hover:bg-[#0f4c81] disabled:opacity-60"
           disabled={saving}
           onClick={() => setConfirmCompletion(true)}
           type="button"
         >
-          Concluir avaliação
+          Salvar e continuar
         </button>
       </ResponsiveActionBar>
 
@@ -727,11 +1070,10 @@ export function PosturalStep({
               </Button>
               <Button
                 loading={saving}
-                onClick={() => {
-                  completionIntent.current = "COMPLETED";
-                }}
+                name="saveIntent"
                 size="small"
                 type="submit"
+                value="CONTINUE"
               >
                 Confirmar conclusão
               </Button>

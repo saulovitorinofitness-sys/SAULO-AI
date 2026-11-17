@@ -61,6 +61,259 @@
   --transition-slow: 320ms;
 }
 
+body:has(.print-document-page) aside,
+body:has(.print-document-page) header.sticky,
+body:has(.print-document-page) nav {
+  display: none !important;
+}
+
+body:has(.print-document-page) main {
+  max-width: none !important;
+  padding: 0 !important;
+}
+
+@media print {
+  body.running-print-preview-open > *:not(.running-print-preview-portal) {
+    display: none !important;
+  }
+
+  html:has(body.running-print-preview-open),
+  body.running-print-preview-open {
+    width: auto !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    background: white !important;
+  }
+
+  body.running-print-preview-open .running-print-preview-portal,
+  body.running-print-preview-open .running-print-preview-portal > div {
+    position: static !important;
+    inset: auto !important;
+    display: block !important;
+    width: auto !important;
+    max-width: none !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    background: white !important;
+  }
+
+  body.running-print-preview-open .running-print-controls {
+    display: none !important;
+  }
+
+  body:has(#nutrition-deliverable-report),
+  body:has(#postural-deliverable-report),
+  body:has(#performance-deliverable-report) {
+    background: white !important;
+  }
+
+  body:has(#nutrition-deliverable-report) aside,
+  body:has(#nutrition-deliverable-report) header.sticky,
+  body:has(#nutrition-deliverable-report) nav,
+  body:has(#nutrition-deliverable-report) .print\:hidden,
+  body:has(#postural-deliverable-report) aside,
+  body:has(#postural-deliverable-report) header.sticky,
+  body:has(#postural-deliverable-report) nav,
+  body:has(#postural-deliverable-report) .print\:hidden,
+  body:has(#performance-deliverable-report) aside,
+  body:has(#performance-deliverable-report) header.sticky,
+  body:has(#performance-deliverable-report) nav,
+  body:has(#performance-deliverable-report) .print\:hidden,
+  body:has(#evaluation-evolution-report) aside,
+  body:has(#evaluation-evolution-report) header.sticky,
+  body:has(#evaluation-evolution-report) nav,
+  body:has(#evaluation-evolution-report) .evaluation-evolution-actions,
+  body:has(#evaluation-evolution-report) .print\:hidden {
+    display: none !important;
+  }
+
+  body:has(#nutrition-deliverable-report) > div,
+  body:has(#nutrition-deliverable-report) main,
+  body:has(#postural-deliverable-report) > div,
+  body:has(#postural-deliverable-report) main,
+  body:has(#performance-deliverable-report) > div,
+  body:has(#performance-deliverable-report) main,
+  body:has(#evaluation-evolution-report) > div,
+  body:has(#evaluation-evolution-report) main {
+    display: block !important;
+    max-width: none !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+
+  #nutrition-deliverable-report {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  #nutrition-deliverable-report .report-cover {
+    padding: 1rem 1.5rem !important;
+  }
+
+  #nutrition-deliverable-report .report-cover > .relative > .mt-7 {
+    grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(0, 0.8fr)) !important;
+    margin-top: 1rem !important;
+  }
+
+  #nutrition-deliverable-report .report-cover > .relative > .mt-7 > div {
+    padding: 0.75rem 1rem !important;
+  }
+
+  #nutrition-deliverable-report .report-section {
+    padding: 1rem 1.5rem !important;
+  }
+
+  #nutrition-deliverable-report .report-section-content {
+    margin-top: 1rem !important;
+  }
+
+  #nutrition-deliverable-report .shopping-list-grid {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 1rem !important;
+    break-inside: auto !important;
+    page-break-inside: auto !important;
+  }
+
+  #nutrition-deliverable-report .shopping-list-card {
+    width: calc(50% - 0.5rem) !important;
+  }
+
+  #nutrition-deliverable-report .meal-card + .meal-card {
+    margin-top: 0.75rem !important;
+  }
+
+  #nutrition-deliverable-report .meal-card {
+    display: table !important;
+    width: 100% !important;
+    break-inside: avoid-page !important;
+    page-break-inside: avoid !important;
+  }
+
+  #nutrition-deliverable-report .meal-items {
+    margin-top: 0.75rem !important;
+  }
+
+  #nutrition-deliverable-report .report-section:has(.recipe-appendix-card) {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  #postural-deliverable-report,
+  #performance-deliverable-report,
+  #evaluation-evolution-report {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  #evaluation-evolution-report > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 1rem !important;
+  }
+
+  #evaluation-evolution-report .evaluation-document-header {
+    padding: 1rem !important;
+  }
+
+  #evaluation-evolution-report .evaluation-section-heading {
+    break-after: avoid-page;
+    break-inside: avoid-page;
+    page-break-after: avoid;
+    page-break-inside: avoid;
+  }
+
+  #evaluation-evolution-report .evaluation-perimetry-region > h4 {
+    break-after: avoid-page;
+    page-break-after: avoid;
+  }
+
+  #evaluation-evolution-report .evaluation-perimetry-region > .grid {
+    align-items: start !important;
+    break-inside: auto !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    page-break-inside: auto !important;
+  }
+
+  #evaluation-evolution-report > header,
+  #evaluation-evolution-report details,
+  #evaluation-evolution-report article,
+  #evaluation-evolution-report svg {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  #evaluation-evolution-report > section,
+  #evaluation-evolution-report .evaluation-perimetry-region {
+    break-inside: auto !important;
+    page-break-inside: auto !important;
+  }
+
+  #evaluation-evolution-report details > div {
+    display: block !important;
+  }
+
+  #evaluation-evolution-report .evaluation-trend-chart {
+    overflow: visible !important;
+  }
+
+  #evaluation-evolution-report .evaluation-trend-chart-svg {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  #evaluation-evolution-report h2,
+  #evaluation-evolution-report h3,
+  #evaluation-evolution-report h4 {
+    break-after: avoid-page;
+    page-break-after: avoid;
+  }
+
+  #nutrition-deliverable-report .report-section-title,
+  #nutrition-deliverable-report .strategy-card,
+  #nutrition-deliverable-report .report-card,
+  #nutrition-deliverable-report .report-card-row,
+  #nutrition-deliverable-report .meal-card,
+  #nutrition-deliverable-report .meal-food-row,
+  #nutrition-deliverable-report .meal-observation,
+  #nutrition-deliverable-report .recipe-detail-row,
+  #nutrition-deliverable-report .recipe-preparation-step,
+  #nutrition-deliverable-report .pdf-avoid-break {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  #nutrition-deliverable-report .report-section-title {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  #nutrition-deliverable-report .meal-table-head {
+    display: table-header-group !important;
+  }
+
+  #nutrition-deliverable-report .source-reference {
+    display: none !important;
+  }
+}
+
 * {
   box-sizing: border-box;
 }
@@ -120,5 +373,106 @@ a {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
+  }
+}
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm;
+  }
+
+  body:has(#financial-executive-report) {
+    background: white !important;
+  }
+
+  body:has(#financial-executive-report) aside,
+  body:has(#financial-executive-report) header.sticky,
+  body:has(#financial-executive-report) nav.fixed,
+  body:has(#financial-executive-report) .print\:hidden {
+    display: none !important;
+  }
+
+  body:has(#professional-service-receipt-preview) {
+    background: white !important;
+  }
+
+  body:has(#professional-service-receipt-preview) aside,
+  body:has(#professional-service-receipt-preview) header.sticky,
+  body:has(#professional-service-receipt-preview) nav.fixed,
+  body:has(#professional-service-receipt-preview) .print\:hidden {
+    display: none !important;
+  }
+
+  body:has(#professional-service-receipt-preview) > div,
+  body:has(#professional-service-receipt-preview) main {
+    display: block !important;
+    max-width: none !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+
+  #professional-service-receipt-preview,
+  #professional-service-receipt-preview * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  body:has(#financial-executive-report) > div,
+  body:has(#financial-executive-report) main {
+    display: block !important;
+    max-width: none !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+
+  #financial-executive-report {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    border: 1px solid #b8cec5 !important;
+    color: #17231f;
+    width: 100%;
+  }
+
+  #financial-executive-report * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  #financial-executive-report > header {
+    border-bottom: 2px solid #17644c !important;
+    color: #20312b;
+    text-shadow: none;
+  }
+
+  #financial-executive-report [class*="border-"] {
+    border-style: solid;
+  }
+
+  #financial-executive-report .print-report-block,
+  #financial-executive-report table,
+  #financial-executive-report tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  #financial-executive-report [aria-labelledby="payables-title"] {
+    break-inside: auto;
+    page-break-inside: auto;
+  }
+
+  #financial-executive-report [aria-labelledby="reading-title"] {
+    break-inside: auto;
+    page-break-inside: auto;
+  }
+
+  #financial-executive-report thead {
+    display: table-header-group;
+  }
+
+  #financial-executive-report footer {
+    break-before: avoid;
   }
 }

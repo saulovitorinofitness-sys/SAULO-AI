@@ -509,10 +509,10 @@ export const clinicalEngineService = {
         analyzedAt,
         engineVersion: NUTRITION_DECISION_ENGINE_VERSION,
         strategyReference: strategy
-          ? `${strategy.masterRecordId}:${strategy.updatedAt}`
+          ? `Atualizada em ${strategy.updatedAt}`
           : undefined,
         mealPlanReference: mealPlan
-          ? `${mealPlan.id}:${mealPlan.updatedAt}`
+          ? `Atualizado em ${mealPlan.updatedAt}`
           : undefined,
       },
       runtimeContext: {

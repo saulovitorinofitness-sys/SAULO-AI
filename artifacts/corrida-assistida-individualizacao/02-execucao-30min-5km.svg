@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="820" viewBox="0 0 1200 820" role="img" aria-labelledby="title desc">
+  <title id="title">Proposta com execução fictícia de trinta minutos e cinco quilômetros</title>
+  <desc id="desc">Captura documental da individualização permitida por uma execução comum de Corrida.</desc>
+  <rect width="1200" height="820" fill="#f4f8f6"/>
+  <rect x="40" y="36" width="1120" height="748" rx="24" fill="#ffffff" stroke="#c8d6d0" stroke-width="2"/>
+  <rect x="40" y="36" width="1120" height="126" rx="24" fill="#173c30"/>
+  <rect x="40" y="132" width="1120" height="30" fill="#173c30"/>
+  <text x="82" y="82" fill="#d8bd78" font-family="Arial, sans-serif" font-size="18" font-weight="700">DEMONSTRAÇÃO — DADOS FICTÍCIOS</text>
+  <text x="82" y="124" fill="#ffffff" font-family="Arial, sans-serif" font-size="32" font-weight="700">Corrida assistida · execução comum selecionada</text>
+  <text x="82" y="204" fill="#173c30" font-family="Arial, sans-serif" font-size="23" font-weight="700">Dados usados neste planejamento</text>
+  <text x="82" y="244" fill="#40584f" font-family="Arial, sans-serif" font-size="18">• Execução fictícia · 01/11/2026 · Apple Health · modalidade Corrida</text>
+  <text x="82" y="276" fill="#40584f" font-family="Arial, sans-serif" font-size="18">• Duração importada: 30 min · distância importada: 5,00 km</text>
+  <text x="82" y="308" fill="#40584f" font-family="Arial, sans-serif" font-size="18">• Calculados: 6:00 min/km e 10,00 km/h sobre a duração importada</text>
+  <text x="82" y="340" fill="#40584f" font-family="Arial, sans-serif" font-size="18">• Histórico, volume de 120 min/semana e capacidade manual também permanecem visíveis</text>
+  <rect x="82" y="376" width="498" height="184" rx="16" fill="#eef8f3" stroke="#9cc9b6"/>
+  <text x="108" y="418" fill="#173c30" font-family="Arial, sans-serif" font-size="22" font-weight="700">Geração semanal</text>
+  <text x="108" y="456" fill="#40584f" font-family="Arial, sans-serif" font-size="18">Volume manual: 40 · 40 · 40 min</text>
+  <text x="108" y="490" fill="#173c30" font-family="Arial, sans-serif" font-size="18" font-weight="700">Com execução: 40 · 40 · 40 min</text>
+  <text x="108" y="524" fill="#40584f" font-family="Arial, sans-serif" font-size="18">Influência: contexto e limitações, não obrigação</text>
+  <rect x="620" y="376" width="498" height="184" rx="16" fill="#eef5fb" stroke="#9ebed9"/>
+  <text x="646" y="418" fill="#173c30" font-family="Arial, sans-serif" font-size="22" font-weight="700">Geração do período</text>
+  <text x="646" y="456" fill="#40584f" font-family="Arial, sans-serif" font-size="18">Volume semanal preservado: 120 min</text>
+  <text x="646" y="490" fill="#173c30" font-family="Arial, sans-serif" font-size="18" font-weight="700">Todas as semanas: 40 · 40 · 40 min</text>
+  <text x="646" y="524" fill="#40584f" font-family="Arial, sans-serif" font-size="18">Sem progressão percentual automática</text>
+  <rect x="82" y="600" width="1036" height="128" rx="16" fill="#fff3f1" stroke="#d79b92"/>
+  <text x="108" y="642" fill="#7b3028" font-family="Arial, sans-serif" font-size="20" font-weight="700">Limites explícitos</text>
+  <text x="108" y="676" fill="#7b3028" font-family="Arial, sans-serif" font-size="18">Execução comum ≠ teste máximo, melhor marca, zona ou intensidade obrigatória.</text>
+  <text x="108" y="708" fill="#7b3028" font-family="Arial, sans-serif" font-size="18">A meta TAF continua 2,4 km/12 min; ritmo e velocidade históricos não viraram alvo prescrito.</text>
+  <text x="82" y="760" fill="#6b7d75" font-family="Arial, sans-serif" font-size="14">Captura documental gerada a partir da saída do teste isolado · sem cadastro real, banco ou navegador</text>
+</svg>

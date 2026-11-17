@@ -1,6 +1,6 @@
 import type { AuditableRecord, EntityId, ISODateTime, PageRequest, PageResult } from "../shared";
 
-export type AppointmentStatus = "SCHEDULED" | "CONFIRMED" | "COMPLETED" | "CANCELLED" | "NO_SHOW";
+export type AppointmentStatus = "SCHEDULED" | "CONFIRMED" | "COMPLETED" | "CANCELLED" | "NO_SHOW" | "RESCHEDULED";
 
 export interface Appointment extends AuditableRecord {
   readonly masterRecordId: EntityId;

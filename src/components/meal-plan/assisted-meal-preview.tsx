@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  useEffect,
   useMemo,
   useState,
   type Dispatch,
@@ -17,15 +18,12 @@ import {
   StatusBadge,
 } from "@/components/ui";
 import {
-  assistedFoodProfiles,
   compareMealPlanTarget,
   createAssistedMealPreview,
   createAssistedMealReferences,
-  findAssistedFoodProfile,
   mealNutrition,
   MEAL_PLAN_TARGET_TOLERANCES,
   mealPlanStatusAfterEdit,
-  nutritionForGrams,
   previewNutrition,
   type AssistedMealPreview,
   type AssistedPreviewFood,
@@ -38,7 +36,11 @@ import {
   type NutritionStrategySelection,
 } from "@/features/nutrition-strategy";
 import type { ScientificLibraryItem } from "@/features/scientific-library";
-import { demonstrativeProfessionalFoods } from "@/features/food-database";
+import type {
+  FoodNutrientsPer100g,
+  FoodSearchResult,
+  ProfessionalFood,
+} from "@/features/food-database";
 import {
   IntelligentSubstitutionDrawer,
   type SubstitutionHistoryItem,
@@ -63,6 +65,11 @@ const formatter = new Intl.NumberFormat("pt-BR", {
   maximumFractionDigits: 1,
 });
 
+const FOOD_CATALOG_PAGE_SIZE = 50;
+const FOOD_CATALOG_REQUEST_CONCURRENCY = 6;
+
+type FoodCatalogState = "loading" | "ready" | "empty" | "error" | "offline";
+
 function format(value: number) {
   return formatter.format(value);
 }
@@ -77,6 +84,111 @@ function normalized(value: string) {
     .normalize("NFD")
     .replace(/\p{Diacritic}/gu, "")
     .toLocaleLowerCase("pt-BR");
+}
+
+function mapCompleteNutrition(
+  nutrients: FoodNutrientsPer100g | null,
+  factor: number,
+) {
+  if (!nutrients) return null;
+  const required = [
+    nutrients.energyKcal,
+    nutrients.proteinGrams,
+    nutrients.carbohydratesGrams,
+    nutrients.fatsGrams,
+    nutrients.fiberGrams,
+    nutrients.calciumMg,
+    nutrients.ironMg,
+    nutrients.magnesiumMg,
+    nutrients.zincMg,
+    nutrients.sodiumMg,
+    nutrients.potassiumMg,
+    nutrients.vitaminAMcg,
+    nutrients.vitaminCMg,
+    nutrients.vitaminDMcg,
+    nutrients.vitaminEMg,
+    nutrients.thiamineMg,
+    nutrients.riboflavinMg,
+    nutrients.vitaminB6Mg,
+    nutrients.vitaminB12Mcg,
+    nutrients.folateMcg,
+  ];
+  if (required.some((value) => value === null)) return null;
+
+  return {
+    calories: nutrients.energyKcal! * factor,
+    proteinGrams: nutrients.proteinGrams! * factor,
+    carbohydratesGrams: nutrients.carbohydratesGrams! * factor,
+    fatsGrams: nutrients.fatsGrams! * factor,
+    fiberGrams: nutrients.fiberGrams! * factor,
+    micronutrients: {
+      calciumMg: nutrients.calciumMg! * factor,
+      ironMg: nutrients.ironMg! * factor,
+      magnesiumMg: nutrients.magnesiumMg! * factor,
+      zincMg: nutrients.zincMg! * factor,
+      sodiumMg: nutrients.sodiumMg! * factor,
+      potassiumMg: nutrients.potassiumMg! * factor,
+      vitaminAMcg: nutrients.vitaminAMcg! * factor,
+      vitaminCMg: nutrients.vitaminCMg! * factor,
+      vitaminDMcg: nutrients.vitaminDMcg! * factor,
+      vitaminEMg: nutrients.vitaminEMg! * factor,
+      vitaminB1Mg: nutrients.thiamineMg! * factor,
+      vitaminB2Mg: nutrients.riboflavinMg! * factor,
+      vitaminB6Mg: nutrients.vitaminB6Mg! * factor,
+      vitaminB12Mcg: nutrients.vitaminB12Mcg! * factor,
+      folateMcg: nutrients.folateMcg! * factor,
+    },
+  };
+}
+
+function hasCompleteAssistedNutrition(food: ProfessionalFood) {
+  return mapCompleteNutrition(food.nutrients, 1) !== null;
+}
+
+async function requestFoodCatalogPage(page: number, signal: AbortSignal) {
+  const parameters = new URLSearchParams({
+    source: "ALL",
+    page: String(page),
+    pageSize: String(FOOD_CATALOG_PAGE_SIZE),
+  });
+  const response = await fetch(`/api/foods?${parameters}`, {
+    cache: "no-store",
+    signal,
+  });
+  if (!response.ok) throw new Error(`FOOD_CATALOG_HTTP_${response.status}`);
+  return (await response.json()) as FoodSearchResult;
+}
+
+async function requestCompleteFoodCatalog(
+  signal: AbortSignal,
+  onProgress: (loaded: number, total: number) => void,
+) {
+  const firstPage = await requestFoodCatalogPage(1, signal);
+  const items = [...firstPage.items];
+  onProgress(items.length, firstPage.total);
+
+  for (
+    let firstPendingPage = 2;
+    firstPendingPage <= firstPage.totalPages;
+    firstPendingPage += FOOD_CATALOG_REQUEST_CONCURRENCY
+  ) {
+    const pages = Array.from(
+      {
+        length: Math.min(
+          FOOD_CATALOG_REQUEST_CONCURRENCY,
+          firstPage.totalPages - firstPendingPage + 1,
+        ),
+      },
+      (_, index) => firstPendingPage + index,
+    );
+    const results = await Promise.all(
+      pages.map((page) => requestFoodCatalogPage(page, signal)),
+    );
+    for (const result of results) items.push(...result.items);
+    onProgress(items.length, firstPage.total);
+  }
+
+  return [...new Map(items.map((food) => [food.id, food])).values()];
 }
 
 function statusBadgeStatus(status: AssistedPreviewStatus) {
@@ -95,39 +207,42 @@ function editedPreview(preview: AssistedMealPreview) {
   } satisfies AssistedMealPreview;
 }
 
-function foodFromLibrary(
-  item: ScientificLibraryItem,
+function foodFromCatalog(
+  centralFood: ProfessionalFood,
   grams?: number,
   id?: string,
 ): AssistedPreviewFood | null {
-  const profile = findAssistedFoodProfile(item.name);
-  if (!profile) return null;
-  const centralFood = demonstrativeProfessionalFoods.find(
-    (food) => food.officialName === item.name,
-  );
   const defaultMeasure =
-    centralFood?.householdMeasures.find((measure) => measure.isDefault) ??
-    centralFood?.householdMeasures[0];
-  const gramsPerMeasure = defaultMeasure?.grams ?? profile.gramsPerMeasure;
+    centralFood.householdMeasures.find((measure) => measure.isDefault) ??
+    centralFood.householdMeasures[0];
+  const gramsPerMeasure = defaultMeasure
+    ? defaultMeasure.grams / defaultMeasure.quantity
+    : centralFood.referenceServingGrams;
 
   const resolvedGrams = Math.max(
     0,
-    grams ?? profile.defaultQuantity * gramsPerMeasure,
+    grams ?? gramsPerMeasure,
   );
+  const nutrition = mapCompleteNutrition(
+    centralFood.nutrients,
+    resolvedGrams / 100,
+  );
+  if (!nutrition || !Number.isFinite(gramsPerMeasure) || gramsPerMeasure <= 0) {
+    return null;
+  }
 
   return {
-    id: id ?? `assisted-manual-${Date.now()}-${item.id}`,
-    scientificLibraryItemId: item.id,
-    name: item.name,
-    category: item.category,
-    householdMeasure: defaultMeasure?.name ?? profile.householdMeasure,
+    id: id ?? `assisted-manual-${Date.now()}-${centralFood.id}`,
+    scientificLibraryItemId: centralFood.id,
+    name: centralFood.officialName,
+    category: centralFood.category,
+    householdMeasure:
+      defaultMeasure?.name ?? centralFood.referenceServingUnit ?? "gramas",
     gramsPerMeasure,
     quantity: round(resolvedGrams / gramsPerMeasure, 2),
     grams: resolvedGrams,
-    nutrition: nutritionForGrams(profile, resolvedGrams),
-    source:
-      centralFood?.source.name ??
-      `${item.source} · composição nutricional demonstrativa local`,
+    nutrition,
+    source: centralFood.source.name,
     demonstrative: true,
   };
 }
@@ -167,6 +282,13 @@ export function AssistedMealPreviewPanel({
   >([]);
   const [addTargetMealId, setAddTargetMealId] = useState<string>();
   const [query, setQuery] = useState("");
+  const [foodCatalog, setFoodCatalog] = useState<readonly ProfessionalFood[]>(
+    [],
+  );
+  const [catalogState, setCatalogState] =
+    useState<FoodCatalogState>("loading");
+  const [catalogProgress, setCatalogProgress] = useState({ loaded: 0, total: 0 });
+  const [catalogRequest, setCatalogRequest] = useState(0);
   const totals = previewNutrition(preview);
   const method =
     nutritionMethodOptions.find(([value]) => value === strategy.method)?.[1] ??
@@ -174,9 +296,59 @@ export function AssistedMealPreviewPanel({
   const strategyFingerprint = nutritionStrategySelectionFingerprint(strategy);
   const previewOutdated =
     preview.strategyFingerprint !== strategyFingerprint;
-  const availableFoods = foods.filter((item) =>
-    assistedFoodProfiles.some((profile) => profile.name === item.name),
+  const usableCatalog = useMemo(
+    () => foodCatalog.filter(hasCompleteAssistedNutrition),
+    [foodCatalog],
   );
+  const availableFoods = usableCatalog;
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function loadCatalog() {
+      await Promise.resolve();
+      if (controller.signal.aborted) return;
+      if (!window.navigator.onLine) {
+        setCatalogState("offline");
+        return;
+      }
+
+      try {
+        const catalog = await requestCompleteFoodCatalog(
+          controller.signal,
+          (loaded, total) => setCatalogProgress({ loaded, total }),
+        );
+        if (controller.signal.aborted) return;
+        setFoodCatalog(catalog);
+        setCatalogState(catalog.length ? "ready" : "empty");
+      } catch (error: unknown) {
+        if (controller.signal.aborted) return;
+        setFoodCatalog([]);
+        setCatalogState(
+          !window.navigator.onLine || error instanceof TypeError
+            ? "offline"
+            : "error",
+        );
+      }
+    }
+
+    void loadCatalog();
+
+    return () => controller.abort();
+  }, [catalogRequest]);
+
+  const catalogAvailable =
+    catalogState === "ready" && usableCatalog.length > 0;
+  const catalogUnavailableReason =
+    catalogState === "offline"
+      ? "Sem conexão. O catálogo alimentar não possui cache offline disponível."
+      : catalogState === "error"
+        ? "Não foi possível consultar o catálogo alimentar real."
+        : catalogState === "empty"
+          ? "Nenhum alimento ativo foi encontrado no catálogo real."
+          : catalogState === "ready" && usableCatalog.length === 0
+            ? "Nenhum alimento possui composição completa para este fluxo assistido."
+            : undefined;
 
   function updatePreview(
     updater: (current: AssistedMealPreview) => AssistedMealPreview,
@@ -243,10 +415,10 @@ export function AssistedMealPreviewPanel({
 
   function editWithLibraryItem(itemId: string) {
     if (!editingFood) return;
-    const item = availableFoods.find((candidate) => candidate.id === itemId);
-    if (!item) return;
-    const next = foodFromLibrary(
-      item,
+    const selectedFood = availableFoods.find((candidate) => candidate.id === itemId);
+    if (!selectedFood) return;
+    const next = foodFromCatalog(
+      selectedFood,
       editingFood.draft.grams,
       editingFood.original.id,
     );
@@ -256,28 +428,46 @@ export function AssistedMealPreviewPanel({
 
   function editQuantity(quantity: number) {
     if (!editingFood) return;
-    const profile = findAssistedFoodProfile(editingFood.draft.name);
-    if (!profile) return;
+    const selectedFood = availableFoods.find(
+      (candidate) =>
+        candidate.id === editingFood.draft.scientificLibraryItemId ||
+        normalized(candidate.officialName) === normalized(editingFood.draft.name),
+    );
+    if (!selectedFood) return;
     const safeQuantity = Math.max(0, quantity);
     const grams = round(
       safeQuantity * editingFood.draft.gramsPerMeasure,
     );
+    const nutrition = mapCompleteNutrition(
+      selectedFood.nutrients,
+      grams / 100,
+    );
+    if (!nutrition) return;
     setEditingFood({
       ...editingFood,
       draft: {
         ...editingFood.draft,
         quantity: safeQuantity,
         grams,
-        nutrition: nutritionForGrams(profile, grams),
+        nutrition,
       },
     });
   }
 
   function editGrams(gramsValue: number) {
     if (!editingFood) return;
-    const profile = findAssistedFoodProfile(editingFood.draft.name);
-    if (!profile) return;
+    const selectedFood = availableFoods.find(
+      (candidate) =>
+        candidate.id === editingFood.draft.scientificLibraryItemId ||
+        normalized(candidate.officialName) === normalized(editingFood.draft.name),
+    );
+    if (!selectedFood) return;
     const grams = Math.max(0, gramsValue);
+    const nutrition = mapCompleteNutrition(
+      selectedFood.nutrients,
+      grams / 100,
+    );
+    if (!nutrition) return;
     setEditingFood({
       ...editingFood,
       draft: {
@@ -287,7 +477,7 @@ export function AssistedMealPreviewPanel({
           grams / editingFood.draft.gramsPerMeasure,
           2,
         ),
-        nutrition: nutritionForGrams(profile, grams),
+        nutrition,
       },
     });
   }
@@ -317,8 +507,8 @@ export function AssistedMealPreviewPanel({
     }));
   }
 
-  function addFood(mealId: string, item: ScientificLibraryItem) {
-    const food = foodFromLibrary(item);
+  function addFood(mealId: string, selectedFood: ProfessionalFood) {
+    const food = foodFromCatalog(selectedFood);
     if (!food) return;
     updatePreview((current) => ({
       ...current,
@@ -354,16 +544,14 @@ export function AssistedMealPreviewPanel({
 
   function applySubstitution(proposal: SubstitutionProposal) {
     if (!substitutionContext) return;
-    const libraryItem = foods.find(
-      (item) => item.name === proposal.food.officialName,
-    );
-    if (!libraryItem) return;
 
     const measureGrams =
       proposal.measureGrams > 0 ? proposal.measureGrams : proposal.grams;
+    const nutrition = mapCompleteNutrition(proposal.nutrition, 1);
+    if (!nutrition) return;
     const nextFood: AssistedPreviewFood = {
       ...substitutionContext.food,
-      scientificLibraryItemId: libraryItem.id,
+      scientificLibraryItemId: proposal.food.id,
       name: proposal.food.officialName,
       category: proposal.food.category,
       householdMeasure: proposal.measureName,
@@ -371,31 +559,7 @@ export function AssistedMealPreviewPanel({
       quantity:
         measureGrams > 0 ? proposal.grams / measureGrams : 1,
       grams: proposal.grams,
-      nutrition: {
-        calories: proposal.nutrition.energyKcal ?? 0,
-        proteinGrams: proposal.nutrition.proteinGrams ?? 0,
-        carbohydratesGrams:
-          proposal.nutrition.carbohydratesGrams ?? 0,
-        fatsGrams: proposal.nutrition.fatsGrams ?? 0,
-        fiberGrams: proposal.nutrition.fiberGrams ?? 0,
-        micronutrients: {
-          calciumMg: proposal.nutrition.calciumMg ?? 0,
-          ironMg: proposal.nutrition.ironMg ?? 0,
-          magnesiumMg: proposal.nutrition.magnesiumMg ?? 0,
-          zincMg: proposal.nutrition.zincMg ?? 0,
-          sodiumMg: proposal.nutrition.sodiumMg ?? 0,
-          potassiumMg: proposal.nutrition.potassiumMg ?? 0,
-          vitaminAMcg: proposal.nutrition.vitaminAMcg ?? 0,
-          vitaminCMg: proposal.nutrition.vitaminCMg ?? 0,
-          vitaminDMcg: proposal.nutrition.vitaminDMcg ?? 0,
-          vitaminEMg: proposal.nutrition.vitaminEMg ?? 0,
-          vitaminB1Mg: proposal.nutrition.thiamineMg ?? 0,
-          vitaminB2Mg: proposal.nutrition.riboflavinMg ?? 0,
-          vitaminB6Mg: proposal.nutrition.vitaminB6Mg ?? 0,
-          vitaminB12Mcg: proposal.nutrition.vitaminB12Mcg ?? 0,
-          folateMcg: proposal.nutrition.folateMcg ?? 0,
-        },
-      },
+      nutrition,
       source: proposal.food.source.name,
     };
 
@@ -451,6 +615,13 @@ export function AssistedMealPreviewPanel({
       ),
     },
   ];
+  const matchingAvailableFoods = availableFoods
+    .filter((food) =>
+      normalized(`${food.officialName} ${food.category}`).includes(
+        normalized(query),
+      ),
+    )
+    .slice(0, 8);
 
   return (
     <section aria-labelledby="assisted-preview-title" className="space-y-4">
@@ -458,7 +629,7 @@ export function AssistedMealPreviewPanel({
         <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <Badge tone="info">Estratégia utilizada · mock controlado</Badge>
+              <Badge tone="info">Estratégia utilizada · regras locais</Badge>
               <StatusBadge
                 label={statusLabels[preview.status]}
                 status={statusBadgeStatus(preview.status)}
@@ -475,8 +646,8 @@ export function AssistedMealPreviewPanel({
               permanece com o nutricionista.
             </p>
             <p className="mt-1 text-xs leading-5 text-sky-800">
-              Mecanismo determinístico local e catálogo demonstrativo atual;
-              nenhuma API externa foi utilizada.
+              Mecanismo determinístico local conectado ao catálogo alimentar
+              real do sistema; nenhuma API externa foi utilizada.
             </p>
           </div>
 
@@ -564,6 +735,62 @@ export function AssistedMealPreviewPanel({
         </dl>
       </Card>
 
+      {catalogState === "loading" ? (
+        <Card
+          aria-live="polite"
+          className="border-sky-200 bg-sky-50 p-4"
+          role="status"
+        >
+          <p className="font-black text-sky-950">
+            Carregando catálogo alimentar real
+          </p>
+          <p className="mt-1 text-sm text-sky-800">
+            {catalogProgress.total
+              ? `${catalogProgress.loaded} de ${catalogProgress.total} alimentos carregados.`
+              : "Consultando o serviço de alimentos do sistema."}
+          </p>
+        </Card>
+      ) : catalogUnavailableReason ? (
+        <Card
+          aria-live="assertive"
+          className="flex flex-col gap-3 border-amber-300 bg-amber-50 p-4 sm:flex-row sm:items-center sm:justify-between"
+          role="alert"
+        >
+          <div>
+            <p className="font-black text-amber-950">Catálogo indisponível</p>
+            <p className="mt-1 text-sm text-amber-900">
+              {catalogUnavailableReason}
+            </p>
+          </div>
+          <Button
+            onClick={() => {
+              setCatalogProgress({ loaded: 0, total: 0 });
+              setCatalogState("loading");
+              setCatalogRequest((current) => current + 1);
+            }}
+            size="small"
+            variant="outline"
+          >
+            Tentar novamente
+          </Button>
+        </Card>
+      ) : (
+        <Card
+          aria-live="polite"
+          className="border-emerald-200 bg-emerald-50 p-4"
+          role="status"
+        >
+          <p className="font-black text-emerald-950">
+            Catálogo alimentar real disponível
+          </p>
+          <p className="mt-1 text-sm text-emerald-800">
+            {foodCatalog.length} alimentos carregados; {usableCatalog.length}{" "}
+            possuem composição completa para o formato atual da montagem
+            assistida.
+          </p>
+        </Card>
+      )}
+
       {previewOutdated ? (
         <Card className="flex flex-col gap-3 border-amber-300 bg-amber-50 p-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -615,6 +842,15 @@ export function AssistedMealPreviewPanel({
                     const activeFood = isEditing
                       ? editingFood.draft
                       : food;
+                    const activeCatalogFood = isEditing
+                      ? availableFoods.find(
+                          (candidate) =>
+                            candidate.id ===
+                              activeFood.scientificLibraryItemId ||
+                            normalized(candidate.officialName) ===
+                              normalized(activeFood.name),
+                        )
+                      : undefined;
 
                     return (
                       <article
@@ -631,11 +867,14 @@ export function AssistedMealPreviewPanel({
                                   onChange={(event) =>
                                     editWithLibraryItem(event.target.value)
                                   }
-                                  value={activeFood.scientificLibraryItemId}
+                                  value={activeCatalogFood?.id ?? ""}
                                 >
-                                  {availableFoods.map((item) => (
-                                    <option key={item.id} value={item.id}>
-                                      {item.name}
+                                  <option value="">
+                                    Selecione um alimento real
+                                  </option>
+                                  {availableFoods.map((food) => (
+                                    <option key={food.id} value={food.id}>
+                                      {food.officialName}
                                     </option>
                                   ))}
                                 </Select>
@@ -732,6 +971,7 @@ export function AssistedMealPreviewPanel({
                             ) : (
                               <>
                                 <Button
+                                  disabled={!catalogAvailable || !availableFoods.length}
                                   onClick={() =>
                                     setEditingFood({
                                       mealId: meal.id,
@@ -745,6 +985,7 @@ export function AssistedMealPreviewPanel({
                                   Editar
                                 </Button>
                                 <Button
+                                  disabled={!catalogAvailable}
                                   onClick={() =>
                                     setSubstitutionContext({
                                       mealId: meal.id,
@@ -781,6 +1022,7 @@ export function AssistedMealPreviewPanel({
 
                 <div className="mt-3">
                   <Button
+                    disabled={!catalogAvailable || !availableFoods.length}
                     onClick={() => {
                       setAddTargetMealId(addOpen ? undefined : meal.id);
                       setQuery("");
@@ -798,25 +1040,28 @@ export function AssistedMealPreviewPanel({
                         placeholder="Pesquisar no catálogo atual"
                         value={query}
                       />
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        {availableFoods
-                          .filter((item) =>
-                            normalized(
-                              `${item.name} ${item.category}`,
-                            ).includes(normalized(query)),
-                          )
-                          .slice(0, 8)
-                          .map((item) => (
+                      {matchingAvailableFoods.length ? (
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {matchingAvailableFoods.map((food) => (
                             <Button
-                              key={item.id}
-                              onClick={() => addFood(meal.id, item)}
+                              key={food.id}
+                              onClick={() => addFood(meal.id, food)}
                               size="small"
                               variant="outline"
                             >
-                              {item.name}
+                              {food.officialName}
                             </Button>
                           ))}
-                      </div>
+                        </div>
+                      ) : (
+                        <p
+                          className="mt-2 rounded-lg bg-white p-3 text-sm text-slate-600"
+                          role="status"
+                        >
+                          Nenhum resultado real com composição completa foi
+                          encontrado para esta busca.
+                        </p>
+                      )}
                     </div>
                   ) : null}
                 </div>
@@ -911,7 +1156,7 @@ export function AssistedMealPreviewPanel({
 
       {substitutionContext ? (
         <IntelligentSubstitutionDrawer
-          catalog={demonstrativeProfessionalFoods}
+          catalog={usableCatalog}
           currentFood={substitutionContext.food}
           history={substitutionHistory}
           key={`${substitutionContext.mealId}:${substitutionContext.food.id}`}

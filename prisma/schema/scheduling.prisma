@@ -1,56 +1,76 @@
 model Appointment {
-  id                 String            @id @default(uuid()) @db.Uuid
-  masterRecordId     String            @db.Uuid
-  professionalUserId String            @db.Uuid
-  createdByUserId    String            @db.Uuid
-  updatedByUserId    String            @db.Uuid
-  moduleId           String            @db.Uuid
-  startsAt           DateTime
-  endsAt             DateTime
-  status             AppointmentStatus @default(SCHEDULED)
-  version            Int               @default(1)
-  notes              String?
-  createdAt          DateTime          @default(now())
-  updatedAt          DateTime          @updatedAt
-  deletedAt          DateTime?
+  id                       String                  @id @default(uuid()) @db.Uuid
+  masterRecordId           String?                 @db.Uuid
+  patientId                String?                 @db.Uuid
+  sourceAttendanceId       String?                 @unique @db.Uuid
+  contactName              String?
+  contactPhone             String?
+  professionalUserId       String                  @db.Uuid
+  createdByUserId          String                  @db.Uuid
+  updatedByUserId          String                  @db.Uuid
+  moduleId                 String                  @db.Uuid
+  clinicalType             ClinicalAttendanceType?
+  origin                   AppointmentOrigin       @default(MANUAL)
+  startsAt                 DateTime
+  endsAt                   DateTime
+  estimatedDurationMinutes Int?
+  status                   AppointmentStatus       @default(SCHEDULED)
+  deduplicationKey         String?                 @unique
+  version                  Int                     @default(1)
+  notes                    String?
+  createdAt                DateTime                @default(now())
+  updatedAt                DateTime                @updatedAt
+  deletedAt                DateTime?
 
-  masterRecord MasterRecord @relation(fields: [masterRecordId], references: [id], onDelete: Restrict)
-  professional User         @relation("AppointmentProfessional", fields: [professionalUserId], references: [id], onDelete: Restrict)
-  createdBy    User         @relation("AppointmentCreator", fields: [createdByUserId], references: [id], onDelete: Restrict)
-  updatedBy    User         @relation("AppointmentUpdater", fields: [updatedByUserId], references: [id], onDelete: Restrict)
-  module       SystemModule @relation(fields: [moduleId], references: [id], onDelete: Restrict)
-  attendance   Attendance?
+  masterRecord     MasterRecord? @relation(fields: [masterRecordId], references: [id], onDelete: Restrict)
+  patient          Patient?      @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  sourceAttendance Attendance?   @relation("AppointmentSourceAttendance", fields: [sourceAttendanceId], references: [id], onDelete: Restrict)
+  professional     User          @relation("AppointmentProfessional", fields: [professionalUserId], references: [id], onDelete: Restrict)
+  createdBy        User          @relation("AppointmentCreator", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  updatedBy        User          @relation("AppointmentUpdater", fields: [updatedByUserId], references: [id], onDelete: Restrict)
+  module           SystemModule  @relation(fields: [moduleId], references: [id], onDelete: Restrict)
+  attendance       Attendance?   @relation("AppointmentAttendance")
 
   @@index([masterRecordId, startsAt])
+  @@index([patientId, startsAt])
   @@index([professionalUserId, startsAt])
+  @@index([clinicalType, startsAt])
+  @@index([origin])
   @@index([status])
   @@index([updatedByUserId])
   @@index([moduleId])
 }
 
 model Attendance {
-  id                 String           @id @default(uuid()) @db.Uuid
-  masterRecordId     String           @db.Uuid
-  appointmentId      String?          @unique @db.Uuid
-  professionalUserId String           @db.Uuid
-  createdByUserId    String           @db.Uuid
-  updatedByUserId    String           @db.Uuid
-  moduleId           String           @db.Uuid
-  consultationType   ConsultationType
-  currentStage       AttendanceStage  @default(RECEPTION)
-  idempotencyKey     String           @unique
-  status             AttendanceStatus @default(DRAFT)
-  version            Int              @default(1)
-  receivedAt         DateTime
-  startedAt          DateTime?
-  endedAt            DateTime?
-  context            Json?
-  createdAt          DateTime         @default(now())
-  updatedAt          DateTime         @updatedAt
-  deletedAt          DateTime?
+  id                    String                  @id @default(uuid()) @db.Uuid
+  masterRecordId        String                  @db.Uuid
+  appointmentId         String?                 @unique @db.Uuid
+  previousAttendanceId  String?                 @db.Uuid
+  professionalUserId    String                  @db.Uuid
+  createdByUserId       String                  @db.Uuid
+  updatedByUserId       String                  @db.Uuid
+  moduleId              String                  @db.Uuid
+  consultationType      ConsultationType
+  clinicalType          ClinicalAttendanceType?
+  clinicalCycleId       String?                 @db.Uuid
+  clinicalCycleSequence Int?
+  currentStage          AttendanceStage         @default(RECEPTION)
+  idempotencyKey        String                  @unique
+  status                AttendanceStatus        @default(DRAFT)
+  version               Int                     @default(1)
+  receivedAt            DateTime
+  startedAt             DateTime?
+  endedAt               DateTime?
+  context               Json?
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+  deletedAt             DateTime?
 
   masterRecord             MasterRecord               @relation(fields: [masterRecordId], references: [id], onDelete: Restrict)
-  appointment              Appointment?               @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+  appointment              Appointment?               @relation("AppointmentAttendance", fields: [appointmentId], references: [id], onDelete: SetNull)
+  previousAttendance       Attendance?                @relation("AttendanceHistory", fields: [previousAttendanceId], references: [id], onDelete: Restrict)
+  subsequentAttendances    Attendance[]               @relation("AttendanceHistory")
+  scheduledReturn          Appointment?               @relation("AppointmentSourceAttendance")
   professional             User                       @relation("AttendanceProfessional", fields: [professionalUserId], references: [id], onDelete: Restrict)
   createdBy                User                       @relation("AttendanceCreator", fields: [createdByUserId], references: [id], onDelete: Restrict)
   updatedBy                User                       @relation("AttendanceUpdater", fields: [updatedByUserId], references: [id], onDelete: Restrict)
@@ -63,6 +83,8 @@ model Attendance {
   clinicalEvolutionSession ClinicalEvolutionSession?
 
   @@index([masterRecordId, createdAt])
+  @@index([previousAttendanceId])
+  @@index([clinicalCycleId, clinicalCycleSequence])
   @@index([professionalUserId, createdAt])
   @@index([status])
   @@index([createdByUserId])
@@ -117,10 +139,14 @@ model AttendancePendingCheck {
 }
 
 model AttendancePendingCheckItem {
-  id               String   @id @default(uuid()) @db.Uuid
-  pendingCheckId   String   @db.Uuid
-  continuityStepId String   @db.Uuid
-  createdAt        DateTime @default(now())
+  id               String               @id @default(uuid()) @db.Uuid
+  pendingCheckId   String               @db.Uuid
+  continuityStepId String               @db.Uuid
+  status           ContinuityStepStatus @default(PENDING)
+  skippedByUserId  String?              @db.Uuid
+  skippedAt        DateTime?
+  skipReason       String?
+  createdAt        DateTime             @default(now())
 
   pendingCheck   AttendancePendingCheck @relation(fields: [pendingCheckId], references: [id], onDelete: Restrict)
   continuityStep ContinuityStep         @relation(fields: [continuityStepId], references: [id], onDelete: Restrict)

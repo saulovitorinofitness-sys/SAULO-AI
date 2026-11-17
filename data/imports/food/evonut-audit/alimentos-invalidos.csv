@@ -1,0 +1,811 @@
+spreadsheetRow,sourceCode,originalName,originalSource,group,reasons
+177,174,Adoçante artificial,IBGE,,GRUPO_AUSENTE
+178,175,Adoçante culinário em pó - Linea Sucralose®,Tucunduva,,GRUPO_AUSENTE
+179,176,Adoçante em pó - DoceMenor®,Tucunduva,,GRUPO_AUSENTE
+180,177,Adoçante em pó - Zero Cal®,Tucunduva,,GRUPO_AUSENTE
+181,178,Adoçante em pó (aspartame) - Finn®,Tucunduva,,GRUPO_AUSENTE
+182,179,Adoçante em pó (stevia) - Finn®,Tucunduva,,GRUPO_AUSENTE
+183,180,Adoçante em pó (sucralose) - Finn®,Tucunduva,,GRUPO_AUSENTE
+184,181,Adoçante em pó - Aspasweet®,Tucunduva,,GRUPO_AUSENTE
+185,182,Adoçante em pó frutose - Doce menor®,Tucunduva,,GRUPO_AUSENTE
+186,183,Adoçante em pó light,IBGE,,GRUPO_AUSENTE
+187,184,Adoçante em pó -Tal & Qual®,Tucunduva,,GRUPO_AUSENTE
+188,185,Adoçante granular sucralose - Linea®,Tucunduva,,GRUPO_AUSENTE
+189,186,Adoçante light,IBGE,,GRUPO_AUSENTE
+190,187,Adoçante líquido - DoceMenor®,Tucunduva,,GRUPO_AUSENTE
+191,188,Adoçante líquido - Linea®,Tucunduva,,GRUPO_AUSENTE
+192,189,Adoçante líquido - Zero cal®,Tucunduva,,GRUPO_AUSENTE
+193,190,Adoçante liquido light,IBGE,,GRUPO_AUSENTE
+203,200,Água,Tucunduva,,GRUPO_AUSENTE
+204,201,Água com gás - Prata®,Tucunduva,,GRUPO_AUSENTE
+241,238,Ajinomoto,Tucunduva,,GRUPO_AUSENTE
+242,239,Aji-sal®,Tucunduva,,GRUPO_AUSENTE
+282,279,Alfajores (biscoito),IBGE,,GRUPO_AUSENTE
+283,280,Alfajores (biscoito) light,IBGE,,GRUPO_AUSENTE
+285,282,Alfenim de cana,IBGE,,GRUPO_AUSENTE
+286,283,Alga marinha desidratada (hijiki) - Sogohras®,Tucunduva,,GRUPO_AUSENTE
+301,298,All Bran - Kelfogg's®,Tucunduva,,GRUPO_AUSENTE
+354,351,Alpro Sobremesas de Baunilha,INSA,,GRUPO_AUSENTE
+355,352,Alpro Sobremesas de Caramelo,INSA,,GRUPO_AUSENTE
+356,353,Alpro Sobremesas de Chocolate puro,INSA,,GRUPO_AUSENTE
+357,354,Alpro Sobremesas de Côco,INSA,,GRUPO_AUSENTE
+360,357,Amaciante de carnes - Maggi®,Tucunduva,,GRUPO_AUSENTE
+365,362,Amêijoa aberta ao natural sem sal,INSA,,GRUPO_AUSENTE
+366,363,Amêijoa crua,INSA,,GRUPO_AUSENTE
+367,364,Amêijoas à Bulhão Pato,INSA,,GRUPO_AUSENTE
+391,388,Amendocrem - Fugini®,Tucunduva,,GRUPO_AUSENTE
+396,393,Amendoim apimentado,IBGE,,GRUPO_AUSENTE
+397,394,Amendoim caramelizado,IBGE,,GRUPO_AUSENTE
+401,398,Amendoim tipo japonês - Dori®,Tucunduva,,GRUPO_AUSENTE
+403,400,Amendoim torrado e salgado - Dori®,Tucunduva,,GRUPO_AUSENTE
+411,408,Americano,IBGE,,GRUPO_AUSENTE
+415,412,Amidomil (bolinho),IBGE,,GRUPO_AUSENTE
+443,440,Aptamii 1 - Danone0,Tucunduva,,GRUPO_AUSENTE
+444,441,Aptamil 2 - Danone®,Tucunduva,,GRUPO_AUSENTE
+445,442,Aptamil 3 - Danone®,Tucunduva,,GRUPO_AUSENTE
+446,443,Aptamil sem lactose - Danone®,Tucunduva,,GRUPO_AUSENTE
+447,444,Aptamil soja 1 - Danone®,Tucunduva,,GRUPO_AUSENTE
+448,445,Araça,IBGE,,GRUPO_AUSENTE
+449,446,Araca acu (goiaba),IBGE,,GRUPO_AUSENTE
+450,447,Arenque (cru),Tucunduva,,GRUPO_AUSENTE
+451,448,Arenque (defumado),Tucunduva,,GRUPO_AUSENTE
+452,449,Arrasto suíno,IBGE,,GRUPO_AUSENTE
+559,556,Ata,IBGE,,GRUPO_AUSENTE
+652,649,"Babaçu, mesocarpo, farinha, crua",TBCA,,GRUPO_AUSENTE
+653,650,Bacaba,IBGE,,GRUPO_AUSENTE
+654,651,Bacabucu,IBGE,,GRUPO_AUSENTE
+717,714,Banana passa - Banana Brasil®,Tucunduva,,GRUPO_AUSENTE
+1000,997,Bertalha refogado(a),IBGE,,GRUPO_AUSENTE
+1018,1015,"Beverage, chá, pêssego, lata/garrafa, ""Lipton""",TBCA,,GRUPO_AUSENTE
+1019,1016,Bidu tradicional,IBGE,,GRUPO_AUSENTE
+1046,1043,Bife vegetal,IBGE,,GRUPO_AUSENTE
+1047,1044,Bifum,Tucunduva,,GRUPO_AUSENTE
+1048,1045,Big Mac - Mc Donald's®,Tucunduva,,GRUPO_AUSENTE
+1049,1046,Biriba,IBGE,,GRUPO_AUSENTE
+1050,1047,Biscoito água e gergelim - Piraquê0,Tucunduva,,GRUPO_AUSENTE
+1055,1052,Biscoito água light - Piraquê®,Tucunduva,,GRUPO_AUSENTE
+1056,1053,Biscoito água Tostines - Nestlé®,Tucunduva,,GRUPO_AUSENTE
+1057,1054,Biscoito Amandita - Lacta®,Tucunduva,,GRUPO_AUSENTE
+1058,1055,Biscoito aveia e mel Nesfit -Nestlé®,Tucunduva,,GRUPO_AUSENTE
+1059,1056,Biscoito Bits Chipits Original - Nabisco®,Tucunduva,,GRUPO_AUSENTE
+1083,1080,Biscoito de castanha,Tucunduva,,GRUPO_AUSENTE
+1263,1260,Bola de Berlim sem creme,INSA,,GRUPO_AUSENTE
+1264,1261,"Bolacha ""Belga""",INSA,,GRUPO_AUSENTE
+1270,1267,Bolacha baunilha,INSA,,GRUPO_AUSENTE
+1272,1269,Bolacha de araticum,Tucunduva,,GRUPO_AUSENTE
+1273,1270,Bolacha de jatobá,Tucunduva,,GRUPO_AUSENTE
+1298,1295,"Bolinrosa, lata",TBCA,,GRUPO_AUSENTE
+1340,1337,Bolo de festa - Sol®,Tucunduva,,GRUPO_AUSENTE
+1409,1406,Brachola,IBGE,,GRUPO_AUSENTE
+1410,1407,Braco bovino frito(a),IBGE,,GRUPO_AUSENTE
+1412,1409,Brandy,INSA,,GRUPO_AUSENTE
+1413,1410,Bredo,IBGE,,GRUPO_AUSENTE
+1455,1452,Buri,Tucunduva,,GRUPO_AUSENTE
+1456,1453,Buriti,IBGE,,GRUPO_AUSENTE
+1457,1454,Butia,IBGE,,GRUPO_AUSENTE
+1478,1475,Cacau em pó,INSA,,GRUPO_AUSENTE
+1479,1476,Cacau em pó - Garoto®,Tucunduva,,GRUPO_AUSENTE
+1481,1478,"Cacau, in natura",TBCA,,GRUPO_AUSENTE
+1493,1490,Café da manha,IBGE,,GRUPO_AUSENTE
+1494,1491,Café em pó,Tucunduva,,GRUPO_AUSENTE
+1495,1492,Café instantâneo em pó,Tucunduva,,GRUPO_AUSENTE
+1497,1494,Café solúvel - Melitta®,Tucunduva,,GRUPO_AUSENTE
+1498,1495,Café solúvel (pó) com cafeína (2 marcas),INSA,,GRUPO_AUSENTE
+1499,1496,Café solúvel (pó) com cafeína (produto branco),INSA,,GRUPO_AUSENTE
+1500,1497,Café solúvel (pó) descafeinado (2 marcas),INSA,,GRUPO_AUSENTE
+1501,1498,Café solúvel (pó) descafeinado (produto branco),INSA,,GRUPO_AUSENTE
+1502,1499,Café soluvel capuccino,IBGE,,GRUPO_AUSENTE
+1503,1500,Café solúvel original Nescafé- Nestlé®,Tucunduva,,GRUPO_AUSENTE
+1504,1501,Café tipo capuccino,IBGE,,GRUPO_AUSENTE
+1505,1502,Café tipo expresso,IBGE,,GRUPO_AUSENTE
+1506,1503,Café torrado e moído - Pelé®,Tucunduva,,GRUPO_AUSENTE
+1512,1509,"Café, pó, torrado",TACO,,GRUPO_AUSENTE
+1513,1510,"Café, pó, torrado",TBCA,,GRUPO_AUSENTE
+1514,1511,Cafeína,INSA,,GRUPO_AUSENTE
+1517,1514,Caja manga,IBGE,,GRUPO_AUSENTE
+1522,1519,Cajarana,IBGE,,GRUPO_AUSENTE
+1552,1549,Caldo de bacon Maggi - Nestlé®,Tucunduva,,GRUPO_AUSENTE
+1556,1553,Caldo de caridade,Tucunduva,,GRUPO_AUSENTE
+1557,1554,Caldo de carne,IBGE,,GRUPO_AUSENTE
+1558,1555,Caldo de carne Maggi - Nestlé®,Tucunduva,,GRUPO_AUSENTE
+1559,1556,Caldo de carne Sazón - Ajinomotoe,Tucunduva,,GRUPO_AUSENTE
+1560,1557,"Caldo de carne, tablete",TACO,,GRUPO_AUSENTE
+1562,1559,Caldo de galinha em pó (0% de gordura) - Maggie,Tucunduva,,GRUPO_AUSENTE
+1563,1560,Caldo de galinha Maggi -Nestlé®,Tucunduva,,GRUPO_AUSENTE
+1564,1561,"Caldo de galinha, tablete",TACO,,GRUPO_AUSENTE
+1565,1562,Caldo de legumes Sazón - Ajinomoto®,Tucunduva,,GRUPO_AUSENTE
+1569,1566,Caldo preparado com cubo de carne de galinha (diluição 2%),INSA,,GRUPO_AUSENTE
+1570,1567,Caldo preparado com cubo de carne de vaca (diluição 2%),INSA,,GRUPO_AUSENTE
+1572,1569,"Caldo, carne, tablete, ""Maggi""",TBCA,,GRUPO_AUSENTE
+1573,1570,"Caldo, carne/galinha, tablete (média diferentes sabores)",TBCA,,GRUPO_AUSENTE
+1574,1571,"Caldo, galinha, tablete, ""Maggi""",TBCA,,GRUPO_AUSENTE
+1607,1604,Canelone à bolonhesa - Nestlé®,Tucunduva,,GRUPO_AUSENTE
+1608,1605,Canelone de ricota - Nestlé®,Tucunduva,,GRUPO_AUSENTE
+1609,1606,Caneloni,IBGE,,GRUPO_AUSENTE
+1633,1630,Canudinho recheado,IBGE,,GRUPO_AUSENTE
+1643,1640,Cappuccino cremoso menta - Cacique,Tucunduva,,GRUPO_AUSENTE
+1644,1641,Cappuccino em pó,Tucunduva,,GRUPO_AUSENTE
+1645,1642,Cappuccino em pó dietético - Doce Menor,Tucunduva,,GRUPO_AUSENTE
+1646,1643,"Capuccino, pó",TACO,,GRUPO_AUSENTE
+1650,1647,"Caqui, in natura",TBCA,,GRUPO_AUSENTE
+1661,1658,Caracol cru,INSA,,GRUPO_AUSENTE
+1666,1663,"Carambola, in natura",TBCA,,GRUPO_AUSENTE
+1667,1664,Caramelo (bala),IBGE,,GRUPO_AUSENTE
+1668,1665,Caramelo de gome de liquirizia Dietorelle - Colavita Brasil,Tucunduva,,GRUPO_AUSENTE
+1684,1681,Cardamomo,INSA,,GRUPO_AUSENTE
+1685,1682,Caribéu,Tucunduva,,GRUPO_AUSENTE
+1686,1683,Caril em pó,INSA,,GRUPO_AUSENTE
+1687,1684,Carimba (cru),Tucunduva,,GRUPO_AUSENTE
+1688,1685,Cariru,IBGE,,GRUPO_AUSENTE
+1942,1939,"Carne, bovina, capa de contra-filé, sem gordura, grelhada",TACO,Carnes e derivados,NUTRIENTE_INVALIDO:Carboidrato
+2104,2101,Casquinha baunilha - McDonald's®,Tucunduva,,GRUPO_AUSENTE
+2105,2102,Casquinha chocolate - McDonald's®,Tucunduva,,GRUPO_AUSENTE
+2106,2103,Casquinha de caranguejo,Tucunduva,,GRUPO_AUSENTE
+2107,2104,Casquinha de siri,Tucunduva,,GRUPO_AUSENTE
+2108,2105,Casquinha mista - McDonald's®,Tucunduva,,GRUPO_AUSENTE
+2136,2133,Cavaco chines,IBGE,,GRUPO_AUSENTE
+2187,2184,"Cereais, barra (média diferentes sabores)",TBCA,,GRUPO_AUSENTE
+2188,2185,"Cereais, barra, banana, ""Ritter""",TBCA,,GRUPO_AUSENTE
+2189,2186,"Cereais, barra, castanha/uva passa/mel, ""Ritter""",TBCA,,GRUPO_AUSENTE
+2190,2187,"Cereais, barra, coco c/ chocolate, ""Ritter""",TBCA,,GRUPO_AUSENTE
+2191,2188,"Cereais, barra, frutas e castanha do Pará, cobertura chocolate, ""Nutry""",TBCA,,GRUPO_AUSENTE
+2192,2189,"Cereais, c/ vitamina, trigo, cevada e aveia, mistura p/ mingau",TBCA,,GRUPO_AUSENTE
+2193,2190,"Cereais, farinha, ""Neston""",TBCA,,GRUPO_AUSENTE
+2194,2191,"Cereais, farinha, láctea",TBCA,,GRUPO_AUSENTE
+2195,2192,"Cereais, farinha, maçã/banana/mamão, vitamina, ""Neston""",TBCA,,GRUPO_AUSENTE
+2196,2193,"Cereais, farinha, milho, ""Mucilon""",TBCA,,GRUPO_AUSENTE
+2197,2194,"Cereais, farinha, morango/pêra/banana, vitamina, ""Neston""",TBCA,,GRUPO_AUSENTE
+2198,2195,"Cereais, farinha, p/ crianças (média diferentes sabores)",TBCA,,GRUPO_AUSENTE
+2199,2196,"Cereais, granola, caseira",TBCA,,GRUPO_AUSENTE
+2202,2199,"Cereais, milho, infantil, mistura p/ mingau",TBCA,,GRUPO_AUSENTE
+2203,2200,"Cereais, mingau, milho, infantil",TACO,,GRUPO_AUSENTE
+2204,2201,"Cereais, mistura p/ mingau (média diferentes sabores)",TBCA,,GRUPO_AUSENTE
+2206,2203,Cereal de milho com açúcar - Nutrifoods®,Tucunduva,,GRUPO_AUSENTE
+2207,2204,"Cereal de pequeno almoço à base de farelo de trigo (tipo ""All-Bran"")",INSA,,GRUPO_AUSENTE
+2208,2205,"Cereal de pequeno almoço à base de farelo de trigo (tipo ""All-Bran"")",INSA,,GRUPO_AUSENTE
+2209,2206,Cereal infantil de milho Mucilon - Nestlé®,Tucunduva,,GRUPO_AUSENTE
+2210,2207,Cereal infantil multicereais Mucilon - Nestlé®,Tucunduva,,GRUPO_AUSENTE
+2211,2208,Cereal integral granolas trutas light - Feinkost®,Tucunduva,,GRUPO_AUSENTE
+2212,2209,Cereal matinal Corn Flakes - Kellogg's®,Tucunduva,,GRUPO_AUSENTE
+2213,2210,Cereal matinal CornFlakes - Nutrifoods®,Tucunduva,,GRUPO_AUSENTE
+2214,2211,Cereal matinal de milho em flocos,IBGE,,GRUPO_AUSENTE
+2215,2212,Cereal matinal mix chocolate - Quaker®,Tucunduva,,GRUPO_AUSENTE
+2216,2213,Cereal matinal Nescau - Nestlé®,Tucunduva,,GRUPO_AUSENTE
+2217,2214,Cereal matinal Nuts Nutry - Nutrimental®,Tucunduva,,GRUPO_AUSENTE
+2218,2215,Cereal matinal sabor banana light Nutry - Nutrimental®,Tucunduva,,GRUPO_AUSENTE
+2219,2216,Cereal matinal sabor chocolate Nutry - Nutrimental®,Tucunduva,,GRUPO_AUSENTE
+2220,2217,Cereal matinal sabor morango com gotas sabor chocolate Nutry - Nutrimental®,Tucunduva,,GRUPO_AUSENTE
+2221,2218,"Cereal matinal, ""Snow Flakes""",TBCA,,GRUPO_AUSENTE
+2222,2219,Cereal matinal (média diferentes marcas),TBCA,,GRUPO_AUSENTE
+2224,2221,"Cereal matinal, milho",TBCA,,GRUPO_AUSENTE
+2225,2222,"Cereal matinal, milho, ""Corn Flakes""",TBCA,,GRUPO_AUSENTE
+2227,2224,"Cereal matinal, milho, açúcar",TBCA,,GRUPO_AUSENTE
+2228,2225,"Cereal matinal, milho, c/ açúcar, ""Sucrilhos""",TBCA,,GRUPO_AUSENTE
+2229,2226,"Cereal matinal, milho, corn flakes, ""Nestlé""",TBCA,,GRUPO_AUSENTE
+2230,2227,"Cereal matinal, milho/trigo/aveia, ""Froot Loops""",TBCA,,GRUPO_AUSENTE
+2231,2228,Cereal shake morango light -Olvebra®,Tucunduva,,GRUPO_AUSENTE
+2232,2229,Cereal shake morango light - Olvebra® (com leite desnatado)*,Tucunduva,,GRUPO_AUSENTE
+2233,2230,Cerefólio fresco,INSA,,GRUPO_AUSENTE
+2246,2243,Cerveja sem álcool,INSA,,GRUPO_AUSENTE
+2248,2245,"Cevada, nua (média diferentes cultivares)",TBCA,,GRUPO_AUSENTE
+2249,2246,Cevada em pó,IBGE,,GRUPO_AUSENTE
+2268,2265,Champanhe,IBGE,,GRUPO_AUSENTE
+2269,2266,Champignon (cogumelo paris),Tucunduva,,GRUPO_AUSENTE
+2272,2269,Chamuça,INSA,,GRUPO_AUSENTE
+2273,2270,Chamuças De Soja 240g,INSA,,GRUPO_AUSENTE
+2274,2271,Chamyto 1+1 cereaiscoloridos - Nestlé®,Tucunduva,,GRUPO_AUSENTE
+2275,2272,Chandele de qualquer sabor,IBGE,,GRUPO_AUSENTE
+2280,2277,Chantilly,IBGE,,GRUPO_AUSENTE
+2282,2279,"Chantily, pó (média diferentes marcas)",TBCA,,GRUPO_AUSENTE
+2283,2280,"Chantily, pó, ""Chantineve""",TBCA,,GRUPO_AUSENTE
+2284,2281,"Chantily, pó, ""Ducoco""",TBCA,,GRUPO_AUSENTE
+2287,2284,Charuto de repolho,IBGE,,GRUPO_AUSENTE
+2289,2286,Cheddar Mc Melt - Mc Dona ld's0,Tucunduva,,GRUPO_AUSENTE
+2290,2287,Cheesburguer,IBGE,,GRUPO_AUSENTE
+2291,2288,Cheese egg,IBGE,,GRUPO_AUSENTE
+2292,2289,Cheese tudo,IBGE,,GRUPO_AUSENTE
+2293,2290,Cheeseburguer - Mc Donald's®,Tucunduva,,GRUPO_AUSENTE
+2296,2293,Cherne cozido,INSA,,GRUPO_AUSENTE
+2297,2294,Cherne cru,INSA,,GRUPO_AUSENTE
+2298,2295,Cherne grelhado,INSA,,GRUPO_AUSENTE
+2303,2300,Chicharro cozido,INSA,,GRUPO_AUSENTE
+2304,2301,Chicharro cru,INSA,,GRUPO_AUSENTE
+2305,2302,Chicharro grelhado,INSA,,GRUPO_AUSENTE
+2306,2303,Chicken fillet tradicional congelado Mini Chicken - Perdigão®,Tucunduva,,GRUPO_AUSENTE
+2307,2304,Chicken popcorn congelado - Perdigão®,Tucunduva,,GRUPO_AUSENTE
+2316,2313,Chikenitos de frango com cenoura congelado Turma da Mônica - Seara®,Tucunduva,,GRUPO_AUSENTE
+2317,2314,Chikenitos tradicional Turma da Mônica - Sadia®,Tucunduva,,GRUPO_AUSENTE
+2320,2317,Chineque,IBGE,,GRUPO_AUSENTE
+2321,2318,Chineque com farofa,IBGE,,GRUPO_AUSENTE
+2322,2319,Chips (salgadinhos),IBGE,,GRUPO_AUSENTE
+2323,2320,Chips (salgadinhos) light,IBGE,,GRUPO_AUSENTE
+2324,2321,Choco cru,INSA,,GRUPO_AUSENTE
+2325,2322,Choco grelhado,INSA,,GRUPO_AUSENTE
+2392,2389,Chopp,IBGE,,GRUPO_AUSENTE
+2393,2390,Chouriço,IBGE,,GRUPO_AUSENTE
+2399,2396,Chouriço de sangue cozido sem adição de sal,INSA,,GRUPO_AUSENTE
+2400,2397,Chouriço de sangue cru,INSA,,GRUPO_AUSENTE
+2416,2413,Chucrute,IBGE,,GRUPO_AUSENTE
+2417,2414,Chucrute,INSA,,GRUPO_AUSENTE
+2425,2422,Churro,IBGE,,GRUPO_AUSENTE
+2426,2423,Churros com doce de leite,Tucunduva,,GRUPO_AUSENTE
+2427,2424,Cidra,Tucunduva,,GRUPO_AUSENTE
+2434,2431,Clementina,INSA,,GRUPO_AUSENTE
+2436,2433,"Coalho , pó",TBCA,,GRUPO_AUSENTE
+2447,2444,Coco,IBGE,,GRUPO_AUSENTE
+2486,2483,Colomba Pascal - Bauducco®,Tucunduva,,GRUPO_AUSENTE
+2490,2487,Cominhos,INSA,,GRUPO_AUSENTE
+2491,2488,Complemento alimentar de qualquer sabor,IBGE,,GRUPO_AUSENTE
+2492,2489,Compota de ameixa,INSA,,GRUPO_AUSENTE
+2493,2490,Compota de ananás,Tucunduva,,GRUPO_AUSENTE
+2494,2491,Compota de ananás,INSA,,GRUPO_AUSENTE
+2495,2492,Compota de araticum,Tucunduva,,GRUPO_AUSENTE
+2496,2493,Compota de cagaita,Tucunduva,,GRUPO_AUSENTE
+2497,2494,Compota de cereja,INSA,,GRUPO_AUSENTE
+2498,2495,Compota de damasco,INSA,,GRUPO_AUSENTE
+2499,2496,Compota de goiaba,Tucunduva,,GRUPO_AUSENTE
+2500,2497,Compota de jenipapo,Tucunduva,,GRUPO_AUSENTE
+2501,2498,Compota de laranja,INSA,,GRUPO_AUSENTE
+2502,2499,Compota de lobeira,Tucunduva,,GRUPO_AUSENTE
+2503,2500,Compota de mama-cadela,Tucunduva,,GRUPO_AUSENTE
+2504,2501,Concentrado alimentar diet shake,IBGE,,GRUPO_AUSENTE
+2505,2502,Condimento de mostarda,INSA,,GRUPO_AUSENTE
+2506,2503,Confete,IBGE,,GRUPO_AUSENTE
+2507,2504,Conhaque,IBGE,,GRUPO_AUSENTE
+2508,2505,Conhaque,Tucunduva,,GRUPO_AUSENTE
+2526,2523,Copa de porco defumada,IBGE,,GRUPO_AUSENTE
+2527,2524,Coquetel de frutas,IBGE,,GRUPO_AUSENTE
+2528,2525,"Coquetel, uva passa/avelã/castanha-do-pará/amendoim torrado, s/ casca, ""Oetker""",TBCA,,GRUPO_AUSENTE
+2549,2546,"Corimba, cru",TACO,Pescados e frutos do mar,NUTRIENTE_INVALIDO:Carboidrato
+2610,2607,Courgette crua,INSA,,GRUPO_AUSENTE
+2611,2608,Courgette frita com óleo alimentar,INSA,,GRUPO_AUSENTE
+2682,2679,Cozido,IBGE,,GRUPO_AUSENTE
+2683,2680,Cozido à portuguesa,INSA,,GRUPO_AUSENTE
+2684,2681,Cozido à portuguesa com grão,INSA,,GRUPO_AUSENTE
+2685,2682,Cravinho,INSA,,GRUPO_AUSENTE
+2704,2701,Creme de graviola,Tucunduva,,GRUPO_AUSENTE
+2723,2720,Creme para barrar de cacau e avelãs (8 marcas),INSA,,GRUPO_AUSENTE
+2742,2739,Cremogema,IBGE,,GRUPO_AUSENTE
+2743,2740,Cremogema chocolate - Maisena,Tucunduva,,GRUPO_AUSENTE
+2744,2741,Cremogema tradicional - Maizena,Tucunduva,,GRUPO_AUSENTE
+2745,2742,Crepe,IBGE,,GRUPO_AUSENTE
+2763,2760,Croquinhos de arroz,IBGE,,GRUPO_AUSENTE
+2764,2761,Cruera,IBGE,,GRUPO_AUSENTE
+2773,2770,Cubitan,INSA,,GRUPO_AUSENTE
+2774,2771,Cubo de carne de galinha para caldo,INSA,,GRUPO_AUSENTE
+2775,2772,Cubo de carne de vaca para caldo,INSA,,GRUPO_AUSENTE
+2776,2773,Cuca de qualquer tipo,IBGE,,GRUPO_AUSENTE
+2795,2792,"Curry, pó, ""Kenko""",TBCA,,GRUPO_AUSENTE
+2806,2803,Cuxa,IBGE,,GRUPO_AUSENTE
+2808,2805,Dadinho®,Tucunduva,,GRUPO_AUSENTE
+2817,2814,Danette pudim,IBGE,,GRUPO_AUSENTE
+2818,2815,Demerara,IBGE,,GRUPO_AUSENTE
+2819,2816,Dextrose de milho - Dextrosol®,Tucunduva,,GRUPO_AUSENTE
+2820,2817,Diasip (diabéticos),INSA,,GRUPO_AUSENTE
+2821,2818,Diet shake,IBGE,,GRUPO_AUSENTE
+2822,2819,Diet Shake® tradicional morango,Tucunduva,,GRUPO_AUSENTE
+2823,2820,Dióspiro,INSA,,GRUPO_AUSENTE
+2824,2821,Dióspiro desidratado,INSA,,GRUPO_AUSENTE
+2885,2882,Drops,IBGE,,GRUPO_AUSENTE
+2886,2883,Drops de laranja Vita C - Adarns®,Tucunduva,,GRUPO_AUSENTE
+2887,2884,Drumete de galinha ou frango assado(a),IBGE,,GRUPO_AUSENTE
+2888,2885,Drumete de galinha ou frango cozido(a),IBGE,,GRUPO_AUSENTE
+2889,2886,Drumete de galinha ou frango frito(a),IBGE,,GRUPO_AUSENTE
+2890,2887,Drumete de galinha ou frango grelhado(a)/brasa/churrasco,IBGE,,GRUPO_AUSENTE
+2891,2888,Drumete de galinha ou frango molho vermelho,IBGE,,GRUPO_AUSENTE
+2892,2889,Drumete de galinha ou frango refogado(a),IBGE,,GRUPO_AUSENTE
+2893,2890,Éclair de chocolate,INSA,,GRUPO_AUSENTE
+2894,2891,Eggsburguer,IBGE,,GRUPO_AUSENTE
+2895,2892,Empada,INSA,,GRUPO_AUSENTE
+2920,2917,Endívia,Tucunduva,,GRUPO_AUSENTE
+2921,2918,Endívia crua,INSA,,GRUPO_AUSENTE
+2922,2919,Endro fresco,Tucunduva,,GRUPO_AUSENTE
+2923,2920,Endro seco,Tucunduva,,GRUPO_AUSENTE
+2924,2921,Enfamil A.R. Premium - MeadJohnson®,Tucunduva,,GRUPO_AUSENTE
+2925,2922,Enfamil H.A. - MeadJohnson®,Tucunduva,,GRUPO_AUSENTE
+2926,2923,Enfamil Premium 1 - MeadJohnson®,Tucunduva,,GRUPO_AUSENTE
+2927,2924,Enfamil Premium 2 - MeadJohnson®,Tucunduva,,GRUPO_AUSENTE
+2928,2925,Enfamil ProSobree Premium - Mead Johnson®,Tucunduva,,GRUPO_AUSENTE
+2929,2926,Enfamil Sem lactose Premium - Mead Johnson®,Tucunduva,,GRUPO_AUSENTE
+2930,2927,Enguia crua,INSA,,GRUPO_AUSENTE
+2931,2928,Enguia frita,INSA,,GRUPO_AUSENTE
+2932,2929,Enroladinho,IBGE,,GRUPO_AUSENTE
+2933,2930,Entrecosto de porco cozido,INSA,,GRUPO_AUSENTE
+2934,2931,Entrecosto de porco cru,INSA,,GRUPO_AUSENTE
+2935,2932,Entrecosto de porco estufado com azeite e banha,INSA,,GRUPO_AUSENTE
+2936,2933,Entrecosto de porco estufado com azeite e margarina,INSA,,GRUPO_AUSENTE
+2937,2934,Entrecosto de porco estufado com margarina,INSA,,GRUPO_AUSENTE
+2938,2935,Entrecosto de porco estufado com óleo alimentar e banha,INSA,,GRUPO_AUSENTE
+2939,2936,"Entrecosto de porco estufado, sem molho",INSA,,GRUPO_AUSENTE
+2940,2937,Entrecostode porco grelhado,INSA,,GRUPO_AUSENTE
+2983,2980,Escarola,IBGE,,GRUPO_AUSENTE
+2984,2981,Escarola,Tucunduva,,GRUPO_AUSENTE
+2985,2982,Escarola (refogada),Tucunduva,,GRUPO_AUSENTE
+3003,3000,Esparregado De Espinafres Sem Lactose 400g,INSA,,GRUPO_AUSENTE
+3004,3001,Espetada de porco grelhada,INSA,,GRUPO_AUSENTE
+3005,3002,Espetada de vaca grelhada,INSA,,GRUPO_AUSENTE
+3030,3027,"Estrogonoffe, frango, c/ temperos, c/ sal",TBCA,,GRUPO_AUSENTE
+3031,3028,Estrudel de maçã,Tucunduva,,GRUPO_AUSENTE
+3040,3037,Fantomalt (modular energético HC pó),INSA,,GRUPO_AUSENTE
+3112,3109,Farinheira cozida sem adição de sal,INSA,,GRUPO_AUSENTE
+3113,3110,Farinheira crua,INSA,,GRUPO_AUSENTE
+3225,3222,Feijoa (polpa),INSA,,GRUPO_AUSENTE
+3235,3232,Feno grego,Tucunduva,,GRUPO_AUSENTE
+3236,3233,Fermento biológico,Tucunduva,,GRUPO_AUSENTE
+3237,3234,Fermento biológico fresco - Fleischmann®,Tucunduva,,GRUPO_AUSENTE
+3238,3235,Fermento biológico seco - Fleischmann®,Tucunduva,,GRUPO_AUSENTE
+3239,3236,Fermento em pó,INSA,,GRUPO_AUSENTE
+3240,3237,"Fermento em pó, químico",TACO,,GRUPO_AUSENTE
+3241,3238,Fermento fresco de padeiro,INSA,,GRUPO_AUSENTE
+3242,3239,Fermento químico em pó,Tucunduva,,GRUPO_AUSENTE
+3243,3240,Fermento seco de padeiro,INSA,,GRUPO_AUSENTE
+3244,3241,"Fermento, biológico",TBCA,,GRUPO_AUSENTE
+3245,3242,"Fermento, biológico, levedura, tablete",TACO,,GRUPO_AUSENTE
+3246,3243,"Fermento, químico, pó",TBCA,,GRUPO_AUSENTE
+3258,3255,Fiber mais suplemento de fibras - Nestlé®,Tucunduva,,GRUPO_AUSENTE
+3259,3256,Fibersource - Nestlé®,Tucunduva,,GRUPO_AUSENTE
+3263,3260,Fibrax® natural,Tucunduva,,GRUPO_AUSENTE
+3361,3358,Fisális,INSA,,GRUPO_AUSENTE
+3362,3359,Flan chocolate - Royal®,Tucunduva,,GRUPO_AUSENTE
+3388,3385,Flor de sal,TBCA,,GRUPO_AUSENTE
+3389,3386,Flor de sal,INSA,,GRUPO_AUSENTE
+3390,3387,FM 85 - Nestfé®,Tucunduva,,GRUPO_AUSENTE
+3393,3390,Folhado de banana com canela congelado - Forno de Minas,Tucunduva,,GRUPO_AUSENTE
+3394,3391,Folhado de frango congelado - Forno de Minas®,Tucunduva,,GRUPO_AUSENTE
+3395,3392,Folhado de presunto e queijo congelado - Forno de Minas®,Tucunduva,,GRUPO_AUSENTE
+3396,3393,Folhado Misto s/ Lactose Pura Vida 10x24g,INSA,,GRUPO_AUSENTE
+3397,3394,Folhas de rabanete cruas,INSA,,GRUPO_AUSENTE
+3398,3395,Fondue de chocolate - Serrabella®,Tucunduva,,GRUPO_AUSENTE
+3399,3396,Fondue de queijo - Serrabella®,Tucunduva,,GRUPO_AUSENTE
+3400,3397,Forticare,INSA,,GRUPO_AUSENTE
+3401,3398,Fortimel (hiperproteico e calórico),INSA,,GRUPO_AUSENTE
+3402,3399,Fortimel Compact (hipercalórico pó),INSA,,GRUPO_AUSENTE
+3403,3400,Fortimel Compact Protein (líquido hiperpoteico e calórico),INSA,,GRUPO_AUSENTE
+3404,3401,Fortimel Creme (hipercalórico e proteico),INSA,,GRUPO_AUSENTE
+3405,3402,Fortimel Energy,INSA,,GRUPO_AUSENTE
+3406,3403,Fortimel Powder (hiperproteico pó),INSA,,GRUPO_AUSENTE
+3407,3404,Foundue de queijo suíço -Tigre®,Tucunduva,,GRUPO_AUSENTE
+3418,3415,Francesinha,INSA,,GRUPO_AUSENTE
+3500,3497,"Frango, fígado, cru",TACO,Carnes e derivados,NUTRIENTE_INVALIDO:Carboidrato
+3516,3513,Fritada de maturi,Tucunduva,,GRUPO_AUSENTE
+3517,3514,Frozen iogurte,Tucunduva,,GRUPO_AUSENTE
+3518,3515,Frozen mousse de chocolate com raspas Míss Daisy - Sadia®,Tucunduva,,GRUPO_AUSENTE
+3519,3516,Frozen mousse sabor maracujá Miss Daisy - Sadia®,Tucunduva,,GRUPO_AUSENTE
+3520,3517,Frozen mousse sabor chocolate com coco e coco ralado Miss Daisy - Sadia®,Tucunduva,,GRUPO_AUSENTE
+3532,3529,Funcho fresco,INSA,,GRUPO_AUSENTE
+3533,3530,Fundo de alcachofra congelado - Daucy®,Tucunduva,,GRUPO_AUSENTE
+3534,3531,Funghi,Tucunduva,,GRUPO_AUSENTE
+3535,3532,Furrundu,Tucunduva,,GRUPO_AUSENTE
+3536,3533,Fusilli Integral Pura Vida 500g,INSA,,GRUPO_AUSENTE
+3537,3534,Galeto,IBGE,,GRUPO_AUSENTE
+3563,3560,Geladinho,IBGE,,GRUPO_AUSENTE
+3564,3561,Gelado caseiro com bolachas e natas,INSA,,GRUPO_AUSENTE
+3565,3562,Gelado caseiro com palitos la Reine,INSA,,GRUPO_AUSENTE
+3566,3563,Gelado de água (sorvete),INSA,,GRUPO_AUSENTE
+3567,3564,Gelado de leite,INSA,,GRUPO_AUSENTE
+3655,3652,"Gin, Rum ou Whisky",INSA,,GRUPO_AUSENTE
+3656,3653,Ginja,INSA,,GRUPO_AUSENTE
+3658,3655,"Glicose, milho",TBCA,,GRUPO_AUSENTE
+3659,3656,Glucose de milho,Tucunduva,,GRUPO_AUSENTE
+3660,3657,Goia cru(a),IBGE,,GRUPO_AUSENTE
+3679,3676,Goma de mandioca,IBGE,,GRUPO_AUSENTE
+3680,3677,Goma de mascar,IBGE,,GRUPO_AUSENTE
+3692,3689,Granola com Sementes Ancestrais Pura Vida 375g (com leite ou iogurte),INSA,,GRUPO_AUSENTE
+3718,3715,Gressino,INSA,,GRUPO_AUSENTE
+3719,3716,Groselha,INSA,,GRUPO_AUSENTE
+3720,3717,Groselha vermelha fresca,Tucunduva,,GRUPO_AUSENTE
+3721,3718,Grustoli (bolinho doce),IBGE,,GRUPO_AUSENTE
+3722,3719,Guabiroba,Tucunduva,,GRUPO_AUSENTE
+3723,3720,Guaiamu cozido(a),IBGE,,GRUPO_AUSENTE
+3725,3722,Guara Power® (energético),Tucunduva,,GRUPO_AUSENTE
+3726,3723,Guaraná - Antarctica®,Tucunduva,,GRUPO_AUSENTE
+3727,3724,Guarana diet,IBGE,,GRUPO_AUSENTE
+3728,3725,Guaraná diet - Antarctica®,Tucunduva,,GRUPO_AUSENTE
+3729,3726,Guarana light,IBGE,,GRUPO_AUSENTE
+3730,3727,Guarana tradicional,IBGE,,GRUPO_AUSENTE
+3738,3735,Gyoza,Tucunduva,,GRUPO_AUSENTE
+3739,3736,Hadoque (cru),Tucunduva,,GRUPO_AUSENTE
+3803,3800,High Protein Chocolate Milbona 200g (20g proteina),INSA,,GRUPO_AUSENTE
+3804,3801,High Protein Vanilla Milbona 200g (20g proteina),INSA,,GRUPO_AUSENTE
+3805,3802,Hondashi,Tucunduva,,GRUPO_AUSENTE
+3809,3806,Hot pocket Extreme Cheddar - Sadia®,Tucunduva,,GRUPO_AUSENTE
+3810,3807,Hot pocket Extreme x-burguer - Sadia®,Tucunduva,,GRUPO_AUSENTE
+3811,3808,Hot pocket x-burguer com molho churrasco - Sadia®,Tucunduva,,GRUPO_AUSENTE
+3812,3809,Hot pocket x-burguer com molho picante - Sadia®,Tucunduva,,GRUPO_AUSENTE
+3813,3810,Hot pocket x-calabresa -Sadia®,Tucunduva,,GRUPO_AUSENTE
+3814,3811,Hot pocket x-frango - Sadia®,Tucunduva,,GRUPO_AUSENTE
+3815,3812,Hot pocket x-picanha -Sadia®,Tucunduva,,GRUPO_AUSENTE
+3817,3814,Impact frutas vermelhas pó - Nestlé®,Tucunduva,,GRUPO_AUSENTE
+3818,3815,Impact líquido - Nestlé,Tucunduva,,GRUPO_AUSENTE
+3819,3816,Impact pêssego pó - Nestlé®,Tucunduva,,GRUPO_AUSENTE
+3820,3817,"Imperador assado com cebola, tomate, azeite e óleo alimentar",INSA,,GRUPO_AUSENTE
+3821,3818,Imperador cozido,INSA,,GRUPO_AUSENTE
+3822,3819,Imperador cru,INSA,,GRUPO_AUSENTE
+3823,3820,Imperador grelhado,INSA,,GRUPO_AUSENTE
+3946,3943,Ioio creme (chocolate em creme),IBGE,,GRUPO_AUSENTE
+3947,3944,Isca de pirarucu,Tucunduva,,GRUPO_AUSENTE
+3948,3945,Isca de pirarucu ao molho,Tucunduva,,GRUPO_AUSENTE
+3949,3946,"Isosource 1,5 - Nestlé®",Tucunduva,,GRUPO_AUSENTE
+3950,3947,"Isosource 1,5 sem sacarose - Nestlé®",Tucunduva,,GRUPO_AUSENTE
+3951,3948,Isosource HN - Nestlé®,Tucunduva,,GRUPO_AUSENTE
+3952,3949,Isosource soya - Nestlé®,Tucunduva,,GRUPO_AUSENTE
+3953,3950,Isosource standard - Nestlé®,Tucunduva,,GRUPO_AUSENTE
+3954,3951,Itokonyaku,Tucunduva,,GRUPO_AUSENTE
+3987,3984,Jesuíta,INSA,,GRUPO_AUSENTE
+3999,3996,Jucara,IBGE,,GRUPO_AUSENTE
+4000,3997,Jujuba,IBGE,,GRUPO_AUSENTE
+4003,4000,Jussara,IBGE,,GRUPO_AUSENTE
+4004,4001,Kamaboko rosa,Tucunduva,,GRUPO_AUSENTE
+4005,4002,Kani kama (cru),Tucunduva,,GRUPO_AUSENTE
+4006,4003,Katsuo bushi (casca de peixe desidratada),Tucunduva,,GRUPO_AUSENTE
+4011,4008,Kinder ovo,IBGE,,GRUPO_AUSENTE
+4012,4009,Kinder ovo - Kinder®,Tucunduva,,GRUPO_AUSENTE
+4014,4011,Kitute suíno,IBGE,,GRUPO_AUSENTE
+4021,4018,Kornbu,Tucunduva,,GRUPO_AUSENTE
+4038,4035,Lambo,Tucunduva,,GRUPO_AUSENTE
+4039,4036,Lampreia crua,INSA,,GRUPO_AUSENTE
+4040,4037,Lanche rápido congelado de carne com cheddar - Pão de Açúcar,Tucunduva,,GRUPO_AUSENTE
+4041,4038,Lanche rápido congelado de pizza - Pão de Açúcar°,Tucunduva,,GRUPO_AUSENTE
+4114,4111,latoba,Tucunduva,,GRUPO_AUSENTE
+4119,4116,"Leite , humano, colostro",TBCA,,GRUPO_AUSENTE
+4206,4203,Leite humano,INSA,,GRUPO_AUSENTE
+4207,4204,"Leite humano, colostro",INSA,,GRUPO_AUSENTE
+4208,4205,"Leite humano, transição",INSA,,GRUPO_AUSENTE
+4225,4222,Leite materno,Tucunduva,,GRUPO_AUSENTE
+4248,4245,"Leite, humano, maduro (média de diferentes amostras)",TBCA,,GRUPO_AUSENTE
+4280,4277,Levedo de cerveja,IBGE,,GRUPO_AUSENTE
+4281,4278,Levedura De Cerveja Em Pó Integral Pura Vida 150g,INSA,,GRUPO_AUSENTE
+4282,4279,Levedura De Cerveja Em Pó Pura Vida 150g,INSA,,GRUPO_AUSENTE
+4283,4280,Lichia fresca,INSA,,GRUPO_AUSENTE
+4372,4369,loiô Nut® cream com avelã,Tucunduva,,GRUPO_AUSENTE
+4373,4370,loiô Nut® cream com leite e avelã,Tucunduva,,GRUPO_AUSENTE
+4423,4420,Longan,Tucunduva,,GRUPO_AUSENTE
+4477,4474,Macarrão instantaneo,IBGE,,GRUPO_AUSENTE
+4478,4475,Macarrão instantâneo cru (sabor galinha) Lámen Maggi - Nestlé®,Tucunduva,,GRUPO_AUSENTE
+4479,4476,Macarrão instantaneo light,IBGE,,GRUPO_AUSENTE
+4480,4477,Macarrão instantaneo light sopa,IBGE,,GRUPO_AUSENTE
+4487,4484,"Macarrão, instantâneo",TACO,,GRUPO_AUSENTE
+4529,4526,Macis em pó,Tucunduva,,GRUPO_AUSENTE
+4530,4527,Madalena,INSA,,GRUPO_AUSENTE
+4572,4569,"Maisena (milho, aveia, arroz ecenteio) - Nutre®",Tucunduva,,GRUPO_AUSENTE
+4574,4571,Malto dextrina - Nidex®,Tucunduva,,GRUPO_AUSENTE
+4627,4624,Mané pelado (bolo de mandioca),Tucunduva,,GRUPO_AUSENTE
+4628,4625,Maneco com jaleco,Tucunduva,,GRUPO_AUSENTE
+4647,4644,Mangalo amargo em grão,IBGE,,GRUPO_AUSENTE
+4648,4645,Manguito,IBGE,,GRUPO_AUSENTE
+4652,4649,Manjar,IBGE,,GRUPO_AUSENTE
+4653,4650,Manjar branco com ameixa em calda,Tucunduva,,GRUPO_AUSENTE
+4654,4651,"Manjar, coco, pó, ""Ducoco""",TBCA,,GRUPO_AUSENTE
+4754,4751,Mari,IBGE,,GRUPO_AUSENTE
+4772,4769,Maricota,IBGE,,GRUPO_AUSENTE
+4785,4782,Marrom glacê,Tucunduva,,GRUPO_AUSENTE
+4786,4783,Marshmellow com cobertura de chocolate e recheio de morango - Top Bel's,Tucunduva,,GRUPO_AUSENTE
+4788,4785,Maruca cozida,INSA,,GRUPO_AUSENTE
+4789,4786,Maruca crua,INSA,,GRUPO_AUSENTE
+4794,4791,Massa de pimentão,INSA,,GRUPO_AUSENTE
+4815,4812,Massago (ovas de arenque),Tucunduva,,GRUPO_AUSENTE
+4818,4815,Maxi Bananinha - Bauducco®,Tucunduva,,GRUPO_AUSENTE
+4819,4816,Maxi Chocolate - Bauducco®,Tucunduva,,GRUPO_AUSENTE
+4826,4823,Mc Chicken Junior - McDonald's®,Tucunduva,,GRUPO_AUSENTE
+4827,4824,Mc Colosso caramelo - McDonald's®,Tucunduva,,GRUPO_AUSENTE
+4828,4825,Mc Colosso caramelo - McDonald's®,Tucunduva,,GRUPO_AUSENTE
+4829,4826,Mc Fish - Mc Donald's®,Tucunduva,,GRUPO_AUSENTE
+4830,4827,McShake chocolate - McDonald's®,Tucunduva,,GRUPO_AUSENTE
+4831,4828,McShake flocos - McDonald's®,Tucunduva,,GRUPO_AUSENTE
+4832,4829,McShake morango - McDonald's®,Tucunduva,,GRUPO_AUSENTE
+4833,4830,MCT Oil (modular lípidico líquido),INSA,,GRUPO_AUSENTE
+4834,4831,Medalhão de filé de peito de frango congelado - Aurora®,Tucunduva,,GRUPO_AUSENTE
+4836,4833,Meia-desfeita de bacalhau,INSA,,GRUPO_AUSENTE
+4837,4834,Mel,IBGE,,GRUPO_AUSENTE
+4838,4835,Mel,Tucunduva,,GRUPO_AUSENTE
+4839,4836,Mel,INSA,,GRUPO_AUSENTE
+4840,4837,Mel de abelha,TBCA,,GRUPO_AUSENTE
+4841,4838,Mel de cana,INSA,,GRUPO_AUSENTE
+4843,4840,Melaço,INSA,,GRUPO_AUSENTE
+4844,4841,Melado,IBGE,,GRUPO_AUSENTE
+4846,4843,Melado,TBCA,,GRUPO_AUSENTE
+4866,4863,Menta (frita),Tucunduva,,GRUPO_AUSENTE
+4886,4883,Mil folhas,IBGE,,GRUPO_AUSENTE
+4887,4884,Milharina - Quaker®,Tucunduva,,GRUPO_AUSENTE
+4898,4895,Milho doce congelado - Daucy®,Tucunduva,,GRUPO_AUSENTE
+4902,4899,Milho para pipoca - Yoki®,Tucunduva,,GRUPO_AUSENTE
+4911,4908,Milho verde congelado - Bonduelie®,Tucunduva,,GRUPO_AUSENTE
+4925,4922,"Milho, pipoca, crua (média de diferentes sabores)",TBCA,,GRUPO_AUSENTE
+4926,4923,"Milho, pipoca, grão, cru, Zea mays (média diferentes amostras)",TBCA,,GRUPO_AUSENTE
+4927,4924,"Milho, pipoca, micro-ondas, light, preparado",TBCA,,GRUPO_AUSENTE
+4928,4925,"Milho, pipoca, p/ micro-ondas, bacon, cru, ""Hikari""",TBCA,,GRUPO_AUSENTE
+4929,4926,"Milho, pipoca, p/ micro-ondas, cru, light, ""Hikari""",TBCA,,GRUPO_AUSENTE
+4930,4927,"Milho, pipoca, p/ micro-ondas, cru, light, ""Hikari""",TBCA,,GRUPO_AUSENTE
+4931,4928,"Milho, pipoca, p/ micro-ondas, light, cru",TBCA,,GRUPO_AUSENTE
+4932,4929,"Milho, pipoca, p/ micro-ondas, manteiga, cru, ""Hikari""",TBCA,,GRUPO_AUSENTE
+4933,4930,"Milho, pipoca, p/ micro-ondas, natural, cru, ""Hikari""",TBCA,,GRUPO_AUSENTE
+4934,4931,"Milho, pipoca, p/ micro-ondas, queijo, cru, ""Hikari""",TBCA,,GRUPO_AUSENTE
+4935,4932,"Milho, pipoca, s/ sal, preparado",TBCA,,GRUPO_AUSENTE
+4955,4952,Mimosa,IBGE,,GRUPO_AUSENTE
+4956,4953,Minarina (meia margarina),INSA,,GRUPO_AUSENTE
+4974,4971,Mini kibe - Sadia®,Tucunduva,,GRUPO_AUSENTE
+4976,4973,Mini pão para hot dog - Casa Victoriana®,Tucunduva,,GRUPO_AUSENTE
+4984,4981,Mini Tortitas De Milho Com Sal 200g,INSA,,GRUPO_AUSENTE
+4985,4982,Mini Tortitas de Milho e Arroz Pura Vida 70g,INSA,,GRUPO_AUSENTE
+4986,4983,Minuano tradicional,IBGE,,GRUPO_AUSENTE
+4987,4984,Miojo,IBGE,,GRUPO_AUSENTE
+4994,4991,Missô,Tucunduva,,GRUPO_AUSENTE
+4998,4995,Missoshiru (pó) - Sakura®,Tucunduva,,GRUPO_AUSENTE
+4999,4996,"Missôshiru, frango, pó, ""Sakura""",TBCA,,GRUPO_AUSENTE
+5000,4997,"Missôshiru, legumes, pó, ""Sakura""",TBCA,,GRUPO_AUSENTE
+5001,4998,"Missoshiru, pó (média diferentes sabores)",TBCA,,GRUPO_AUSENTE
+5002,4999,"Missôshiru, tradicional, pó, ""Sakura""",TBCA,,GRUPO_AUSENTE
+5003,5000,Misto quente,Tucunduva,,GRUPO_AUSENTE
+5004,5001,Misto quente ou frio,IBGE,,GRUPO_AUSENTE
+5005,5002,Misto trio,Tucunduva,,GRUPO_AUSENTE
+5006,5003,Mistura caribenha congelado - Daucy®,Tucunduva,,GRUPO_AUSENTE
+5007,5004,Mistura de Sementes Pura Vida 250g,INSA,,GRUPO_AUSENTE
+5008,5005,Mistura para bolo sabor maracujá - Dona Benta®,Tucunduva,,GRUPO_AUSENTE
+5009,5006,Mistura quatro legumes congelado - Daucy®,Tucunduva,,GRUPO_AUSENTE
+5024,5021,Modulen IBD pó - Nestlé®,Tucunduva,,GRUPO_AUSENTE
+5033,5030,Moiho de tomate,Tucunduva,,GRUPO_AUSENTE
+5161,5158,Moyashi (broto de feijão cru),Tucunduva,,GRUPO_AUSENTE
+5162,5159,Mucilon,IBGE,,GRUPO_AUSENTE
+5163,5160,Mucilon de arroz - Nestlé®,Tucunduva,,GRUPO_AUSENTE
+5164,5161,Mucilon de milho - Nestlé®,Tucunduva,,GRUPO_AUSENTE
+5165,5162,Mumu,IBGE,,GRUPO_AUSENTE
+5168,5165,Murici,IBGE,,GRUPO_AUSENTE
+5178,5175,Musli,IBGE,,GRUPO_AUSENTE
+5179,5176,Müsli - Kellogg's,Tucunduva,,GRUPO_AUSENTE
+5180,5177,Muslix tradicional - Kellogg's®,Tucunduva,,GRUPO_AUSENTE
+5190,5187,Nira,Tucunduva,,GRUPO_AUSENTE
+5191,5188,Nabiça crua,INSA,,GRUPO_AUSENTE
+5204,5201,Nan A.R. - Nestlé,Tucunduva,,GRUPO_AUSENTE
+5205,5202,Nan Comfort 1 - Nestlé®,Tucunduva,,GRUPO_AUSENTE
+5206,5203,Nan Comfort 2 - Nestlé®,Tucunduva,,GRUPO_AUSENTE
+5207,5204,Nan H.A. - Nestlée,Tucunduva,,GRUPO_AUSENTE
+5208,5205,Nan Pro 1 - Nestlé,Tucunduva,,GRUPO_AUSENTE
+5209,5206,Nan Pro 2 - Nestlé®,Tucunduva,,GRUPO_AUSENTE
+5210,5207,Nan sem lactose - Nestlé®,Tucunduva,,GRUPO_AUSENTE
+5211,5208,Nan Soy - Nestlé®,Tucunduva,,GRUPO_AUSENTE
+5212,5209,Nata,IBGE,,GRUPO_AUSENTE
+5229,5226,Nectarina,IBGE,,GRUPO_AUSENTE
+5230,5227,Nectarina,Tucunduva,,GRUPO_AUSENTE
+5231,5228,Nectarina,INSA,,GRUPO_AUSENTE
+5232,5229,Nescafé,IBGE,,GRUPO_AUSENTE
+5233,5230,Nescau tradicional - Nestlé®,Tucunduva,,GRUPO_AUSENTE
+5240,5237,Nestogeno 1 - Nestlé®,Tucunduva,,GRUPO_AUSENTE
+5241,5238,Nestogeno 2 - Nestlé®,Tucunduva,,GRUPO_AUSENTE
+5242,5239,Nestogeno Plus - Nestlé®,Tucunduva,,GRUPO_AUSENTE
+5243,5240,Neston,IBGE,,GRUPO_AUSENTE
+5244,5241,Neston três cereais - Nestlé®,Tucunduva,,GRUPO_AUSENTE
+5245,5242,"Neston vitamina banana, maçã e mamão - Nestlé®",Tucunduva,,GRUPO_AUSENTE
+5246,5243,"Neston vitamina morango, pera e banana - Nestlé®",Tucunduva,,GRUPO_AUSENTE
+5247,5244,Nhá Benta maracujá - Kopenhagen,Tucunduva,,GRUPO_AUSENTE
+5255,5252,Nori,Tucunduva,,GRUPO_AUSENTE
+5256,5253,Novasource - Nestlé®,Tucunduva,,GRUPO_AUSENTE
+5257,5254,Novasource pulmonary - Nestlé®,Tucunduva,,GRUPO_AUSENTE
+5258,5255,Novasource renal - Nestlé®,Tucunduva,,GRUPO_AUSENTE
+5259,5256,Novomilk® mamão e banana*,Tucunduva,,GRUPO_AUSENTE
+5260,5257,NovonnIk® em pó chocolate,Tucunduva,,GRUPO_AUSENTE
+5283,5280,Nutilis Aqua,INSA,,GRUPO_AUSENTE
+5284,5281,Nutilis Fruit,INSA,,GRUPO_AUSENTE
+5285,5282,Nutilis Powder,INSA,,GRUPO_AUSENTE
+5286,5283,Nutison Avanced Protison,INSA,,GRUPO_AUSENTE
+5287,5284,Nutren Active sabor banana - Nestlé®,Tucunduva,,GRUPO_AUSENTE
+5288,5285,Nutren Active sabor baunilha - Nestlé®,Tucunduva,,GRUPO_AUSENTE
+5289,5286,Nutren Active sabor chocolate - Nestlé®,Tucunduva,,GRUPO_AUSENTE
+5290,5287,Nutren Active sabor morango - Nestlé®,Tucunduva,,GRUPO_AUSENTE
+5291,5288,Nutren kids sabor baunilha - Nestlé®,Tucunduva,,GRUPO_AUSENTE
+5292,5289,Nutren kids sabor chocolate - Nestlé®,Tucunduva,,GRUPO_AUSENTE
+5293,5290,Nutren kids sabor chocolate - Nestlé®,Tucunduva,,GRUPO_AUSENTE
+5294,5291,Nutren Senior líquido - Nestlé®,Tucunduva,,GRUPO_AUSENTE
+5295,5292,Nutren Senior pó - Nestlé®,Tucunduva,,GRUPO_AUSENTE
+5296,5293,Nutrison,INSA,,GRUPO_AUSENTE
+5297,5294,Nutrison Advanced Cubison,INSA,,GRUPO_AUSENTE
+5298,5295,Nutrison Advanced Diason,INSA,,GRUPO_AUSENTE
+5299,5296,Nutrison Advanced Peptisorb,INSA,,GRUPO_AUSENTE
+5300,5297,Nutrison Advanced Peptisorb Powder,INSA,,GRUPO_AUSENTE
+5301,5298,Nutrison Energy,INSA,,GRUPO_AUSENTE
+5302,5299,Nutrison MultiFibre,INSA,,GRUPO_AUSENTE
+5303,5300,Nutrison Protein Plus,INSA,,GRUPO_AUSENTE
+5304,5301,Nutrison Protein Plus MultiFibre,INSA,,GRUPO_AUSENTE
+5386,5383,Ossada não especificada,IBGE,,GRUPO_AUSENTE
+5387,5384,Ossada não especificada cozido(a),IBGE,,GRUPO_AUSENTE
+5388,5385,Ossada não especificada refogado(a),IBGE,,GRUPO_AUSENTE
+5389,5386,Ossada não especificada sopa,IBGE,,GRUPO_AUSENTE
+5399,5396,Ovinhos de amendoim - Fritex®,Tucunduva,,GRUPO_AUSENTE
+5491,5488,Pacova,IBGE,,GRUPO_AUSENTE
+5492,5489,Paella,Tucunduva,,GRUPO_AUSENTE
+5493,5490,Pãezinhos especiais fofinhos - Seven Boys,Tucunduva,,GRUPO_AUSENTE
+5506,5503,Palmiers Pura Vida Integrais 125g,INSA,,GRUPO_AUSENTE
+5694,5691,Papas multicereias,INSA,,GRUPO_AUSENTE
+5714,5711,Paraguai refrigerante light,IBGE,,GRUPO_AUSENTE
+5715,5712,Paraguai refrigerante tradicional,IBGE,,GRUPO_AUSENTE
+5766,5763,Pastilha,IBGE,,GRUPO_AUSENTE
+5767,5764,Pastilha elástica,INSA,,GRUPO_AUSENTE
+5768,5765,Pat (média diferentes sabores),TBCA,,GRUPO_AUSENTE
+5769,5766,Pataua,IBGE,,GRUPO_AUSENTE
+5774,5771,Paté Vegetal De Cogumelos Pura Vida 100g,INSA,,GRUPO_AUSENTE
+5775,5772,Paté Vegetal Piment Verde Pura Vida 100g,INSA,,GRUPO_AUSENTE
+5798,5795,Paulista assado(a),IBGE,,GRUPO_AUSENTE
+5799,5796,Paulista cozido(a),IBGE,,GRUPO_AUSENTE
+5800,5797,Pavê de amendoim,Tucunduva,,GRUPO_AUSENTE
+5801,5798,Pave de qualquer sabor,IBGE,,GRUPO_AUSENTE
+6019,6016,Pele de porco preparada (pururuca),IBGE,,GRUPO_AUSENTE
+6020,6017,Penne Integral Pura Vida 500g,INSA,,GRUPO_AUSENTE
+6029,6026,Peptamen 1.5 líquido - Nestlé®,Tucunduva,,GRUPO_AUSENTE
+6030,6027,Peptamen Junior líquido - Nestlé,Tucunduva,,GRUPO_AUSENTE
+6031,6028,Peptamen Junior pó - Nestlé,Tucunduva,,GRUPO_AUSENTE
+6032,6029,Peptamen pó - Nestlé®,Tucunduva,,GRUPO_AUSENTE
+6033,6030,Peptamen Prebio líquido - Nestlé®,Tucunduva,,GRUPO_AUSENTE
+6034,6031,Peptamen UTI líquido - Nestlé®,Tucunduva,,GRUPO_AUSENTE
+6158,6155,Pêssegos em calda diet - IaPastina®,Tucunduva,,GRUPO_AUSENTE
+6159,6156,Petit gateau de chocolate light congelado - Alibey®,Tucunduva,,GRUPO_AUSENTE
+6160,6157,Petit gateau de chocolate congelado - Alibey®,Tucunduva,,GRUPO_AUSENTE
+6161,6158,Petit pois,IBGE,,GRUPO_AUSENTE
+6162,6159,Petit Suisse chocolate Maxi Chambinho - Nestlé®,Tucunduva,,GRUPO_AUSENTE
+6163,6160,"Petit Suisse maçã, banana, cereais e uva Batavinho - Batavo",Tucunduva,,GRUPO_AUSENTE
+6164,6161,Petit Suisse meio a meio (uvaverde/uva roxa) Danoninho - Danone,Tucunduva,,GRUPO_AUSENTE
+6165,6162,"Petit Suisse morango, maçã e banana Ninho Soleil - Nestlé",Tucunduva,,GRUPO_AUSENTE
+6166,6163,Petit Suisse morango e mel Ninho Soleil - Nestlé®,Tucunduva,,GRUPO_AUSENTE
+6167,6164,Petit Suisse morango Maxi Chambinho Nestlé®,Tucunduva,,GRUPO_AUSENTE
+6168,6165,Petit Suisse morango Ninho Soleil - Nestlé®,Tucunduva,,GRUPO_AUSENTE
+6169,6166,Petit Suisse morango Batavinho - Batavo®,Tucunduva,,GRUPO_AUSENTE
+6170,6167,Petit Suisse morango Chambinho - Nestlé®,Tucunduva,,GRUPO_AUSENTE
+6171,6168,Petit Suisse morango Danoninho - Danone®,Tucunduva,,GRUPO_AUSENTE
+6172,6169,Picadinho com ora-pro-nóbis,Tucunduva,,GRUPO_AUSENTE
+6174,6171,Picadinho de tartaruga,Tucunduva,,GRUPO_AUSENTE
+6188,6185,Picolé de qualquer sabor industrializado,IBGE,,GRUPO_AUSENTE
+6189,6186,Picolé ensacado,IBGE,,GRUPO_AUSENTE
+6207,6204,Pimento grelhado,INSA,,GRUPO_AUSENTE
+6209,6206,Pingado,Tucunduva,,GRUPO_AUSENTE
+6210,6207,Pingo Douro - Elma Chips®,Tucunduva,,GRUPO_AUSENTE
+6228,6225,Pipoca  light,IBGE,,GRUPO_AUSENTE
+6229,6226,Pipoca doce de milho caramelizada - Clac®,Tucunduva,,GRUPO_AUSENTE
+6230,6227,Pipoca doce industrializada,Tucunduva,,GRUPO_AUSENTE
+6231,6228,Pipoca doce ou salgada,IBGE,,GRUPO_AUSENTE
+6232,6229,Pipoca para micro-ondas de manteiga suave - Yoki®,Tucunduva,,GRUPO_AUSENTE
+6233,6230,Pipoca para micro-ondas natural -Yoki®,Tucunduva,,GRUPO_AUSENTE
+6234,6231,Pipoca salgada,Tucunduva,,GRUPO_AUSENTE
+6235,6232,Pipoca salgada com manteiga,Tucunduva,,GRUPO_AUSENTE
+6236,6233,Pipoca sem sal,Tucunduva,,GRUPO_AUSENTE
+6237,6234,"Pipoca, com óleo de soja, sem sal",TACO,,GRUPO_AUSENTE
+6241,6238,Pirulito,IBGE,,GRUPO_AUSENTE
+6288,6285,Polenguinho - Polenghi®,Tucunduva,,GRUPO_AUSENTE
+6289,6286,Polenguinho light - Polenghi®,Tucunduva,,GRUPO_AUSENTE
+6299,6296,Polentina com sal - Quaker®,Tucunduva,,GRUPO_AUSENTE
+6300,6297,Polentina temperada - Quaker®,Tucunduva,,GRUPO_AUSENTE
+6323,6320,Pombo cru,INSA,,GRUPO_AUSENTE
+6348,6345,Pota crua,INSA,,GRUPO_AUSENTE
+6355,6352,Pre Nan - Nestlé®,Tucunduva,,GRUPO_AUSENTE
+6356,6353,Pre Nutrison,INSA,,GRUPO_AUSENTE
+6357,6354,Pregestimil Premium - MeadJohnson®,Tucunduva,,GRUPO_AUSENTE
+6358,6355,PreOp (cirurgicos),INSA,,GRUPO_AUSENTE
+6359,6356,Preparado Vegetal Fermentado à Base de Soja com Frutos Cítricos Pura Vida 4X120g,INSA,,GRUPO_AUSENTE
+6360,6357,Preparado Vegetal Fermentado à Base de Soja com Frutos Vermelhos Pura Vida 4X120g,INSA,,GRUPO_AUSENTE
+6382,6379,Protifar (modular proteína pó),INSA,,GRUPO_AUSENTE
+6383,6380,Puba de fuba,IBGE,,GRUPO_AUSENTE
+6433,6430,Pulmões de porco,INSA,,GRUPO_AUSENTE
+6434,6431,Pupunha,IBGE,,GRUPO_AUSENTE
+6435,6432,Pupunha,Tucunduva,,GRUPO_AUSENTE
+6436,6433,Pupunha (cozida),Tucunduva,,GRUPO_AUSENTE
+6438,6435,"Pupunha, fruto, cozido",TBCA,,GRUPO_AUSENTE
+6449,6446,Purity 69A - Lorenal®,Tucunduva,,GRUPO_AUSENTE
+6450,6447,Pururuca de porco,IBGE,,GRUPO_AUSENTE
+6456,6453,Quarteirão com queijo - McDonald's,Tucunduva,,GRUPO_AUSENTE
+6457,6454,Quarto suíno cozido(a),IBGE,,GRUPO_AUSENTE
+6458,6455,Quebra quebra,IBGE,,GRUPO_AUSENTE
+6459,6456,Quebra queixo,IBGE,,GRUPO_AUSENTE
+6460,6457,Quechimia,IBGE,,GRUPO_AUSENTE
+6595,6592,Queque,INSA,,GRUPO_AUSENTE
+6618,6615,Quicare,IBGE,,GRUPO_AUSENTE
+6636,6633,Quirera lapiana,Tucunduva,,GRUPO_AUSENTE
+6637,6634,Quirera não especificada,IBGE,,GRUPO_AUSENTE
+6638,6635,Rã (cozida),Tucunduva,,GRUPO_AUSENTE
+6639,6636,Rã (crua),Tucunduva,,GRUPO_AUSENTE
+6640,6637,Rabada de boi,IBGE,,GRUPO_AUSENTE
+6670,6667,Rebuçados,INSA,,GRUPO_AUSENTE
+6735,6732,Resource breeze - Nestlé®,Tucunduva,,GRUPO_AUSENTE
+6736,6733,Resource diabetic - Nestlê®,Tucunduva,,GRUPO_AUSENTE
+6737,6734,Resource glutamina - Nestlé®,Tucunduva,,GRUPO_AUSENTE
+6738,6735,Resource just for kids - Nestlé®,Tucunduva,,GRUPO_AUSENTE
+6739,6736,Resource plus - Nestlé®,Tucunduva,,GRUPO_AUSENTE
+6740,6737,Resource protein - Nestlé®,Tucunduva,,GRUPO_AUSENTE
+6741,6738,Resource purê instant carne com ervilhas - Nestlé®,Tucunduva,,GRUPO_AUSENTE
+6742,6739,Resource purê instant peru com champignon - Nestlé®,Tucunduva,,GRUPO_AUSENTE
+6743,6740,Resource Thicken up - Nestlé®,Tucunduva,,GRUPO_AUSENTE
+6744,6741,Resource ultra plus - Nestlé®,Tucunduva,,GRUPO_AUSENTE
+6757,6754,Rissóis Vegetarianos Pura Vida 420g,INSA,,GRUPO_AUSENTE
+6799,6796,Safio cru,INSA,,GRUPO_AUSENTE
+6800,6797,Sagu (cru),Tucunduva,,GRUPO_AUSENTE
+6801,6798,Sagu com vinho tinto,Tucunduva,,GRUPO_AUSENTE
+6802,6799,Sagu de mandioca,IBGE,,GRUPO_AUSENTE
+6803,6800,Sagu de tapioca,IBGE,,GRUPO_AUSENTE
+6804,6801,Sagu sabor morango - Yoki®,Tucunduva,,GRUPO_AUSENTE
+6805,6802,"Sagu, cereja, mistura p/, preparada",TBCA,,GRUPO_AUSENTE
+6806,6803,"Sagu, framboesa, mistura p/, ""Ducoco""",TBCA,,GRUPO_AUSENTE
+6807,6804,"Sagu, framboesa, mistura p/, preparada",TBCA,,GRUPO_AUSENTE
+6808,6805,"Sagu, mandioca, preparado c/ suco de uva, c/ açúcar",TBCA,,GRUPO_AUSENTE
+6809,6806,"Sagu, maracujá, mistura p/, ""Ducoco""",TBCA,,GRUPO_AUSENTE
+6810,6807,"Sagu, mistura p/ (média diferentes sabores)",TBCA,,GRUPO_AUSENTE
+6811,6808,"Sagu, mistura p/, preparada, (média diferentes sabores)",TBCA,,GRUPO_AUSENTE
+6812,6809,"Sagu, morango, mistura p/, ""Ducoco""",TBCA,,GRUPO_AUSENTE
+6813,6810,"Sagu, morango, mistura p/, ""Oetker""",TBCA,,GRUPO_AUSENTE
+6814,6811,"Sagu, morango, mistura p/, preparada",TBCA,,GRUPO_AUSENTE
+6815,6812,"Sagu, uva, mistura p/, ""Ducoco""",TBCA,,GRUPO_AUSENTE
+6816,6813,"Sagu, uva, mistura p/, ""Oetker""",TBCA,,GRUPO_AUSENTE
+6817,6814,"Sagu, uva, mistura p/, preparada",TBCA,,GRUPO_AUSENTE
+6818,6815,Sake mirin®,Tucunduva,,GRUPO_AUSENTE
+6858,6855,Salaminho,IBGE,,GRUPO_AUSENTE
+6859,6856,"Salaminho, porco, ""Sadia""",TBCA,,GRUPO_AUSENTE
+6911,6908,"Salsicha, soja",TBCA,,GRUPO_AUSENTE
+7090,7087,Sangue de porco,INSA,,GRUPO_AUSENTE
+7091,7088,Sapateira crua,INSA,,GRUPO_AUSENTE
+7092,7089,Sapoti,IBGE,,GRUPO_AUSENTE
+7123,7120,Sarolho,IBGE,,GRUPO_AUSENTE
+7124,7121,Sarrabulho,IBGE,,GRUPO_AUSENTE
+7127,7124,Scandishake (fibrose quística),INSA,,GRUPO_AUSENTE
+7128,7125,Schimier de cana,IBGE,,GRUPO_AUSENTE
+7129,7126,Schimier de fruta (exceto de cana),IBGE,,GRUPO_AUSENTE
+7133,7130,Sembereba,Tucunduva,,GRUPO_AUSENTE
+7160,7157,Shimeji,Tucunduva,,GRUPO_AUSENTE
+7161,7158,Shitake,Tucunduva,,GRUPO_AUSENTE
+7173,7170,Skyr to go Baunilha Milbona 100g,INSA,,GRUPO_AUSENTE
+7174,7171,Skyr to go Mirtilo Milbona 100g,INSA,,GRUPO_AUSENTE
+7175,7172,Skyr to go Morango Milbona 100g,INSA,,GRUPO_AUSENTE
+7182,7179,Sobremesa de Origem Vegetal Ananás Pura Vida 2x90g (GELATINA),INSA,,GRUPO_AUSENTE
+7183,7180,Sobremesa de Origem Vegetal Frutos vermelhos Pura Vida 2x90g (GELATINA),INSA,,GRUPO_AUSENTE
+7184,7181,Sobremesa de Origem Vegetal Morango Pura Vida 2x90g (GELATINA),INSA,,GRUPO_AUSENTE
+7185,7182,Sobremesa de qualquer tipo (exceto infantil),IBGE,,GRUPO_AUSENTE
+7213,7210,"Soja, proteína, texturizada",TBCA,,GRUPO_AUSENTE
+7214,7211,"Soja, queijo (tofu)",TACO,,GRUPO_AUSENTE
+7215,7212,"Soja, tofu",TBCA,,GRUPO_AUSENTE
+7216,7213,Solda,IBGE,,GRUPO_AUSENTE
+7217,7214,Solha crua,INSA,,GRUPO_AUSENTE
+7218,7215,Solha frita,INSA,,GRUPO_AUSENTE
+7219,7216,Solha grelhada,INSA,,GRUPO_AUSENTE
+7371,7368,Sportade® tangerina,Tucunduva,,GRUPO_AUSENTE
+7385,7382,Stimulance (modular de fibra pó),INSA,,GRUPO_AUSENTE
+7390,7387,Sucedâneo de café (pó) (2 marcas),INSA,,GRUPO_AUSENTE
+7391,7388,Sucedâneo de café (pó) com 20% de café,INSA,,GRUPO_AUSENTE
+7478,7475,Sultanas,INSA,,GRUPO_AUSENTE
+7493,7490,Suprinutri Sênior sabor baunilha - Sanavita®,Tucunduva,,GRUPO_AUSENTE
+7501,7498,Sustagem,IBGE,,GRUPO_AUSENTE
+7502,7499,Sustagem sabor banana - Sustagem®,Tucunduva,,GRUPO_AUSENTE
+7503,7500,Tablete de chocolate,IBGE,,GRUPO_AUSENTE
+7507,7504,Taff Man-E - Yakult®,Tucunduva,,GRUPO_AUSENTE
+7515,7512,Tamarilho sem pele,INSA,,GRUPO_AUSENTE
+7523,7520,Tamuatá no tucupi,Tucunduva,,GRUPO_AUSENTE
+7531,7528,Tanja,IBGE,,GRUPO_AUSENTE
+7541,7538,Tareco,IBGE,,GRUPO_AUSENTE
+7550,7547,Tempero Fonclor - Maggi,Tucunduva,,GRUPO_AUSENTE
+7551,7548,Tempero Grill - Maggi®,Tucunduva,,GRUPO_AUSENTE
+7552,7549,Tempero Sazón - Ajinomoto®,Tucunduva,,GRUPO_AUSENTE
+7553,7550,"Tempero, base de sal",TBCA,,GRUPO_AUSENTE
+7557,7554,Terere,IBGE,,GRUPO_AUSENTE
+7558,7555,Ti kuwa,Tucunduva,,GRUPO_AUSENTE
+7559,7556,Tic Tac® menta,Tucunduva,,GRUPO_AUSENTE
+7567,7564,Tofu,IBGE,,GRUPO_AUSENTE
+7568,7565,Tofu,Tucunduva,,GRUPO_AUSENTE
+7569,7566,Tofu frito com azeite,INSA,,GRUPO_AUSENTE
+7570,7567,Tofu frito com óleo de milho,INSA,,GRUPO_AUSENTE
+7571,7568,Tofu simples,INSA,,GRUPO_AUSENTE
+7591,7588,Tonyu maçã - Yakult®,Tucunduva,,GRUPO_AUSENTE
+7614,7611,Torrão de amendoim,IBGE,,GRUPO_AUSENTE
+7615,7612,Torresmo,IBGE,,GRUPO_AUSENTE
+7616,7613,Torrone,IBGE,,GRUPO_AUSENTE
+7617,7614,Torrone Montevergine®,Tucunduva,,GRUPO_AUSENTE
+7651,7648,Tortitas Pura Vida Arroz com Sal 130g,INSA,,GRUPO_AUSENTE
+7652,7649,Tortitas Pura Vida Arroz Sem Sal 130g,INSA,,GRUPO_AUSENTE
+7653,7650,Tortitas Pura Vida Milho 130g,INSA,,GRUPO_AUSENTE
+7654,7651,"Tortitas Pura Vida Milho Com Chocolate Negro 4x22,6g",INSA,,GRUPO_AUSENTE
+7655,7652,Torta de morango,Tucunduva,,GRUPO_AUSENTE
+7656,7653,Torta mousse de chocolate com raspas de chocolate Miss Daisy - Sadia,Tucunduva,,GRUPO_AUSENTE
+7657,7654,Torta mousse de Iimão Miss Daisy - Sadia®,Tucunduva,,GRUPO_AUSENTE
+7682,7679,"Trio cereais, morango com chocolate light - Grain Mills®",Tucunduva,,GRUPO_AUSENTE
+7683,7680,"Trio light cereais, ayela - e castanha com chocolate light - Grain Mills®",Tucunduva,,GRUPO_AUSENTE
+7701,7698,Túbera (trufa) crua,INSA,,GRUPO_AUSENTE
+7706,7703,"Tucunaré, filé, congelado, cru",TACO,Pescados e frutos do mar,NUTRIENTE_INVALIDO:Carboidrato
+7712,7709,Uaçai,IBGE,,GRUPO_AUSENTE
+7713,7710,Udon,Tucunduva,,GRUPO_AUSENTE
+7740,7737,Uxi,IBGE,,GRUPO_AUSENTE
+7802,7799,Vinagreira,IBGE,,GRUPO_AUSENTE
+7803,7800,Vinagrete,IBGE,,GRUPO_AUSENTE
+7858,7855,Vivonex plus - Nestlé,Tucunduva,,GRUPO_AUSENTE
+7862,7859,Waffles belgian congelados - Guli Guli®,Tucunduva,,GRUPO_AUSENTE

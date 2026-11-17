@@ -1,3 +1,5 @@
+import { InstitutionalDocumentIdentity } from "./institutional-document-identity";
+
 export function DocumentFooter() {
   return (
     <footer
@@ -5,10 +7,8 @@ export function DocumentFooter() {
       data-html2canvas-ignore="true"
     >
       <div className="flex items-end justify-between gap-4 text-[8px] leading-4 text-[#60746d]">
-        <p className="font-black text-[#23483b]">
-          Clínica SV · Sistema Integrado SV
-        </p>
-        <p className="text-right">
+        <InstitutionalDocumentIdentity className="max-w-[68%]" compact />
+        <p className="max-w-[30%] text-right">
           Plano individualizado e sujeito a ajustes conforme evolução clínica.
         </p>
       </div>

@@ -1,10 +1,17 @@
 import Link from "next/link";
 
+import { AttendanceStateActions } from "@/components/attendance/attendance-state-actions";
 import { CheckIcon } from "@/components/ui/icons";
 import type {
   InitialConsultationStep,
   RegisteredPatientEntry,
 } from "@/features/patient-registration";
+import { clinicalAttendanceTypeLabel } from "@/features/patient-registration/attendance-presentation";
+import {
+  isVisibleNutritionClinicalFlowStep,
+  nutritionClinicalFlowProgress,
+  type NutritionClinicalFlowStep,
+} from "@/features/nutrition-clinical-flow";
 
 const sexLabels = {
   FEMALE: "Feminino",
@@ -115,21 +122,29 @@ function ModuleStatus({
 }
 
 export function InitialConsultationProgress({
+  flow = [],
   patient,
   registered,
 }: {
+  flow?: readonly NutritionClinicalFlowStep[];
   patient: RegisteredPatientEntry;
   registered: boolean;
 }) {
-  const completedSteps = patient.steps.filter(
-    (step) => step.status === "COMPLETED",
-  ).length;
-  const totalSteps = patient.steps.length;
-  const progressPercent = totalSteps
-    ? Math.round((completedSteps / totalSteps) * 100)
-    : 0;
-  const collectionCompleted =
-    totalSteps > 0 && completedSteps === totalSteps;
+  const activeAttendance = patient.activeAttendance;
+  const historicalAttendance = patient.historicalAttendance;
+  const activeFlow = flow.filter(isVisibleNutritionClinicalFlowStep);
+  const currentAttendanceClinicalFlow = activeFlow.filter(
+    (step) => step.id !== "PATIENT_REGISTRATION",
+  );
+  const progressPercent = nutritionClinicalFlowProgress(flow);
+  const collectionCompleted = progressPercent === 100;
+  const displayedSteps: readonly InitialConsultationStep[] = currentAttendanceClinicalFlow.length
+    ? currentAttendanceClinicalFlow.map((step) => ({
+        key: "ASSESSMENT",
+        label: step.title,
+        status: step.status === "COMPLETED" ? "COMPLETED" : "PENDING",
+      }))
+    : patient.steps.filter((step) => step.key !== "PATIENT_REGISTRATION");
 
   return (
     <div className="space-y-5">
@@ -165,9 +180,20 @@ export function InitialConsultationProgress({
               </p>
             </div>
 
-            <strong className="w-fit rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-base font-black tracking-wide text-white">
-              {patient.clinicalCode}
-            </strong>
+            <div className="flex w-full flex-col items-stretch gap-2 sm:w-auto sm:min-w-64 sm:items-end">
+              <strong className="w-fit rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-base font-black tracking-wide text-white">
+                {patient.clinicalCode}
+              </strong>
+              <p className="mt-1 text-[10px] font-black uppercase tracking-[0.16em] text-emerald-200">
+                Ação principal
+              </p>
+              <Link
+                className="inline-flex min-h-12 w-full items-center justify-center rounded-xl border border-amber-200 bg-amber-300 px-5 text-center text-sm font-black text-emerald-950 shadow-sm transition hover:bg-amber-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-emerald-900"
+                href={`/pacientes/${patient.patientId}/evolucao-avaliacoes`}
+              >
+                Evolução e comparativos
+              </Link>
+            </div>
           </div>
         </div>
 
@@ -176,18 +202,26 @@ export function InitialConsultationProgress({
             <RecordField label="Idade" value={`${patient.age} anos`} />
             <RecordField label="Sexo" value={sexLabels[patient.sex]} />
             <RecordField label="Telefone" value={patient.phone} />
-            <RecordField label="Tipo de atendimento" value="Consulta inicial" />
+            <RecordField
+              label="Situação do atendimento"
+              value={activeAttendance ? activeAttendance.status === "DRAFT" ? "Preparado" : "Em andamento" : historicalAttendance ? "Concluído" : "Sem atendimento"}
+            />
           </dl>
 
-          <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
+          {activeAttendance ? <div className="mt-5 rounded-xl border border-emerald-200 bg-emerald-50/60 p-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.12em] text-emerald-700">
-                  Situação do atendimento
+                  Atendimento atual
                 </p>
                 <h2 className="mt-1 text-lg font-black text-slate-950">
-                  Coleta clínica em andamento
+                  {clinicalAttendanceTypeLabel(activeAttendance.clinicalType)}
                 </h2>
+                <p className="mt-1 text-sm text-slate-600">
+                  {activeAttendance.status === "DRAFT"
+                    ? `Preparado em ${new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(activeAttendance.preparedAt))}. A consulta ainda não foi iniciada.`
+                    : `Em andamento desde ${new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(activeAttendance.startedAt!))}`}
+                </p>
               </div>
 
               <span className="w-fit rounded-full bg-emerald-100 px-3 py-1.5 text-xs font-black text-emerald-800">
@@ -208,26 +242,30 @@ export function InitialConsultationProgress({
                 style={{ width: `${progressPercent}%` }}
               />
             </div>
+          </div> : (
+            <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <p className="text-xs font-black uppercase tracking-[0.12em] text-slate-500">Atendimento atual</p>
+              <h2 className="mt-1 text-lg font-black text-slate-950">Nenhum atendimento registrado</h2>
+              <p className="mt-1 text-sm text-slate-600">Os dados cadastrais permanentes continuam concluídos e disponíveis.</p>
+            </div>
+          )}
 
-            <p className="mt-3 text-xs font-semibold text-slate-600">
-              Atendimento iniciado em{" "}
-              {new Intl.DateTimeFormat("pt-BR", {
-                dateStyle: "short",
-                timeStyle: "short",
-              }).format(new Date(patient.attendanceStartedAt))}
-            </p>
-          </div>
+          {historicalAttendance ? <section aria-labelledby="previous-attendance-title" className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
+            <p className="text-xs font-black uppercase tracking-[0.12em] text-slate-500">Histórico anterior</p>
+            <h2 className="mt-1 text-base font-black text-slate-900" id="previous-attendance-title">{clinicalAttendanceTypeLabel(historicalAttendance.clinicalType)} · Atendimento concluído</h2>
+            <p className="mt-1 text-sm text-slate-600">Iniciado em {new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(historicalAttendance.startedAt ?? historicalAttendance.preparedAt))}. Visualização histórica em modo somente leitura; o registro anterior permanece preservado.</p>
+          </section> : null}
         </div>
       </section>
 
-      <section
+      {activeAttendance ? <section
         aria-labelledby="collection-progress-title"
         className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5"
       >
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">
-              Consulta inicial
+              {clinicalAttendanceTypeLabel(activeAttendance.clinicalType)}
             </p>
             <h2
               className="mt-1 text-lg font-black text-slate-950"
@@ -237,22 +275,40 @@ export function InitialConsultationProgress({
             </h2>
           </div>
 
-          <Link
-            className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#12664f] px-5 text-sm font-black text-white transition hover:bg-[#0a4938] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
-            href={`/pacientes/${patient.patientId}/continuar`}
-          >
-            Continuar atendimento
-          </Link>
+          {activeAttendance.status === "DRAFT" ? (
+            <AttendanceStateActions attendanceId={activeAttendance.id} patientId={patient.patientId} />
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              <Link
+                className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#12664f] px-5 text-sm font-black text-white transition hover:bg-[#0a4938] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
+                href={`/pacientes/${patient.patientId}/continuar`}
+              >
+                Continuar atendimento
+              </Link>
+              <Link
+                className="inline-flex min-h-11 items-center justify-center rounded-xl border border-sky-200 bg-sky-50 px-5 text-sm font-black text-sky-800 transition hover:bg-sky-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2"
+                href={`/atendimentos?action=finalize&attendanceId=${encodeURIComponent(activeAttendance.id)}&patientId=${encodeURIComponent(patient.patientId)}`}
+              >
+                Finalizar consulta
+              </Link>
+            </div>
+          )}
         </div>
 
-        <ol className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {patient.steps.map((step) => (
-            <Step key={step.key} step={step} />
+        <p className="mt-5 rounded-xl border border-sky-200 bg-sky-50 px-3.5 py-3 text-sm font-semibold text-sky-900">
+          <strong>Cadastro permanente reutilizado.</strong> Os dados permanecem
+          disponíveis no Prontuário Mestre e não compõem o progresso clínico
+          deste atendimento.
+        </p>
+
+        <ol className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {displayedSteps.map((step, index) => (
+            <Step key={`${step.key}-${index}`} step={step} />
           ))}
         </ol>
-      </section>
+      </section> : null}
 
-      <section
+      {activeAttendance?.status === "IN_PROGRESS" ? <section
         aria-labelledby="inheritance-status-title"
         className="rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:p-5"
       >
@@ -292,7 +348,7 @@ export function InitialConsultationProgress({
             ready={collectionCompleted}
           />
         </div>
-      </section>
+      </section> : null}
     </div>
   );
 }

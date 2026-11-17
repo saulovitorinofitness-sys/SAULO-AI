@@ -19,7 +19,7 @@ export function heightMetersToCentimeters(
   heightMeters: number | undefined,
 ): number | undefined {
   if (heightMeters === undefined || heightMeters <= 0) return undefined;
-  return Math.round(heightMeters * 10_000) / 100;
+  return Number((heightMeters * 100).toFixed(10));
 }
 
 export function calculateBmi(
@@ -41,11 +41,36 @@ export function calculateBmi(
   return Math.round((bmi + Number.EPSILON) * 100) / 100;
 }
 
+export type AnthropometryMeasurementErrors = Partial<
+  Record<"weightKg" | "heightCm", string>
+>;
+
+export function validateAnthropometryMeasurements(input: {
+  weightKg?: number;
+  heightCm?: number;
+}): AnthropometryMeasurementErrors {
+  const errors: AnthropometryMeasurementErrors = {};
+
+  if (input.weightKg === undefined) {
+    errors.weightKg = "Informe o peso.";
+  } else if (!Number.isFinite(input.weightKg) || input.weightKg <= 0) {
+    errors.weightKg = "O peso deve ser um número maior que zero.";
+  }
+
+  if (input.heightCm === undefined) {
+    errors.heightCm = "Informe a altura.";
+  } else if (!Number.isFinite(input.heightCm) || input.heightCm <= 0) {
+    errors.heightCm = "A altura deve ser um número maior que zero.";
+  }
+
+  return errors;
+}
+
 export function formatLocalizedNumber(value: number | undefined) {
   if (value === undefined || !Number.isFinite(value)) return "";
 
   return new Intl.NumberFormat("pt-BR", {
-    maximumFractionDigits: 2,
+    maximumFractionDigits: 10,
     useGrouping: false,
   }).format(value);
 }
@@ -57,7 +82,7 @@ export function formatHeightFromCentimeters(
     return "";
   }
 
-  return (heightCm / 100).toFixed(2).replace(".", ",");
+  return formatLocalizedNumber(heightCm / 100);
 }
 
 export function formatBmi(value: number | undefined) {

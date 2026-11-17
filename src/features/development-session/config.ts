@@ -91,15 +91,10 @@ export function developmentProfessionalFromUserId(userId: string) {
 }
 
 export function resolveDevelopmentAccess(
-  request: Request,
+  _request: Request,
   fallback: FrontendAccessSnapshot,
 ) {
-  if (process.env.NODE_ENV !== "development") return fallback;
-
-  const userId = request.headers.get(DEVELOPMENT_USER_HEADER);
-  return developmentProfessionalFromUserId(
-    userId ?? fallback.user.id,
-  ).access;
+  return fallback;
 }
 
 export function canDevelopmentUserAccess(
@@ -133,8 +128,8 @@ export function canDevelopmentUserOperatePostural(
   professional: DevelopmentProfessional,
 ) {
   return (
-    professional.user.id ===
-    BUILT_IN_IDS.users.mariaDeLourdesGomes
+    professional.user.id === BUILT_IN_IDS.users.sauloXavierVitorino ||
+    professional.user.id === BUILT_IN_IDS.users.mariaDeLourdesGomes
   );
 }
 

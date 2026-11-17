@@ -80,6 +80,7 @@ test("não retorna valores inválidos quando faltam dados", () => {
     sex: "FEMALE",
     ageYears: 40,
     weightKg: 65,
+    protocol: "MIFFLIN_ST_JEOR",
   });
 
   assert.equal(result.basalMetabolicRate, undefined);

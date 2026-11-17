@@ -1,0 +1,412 @@
+enum ProfessionalServiceProviderType {
+  LEGAL_ENTITY
+  INDIVIDUAL
+}
+
+enum ProfessionalServiceProviderStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum ProfessionalCouncil {
+  CRN
+  CREF
+}
+
+enum ProfessionalRegistrationStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum ProfessionalServiceKind {
+  ACADEMY_MEMBERSHIP
+  ACADEMY_SERVICE
+  NUTRITION_CONSULTATION
+  NUTRITION_FOLLOW_UP
+  NUTRITION_STRATEGY
+  NUTRITION_PLAN
+  POSTURAL_ASSESSMENT
+  PERSONAL_TRAINING
+  STRENGTH_TRAINING_PLAN
+  RUNNING_PLAN
+  CYCLING_PLAN
+  PHYSICAL_FOLLOW_UP
+}
+
+enum ProfessionalServiceChargeStatus {
+  OPEN
+  PARTIALLY_PAID
+  PAID
+  CANCELLED
+}
+
+enum ProfessionalServiceReceiptStatus {
+  DRAFT
+  ISSUED
+  CANCELLED
+  REFUNDED
+}
+
+enum ProfessionalServiceSignatureMode {
+  ELECTRONIC
+  MANUAL
+}
+
+enum ProfessionalServiceCpfVisibility {
+  MASKED
+  FULL
+}
+
+enum ProfessionalServiceReceiptEventType {
+  DRAFT_CREATED
+  ISSUED
+  CORRECTION_ISSUED
+  CANCELLED
+  REFUNDED
+}
+
+enum ProfessionalServiceFinancialEntryClaimSource {
+  LEGACY_SERVICE_RECEIPT
+  PROFESSIONAL_SERVICE_CHARGE
+}
+
+model ProfessionalServiceLegalProvider {
+  id                  String                            @id @default(uuid()) @db.Uuid
+  type                ProfessionalServiceProviderType
+  businessUnitId      String?                           @unique @db.Uuid
+  userId              String?                           @unique @db.Uuid
+  employeeId          String?                           @db.Uuid
+  taxIdType           EmployerTaxIdType?
+  taxIdHash           String?                           @db.VarChar(64)
+  taxIdEncrypted      String?
+  addressStreet       String?                           @db.VarChar(180)
+  addressNumber       String?                           @db.VarChar(30)
+  addressComplement   String?                           @db.VarChar(120)
+  addressNeighborhood String?                           @db.VarChar(120)
+  addressPostalCode   String?                           @db.VarChar(8)
+  addressCity         String?                           @db.VarChar(120)
+  addressState        String?                           @db.Char(2)
+  status              ProfessionalServiceProviderStatus @default(ACTIVE)
+  createdAt           DateTime                          @default(now())
+  updatedAt           DateTime                          @updatedAt
+
+  businessUnit    BusinessUnit?                          @relation("ProfessionalServiceBusinessProvider", fields: [businessUnitId], references: [id], onDelete: Restrict)
+  user            User?                                  @relation("ProfessionalServiceIndividualProviderUser", fields: [userId], references: [id], onDelete: Restrict)
+  employee        Employee?                              @relation("ProfessionalServiceIndividualProvider", fields: [employeeId], references: [id], onDelete: Restrict)
+  commercialUnits ProfessionalServiceCommercialUnit[]
+  charges         ProfessionalServiceCharge[]
+  chargeItems     ProfessionalServiceChargeItem[]
+  series          ProfessionalServiceReceiptSeries[]
+  payments        ProfessionalServicePayment[]
+  paymentItems    ProfessionalServicePaymentAllocation[]
+  receipts        ProfessionalServiceReceipt[]
+  refunds         ProfessionalServiceRefund[]
+
+  @@index([type, status])
+  @@index([employeeId])
+}
+
+model ProfessionalServiceCommercialUnit {
+  id              String   @id @default(uuid()) @db.Uuid
+  legalProviderId String   @db.Uuid
+  code            String   @db.VarChar(80)
+  commercialName  String   @db.VarChar(180)
+  active          Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  legalProvider ProfessionalServiceLegalProvider @relation(fields: [legalProviderId], references: [id], onDelete: Restrict)
+  chargeItems   ProfessionalServiceChargeItem[]
+
+  @@unique([legalProviderId, code])
+  @@unique([id, legalProviderId])
+  @@index([legalProviderId, active])
+}
+
+model ServiceProfessionalRegistration {
+  id                    String                         @id @default(uuid()) @db.Uuid
+  userId                String                         @db.Uuid
+  council               ProfessionalCouncil
+  registrationHash      String                         @db.VarChar(64)
+  registrationEncrypted String
+  regionCode            String                         @db.Char(2)
+  status                ProfessionalRegistrationStatus @default(ACTIVE)
+  createdAt             DateTime                       @default(now())
+  updatedAt             DateTime                       @updatedAt
+
+  user       User                                @relation("ServiceProfessionalRegistrationOwner", fields: [userId], references: [id], onDelete: Restrict)
+  executions ProfessionalServiceChargeExecutor[]
+
+  @@unique([userId, council, registrationHash, regionCode])
+  @@unique([id, userId])
+  @@index([council, status])
+}
+
+model ProfessionalServiceCharge {
+  id               String                          @id @default(uuid()) @db.Uuid
+  legalProviderId  String                          @db.Uuid
+  masterRecordId   String                          @db.Uuid
+  financialEntryId String?                         @unique @db.Uuid
+  status           ProfessionalServiceChargeStatus @default(OPEN)
+  subtotal         Decimal                         @db.Decimal(14, 2)
+  discount         Decimal                         @default(0) @db.Decimal(14, 2)
+  surcharge        Decimal                         @default(0) @db.Decimal(14, 2)
+  amountDue        Decimal                         @db.Decimal(14, 2)
+  createdByUserId  String                          @db.Uuid
+  createdAt        DateTime                        @default(now())
+  updatedAt        DateTime                        @updatedAt
+
+  legalProvider       ProfessionalServiceLegalProvider        @relation(fields: [legalProviderId], references: [id], onDelete: Restrict)
+  masterRecord        MasterRecord                            @relation("ProfessionalServiceCustomer", fields: [masterRecordId], references: [id], onDelete: Restrict)
+  financialEntry      FinancialEntry?                         @relation("ProfessionalServiceFinancialEntry", fields: [financialEntryId], references: [id], onDelete: Restrict)
+  createdBy           User                                    @relation("ProfessionalServiceChargeCreator", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  items               ProfessionalServiceChargeItem[]
+  payments            ProfessionalServicePayment[]
+  financialEntryClaim ProfessionalServiceFinancialEntryClaim?
+
+  @@unique([id, legalProviderId])
+  @@index([legalProviderId, status, createdAt])
+  @@index([masterRecordId, createdAt])
+  @@index([createdByUserId, createdAt])
+}
+
+model ProfessionalServiceFinancialEntryClaim {
+  financialEntryId            String                                       @id @db.Uuid
+  source                      ProfessionalServiceFinancialEntryClaimSource
+  legacyServiceReceiptId      String?                                      @unique @db.Uuid
+  professionalServiceChargeId String?                                      @unique @db.Uuid
+  createdAt                   DateTime                                     @default(now())
+
+  financialEntry            FinancialEntry             @relation("ProfessionalServiceReceiptFinancialEntryClaim", fields: [financialEntryId], references: [id], onDelete: Restrict)
+  legacyServiceReceipt      ServiceReceipt?            @relation("LegacyServiceReceiptFinancialEntryClaim", fields: [legacyServiceReceiptId], references: [id], onDelete: Restrict)
+  professionalServiceCharge ProfessionalServiceCharge? @relation(fields: [professionalServiceChargeId], references: [id], onDelete: Restrict)
+}
+
+model ProfessionalServiceChargeItem {
+  id                  String                  @id @default(uuid()) @db.Uuid
+  chargeId            String                  @db.Uuid
+  legalProviderId     String                  @db.Uuid
+  commercialUnitId    String?                 @db.Uuid
+  masterRecordEntryId String?                 @db.Uuid
+  kind                ProfessionalServiceKind
+  description         String                  @db.VarChar(500)
+  serviceDate         DateTime                @db.Date
+  grossAmount         Decimal                 @db.Decimal(14, 2)
+  createdAt           DateTime                @default(now())
+
+  charge            ProfessionalServiceCharge              @relation(fields: [chargeId, legalProviderId], references: [id, legalProviderId], onDelete: Restrict)
+  legalProvider     ProfessionalServiceLegalProvider       @relation(fields: [legalProviderId], references: [id], onDelete: Restrict)
+  commercialUnit    ProfessionalServiceCommercialUnit?     @relation(fields: [commercialUnitId, legalProviderId], references: [id, legalProviderId], onDelete: Restrict)
+  masterRecordEntry MasterRecordEntry?                     @relation("ProfessionalServiceSourceEntry", fields: [masterRecordEntryId], references: [id], onDelete: Restrict)
+  executors         ProfessionalServiceChargeExecutor[]
+  allocations       ProfessionalServicePaymentAllocation[]
+
+  @@unique([id, legalProviderId])
+  @@index([chargeId, kind])
+  @@index([legalProviderId, serviceDate])
+  @@index([commercialUnitId])
+  @@index([masterRecordEntryId])
+}
+
+model ProfessionalServiceChargeExecutor {
+  id                         String   @id @default(uuid()) @db.Uuid
+  chargeItemId               String   @db.Uuid
+  professionalUserId         String   @db.Uuid
+  professionalRegistrationId String   @db.Uuid
+  performedActivity          String   @db.VarChar(500)
+  createdAt                  DateTime @default(now())
+
+  chargeItem               ProfessionalServiceChargeItem   @relation(fields: [chargeItemId], references: [id], onDelete: Restrict)
+  professional             User                            @relation("ProfessionalServiceExecutor", fields: [professionalUserId], references: [id], onDelete: Restrict)
+  professionalRegistration ServiceProfessionalRegistration @relation(fields: [professionalRegistrationId, professionalUserId], references: [id, userId], onDelete: Restrict)
+
+  @@unique([chargeItemId, professionalUserId])
+  @@index([professionalUserId, createdAt])
+  @@index([professionalRegistrationId])
+}
+
+model ProfessionalServiceReceiptSeries {
+  id              String   @id @default(uuid()) @db.Uuid
+  legalProviderId String   @db.Uuid
+  code            String   @db.VarChar(40)
+  nextSequence    Int      @default(1)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  legalProvider ProfessionalServiceLegalProvider @relation(fields: [legalProviderId], references: [id], onDelete: Restrict)
+  receipts      ProfessionalServiceReceipt[]
+
+  @@unique([legalProviderId, code])
+  @@unique([id, legalProviderId])
+  @@index([legalProviderId])
+}
+
+model ProfessionalServicePayment {
+  id                    String   @id @default(uuid()) @db.Uuid
+  chargeId              String   @db.Uuid
+  legalProviderId       String   @db.Uuid
+  financialSettlementId String   @unique @db.Uuid
+  receivedAmount        Decimal  @db.Decimal(14, 2)
+  transactionReference  String?  @db.VarChar(120)
+  idempotencyKey        String   @unique @db.VarChar(120)
+  requestSha256         String   @db.VarChar(64)
+  recordedByUserId      String   @db.Uuid
+  recordedAt            DateTime @default(now())
+
+  charge              ProfessionalServiceCharge              @relation(fields: [chargeId, legalProviderId], references: [id, legalProviderId], onDelete: Restrict)
+  legalProvider       ProfessionalServiceLegalProvider       @relation(fields: [legalProviderId], references: [id], onDelete: Restrict)
+  financialSettlement FinancialSettlement                    @relation("ProfessionalServicePaymentSettlement", fields: [financialSettlementId], references: [id], onDelete: Restrict)
+  recordedBy          User                                   @relation("ProfessionalServicePaymentRecorder", fields: [recordedByUserId], references: [id], onDelete: Restrict)
+  allocations         ProfessionalServicePaymentAllocation[]
+  proof               ProfessionalServicePaymentProof?
+  receipts            ProfessionalServiceReceipt[]
+  refunds             ProfessionalServiceRefund[]
+
+  @@unique([id, legalProviderId])
+  @@index([chargeId, recordedAt])
+  @@index([legalProviderId, recordedAt])
+  @@index([recordedByUserId, recordedAt])
+}
+
+model ProfessionalServicePaymentAllocation {
+  id              String  @id @default(uuid()) @db.Uuid
+  paymentId       String  @db.Uuid
+  chargeItemId    String  @db.Uuid
+  legalProviderId String  @db.Uuid
+  amount          Decimal @db.Decimal(14, 2)
+
+  payment       ProfessionalServicePayment       @relation(fields: [paymentId, legalProviderId], references: [id, legalProviderId], onDelete: Restrict)
+  chargeItem    ProfessionalServiceChargeItem    @relation(fields: [chargeItemId, legalProviderId], references: [id, legalProviderId], onDelete: Restrict)
+  legalProvider ProfessionalServiceLegalProvider @relation(fields: [legalProviderId], references: [id], onDelete: Restrict)
+
+  @@unique([paymentId, chargeItemId])
+  @@index([chargeItemId])
+  @@index([legalProviderId])
+}
+
+model ProfessionalServicePaymentProof {
+  id               String   @id @default(uuid()) @db.Uuid
+  paymentId        String   @unique @db.Uuid
+  storageKey       String   @unique @db.VarChar(500)
+  originalFileName String   @db.VarChar(255)
+  mimeType         String   @db.VarChar(80)
+  byteLength       Int
+  sha256           String   @unique @db.VarChar(64)
+  recordedByUserId String   @db.Uuid
+  recordedAt       DateTime @default(now())
+
+  payment    ProfessionalServicePayment           @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+  recordedBy User                                 @relation("ProfessionalServiceProofRecorder", fields: [recordedByUserId], references: [id], onDelete: Restrict)
+  blob       ProfessionalServicePaymentProofBlob?
+
+  @@index([recordedByUserId, recordedAt])
+}
+
+model ProfessionalServicePaymentProofBlob {
+  proofId String @id @db.Uuid
+  content Bytes
+
+  proof ProfessionalServicePaymentProof @relation(fields: [proofId], references: [id], onDelete: Restrict)
+}
+
+model ProfessionalServiceReceipt {
+  id                           String                            @id @default(uuid()) @db.Uuid
+  legalProviderId              String                            @db.Uuid
+  paymentId                    String                            @db.Uuid
+  seriesId                     String                            @db.Uuid
+  sequence                     Int?
+  status                       ProfessionalServiceReceiptStatus  @default(DRAFT)
+  customerCpfHash              String?                           @db.VarChar(64)
+  customerCpfEncrypted         String?
+  receivedAmount               Decimal                           @db.Decimal(14, 2)
+  remainingBalance             Decimal                           @db.Decimal(14, 2)
+  partialPayment               Boolean
+  signatureMode                ProfessionalServiceSignatureMode?
+  electronicSignatureReference String?                           @db.VarChar(500)
+  manualSignatureSpace         Boolean                           @default(true)
+  customerCpfVisibility        ProfessionalServiceCpfVisibility
+  idempotencyKey               String                            @unique @db.VarChar(120)
+  requestSha256                String                            @db.VarChar(64)
+  snapshotPayloadSha256        String?                           @db.VarChar(64)
+  replacesReceiptId            String?                           @unique @db.Uuid
+  issuedAt                     DateTime?
+  issuedByUserId               String?                           @db.Uuid
+  cancelledAt                  DateTime?
+  cancelledByUserId            String?                           @db.Uuid
+  cancellationReason           String?                           @db.VarChar(500)
+  createdByUserId              String                            @db.Uuid
+  createdAt                    DateTime                          @default(now())
+  updatedAt                    DateTime                          @updatedAt
+
+  legalProvider      ProfessionalServiceLegalProvider    @relation(fields: [legalProviderId], references: [id], onDelete: Restrict)
+  payment            ProfessionalServicePayment          @relation(fields: [paymentId, legalProviderId], references: [id, legalProviderId], onDelete: Restrict)
+  series             ProfessionalServiceReceiptSeries    @relation(fields: [seriesId, legalProviderId], references: [id, legalProviderId], onDelete: Restrict)
+  replacesReceipt    ProfessionalServiceReceipt?         @relation("ProfessionalServiceReceiptCorrection", fields: [replacesReceiptId], references: [id], onDelete: Restrict)
+  replacementReceipt ProfessionalServiceReceipt?         @relation("ProfessionalServiceReceiptCorrection")
+  issuedBy           User?                               @relation("ProfessionalServiceReceiptIssuer", fields: [issuedByUserId], references: [id], onDelete: Restrict)
+  cancelledBy        User?                               @relation("ProfessionalServiceReceiptCanceller", fields: [cancelledByUserId], references: [id], onDelete: Restrict)
+  createdBy          User                                @relation("ProfessionalServiceReceiptCreator", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  snapshot           ProfessionalServiceReceiptSnapshot?
+  refund             ProfessionalServiceRefund?
+  events             ProfessionalServiceReceiptEvent[]
+
+  @@unique([seriesId, sequence])
+  @@unique([id, legalProviderId])
+  @@index([legalProviderId, status, issuedAt])
+  @@index([paymentId, status])
+  @@index([createdByUserId, createdAt])
+  @@index([issuedByUserId, issuedAt])
+  @@index([cancelledByUserId, cancelledAt])
+}
+
+model ProfessionalServiceReceiptSnapshot {
+  receiptId         String   @id @db.Uuid
+  schemaVersion     Int
+  payloadCiphertext Bytes
+  encryptionVersion Int
+  payloadSha256     String   @db.VarChar(64)
+  createdAt         DateTime @default(now())
+
+  receipt ProfessionalServiceReceipt @relation(fields: [receiptId], references: [id], onDelete: Restrict)
+
+  @@unique([payloadSha256])
+}
+
+model ProfessionalServiceRefund {
+  id                    String   @id @default(uuid()) @db.Uuid
+  receiptId             String   @unique @db.Uuid
+  originalPaymentId     String   @db.Uuid
+  legalProviderId       String   @db.Uuid
+  financialSettlementId String   @unique @db.Uuid
+  amount                Decimal  @db.Decimal(14, 2)
+  reason                String   @db.VarChar(500)
+  idempotencyKey        String   @unique @db.VarChar(120)
+  requestSha256         String   @db.VarChar(64)
+  recordedByUserId      String   @db.Uuid
+  recordedAt            DateTime @default(now())
+
+  receipt             ProfessionalServiceReceipt       @relation(fields: [receiptId, legalProviderId], references: [id, legalProviderId], onDelete: Restrict)
+  originalPayment     ProfessionalServicePayment       @relation(fields: [originalPaymentId, legalProviderId], references: [id, legalProviderId], onDelete: Restrict)
+  legalProvider       ProfessionalServiceLegalProvider @relation(fields: [legalProviderId], references: [id], onDelete: Restrict)
+  financialSettlement FinancialSettlement              @relation("ProfessionalServiceRefundSettlement", fields: [financialSettlementId], references: [id], onDelete: Restrict)
+  recordedBy          User                             @relation("ProfessionalServiceRefundRecorder", fields: [recordedByUserId], references: [id], onDelete: Restrict)
+
+  @@unique([receiptId, legalProviderId])
+}
+
+model ProfessionalServiceReceiptEvent {
+  id          String                              @id @default(uuid()) @db.Uuid
+  receiptId   String                              @db.Uuid
+  type        ProfessionalServiceReceiptEventType
+  fromStatus  ProfessionalServiceReceiptStatus?
+  toStatus    ProfessionalServiceReceiptStatus
+  actorUserId String                              @db.Uuid
+  reason      String?                             @db.VarChar(500)
+  occurredAt  DateTime                            @default(now())
+
+  receipt ProfessionalServiceReceipt @relation(fields: [receiptId], references: [id], onDelete: Restrict)
+  actor   User                       @relation("ProfessionalServiceReceiptEventActor", fields: [actorUserId], references: [id], onDelete: Restrict)
+
+  @@index([receiptId, occurredAt])
+  @@index([actorUserId, occurredAt])
+}

@@ -1,37 +1,10 @@
 import type { ClinicalCollectionScenarioKey } from "@/features/clinical-collection";
-import {
-  toMealPlanStrategyInheritance,
-  type MealPlanStrategyInheritance,
-} from "@/features/nutrition-strategy/inheritance";
+import { householdMeasureRepository } from "@/features/food-database/household-measure-repository";
 import { nutritionStrategyInheritanceService } from "@/features/nutrition-strategy/inheritance-service";
-import { nutritionStrategyRepository } from "@/features/nutrition-strategy/strategy-repository";
 
 import { assembleMealPlanView } from "./foundation-view";
+import { attachConfirmedIbgeMeasures } from "./food-snapshot";
 import { mealPlanRepository } from "./repository";
-
-async function getDevelopmentStrategy(input: {
-  readonly patientId: string;
-  readonly attendanceId: string;
-  readonly professionalUserId: string;
-}): Promise<MealPlanStrategyInheritance | null> {
-  if (process.env.NODE_ENV !== "development") return null;
-
-  const draft = await nutritionStrategyRepository.get(
-    input.patientId,
-    input.attendanceId,
-  );
-  if (!draft) return null;
-
-  const approvedAt = new Date().toISOString();
-
-  return toMealPlanStrategyInheritance({
-    ...draft,
-    status: "APPROVED",
-    approvedAt,
-    approvedByUserId: input.professionalUserId,
-    approvedByName: draft.responsibleName,
-  });
-}
 
 export const mealPlanFoundationService = {
   async getOrCreate(input: {
@@ -39,31 +12,56 @@ export const mealPlanFoundationService = {
     readonly attendanceId: string;
     readonly scenario: ClinicalCollectionScenarioKey;
     readonly professionalUserId: string;
+    readonly strategySkipped?: boolean;
   }) {
-    const approvedStrategy =
+    const current = await mealPlanRepository.get(
+      input.patientId,
+      input.attendanceId,
+    );
+    const latestDelivered = current
+      ? null
+      : await mealPlanRepository.getLatestDeliveredForAttendanceMasterRecord(
+          input.patientId,
+          input.attendanceId,
+        );
+    const currentStrategy =
       await nutritionStrategyInheritanceService.getForMealPlan(
         input.patientId,
         input.attendanceId,
       );
-    const strategy =
-      approvedStrategy ?? (await getDevelopmentStrategy(input));
+    const strategy = currentStrategy;
 
-    if (!strategy) return null;
+    if (!strategy && !input.strategySkipped) return null;
 
-    const record = await mealPlanRepository.getOrCreateDraft({
-      patientId: input.patientId,
-      attendanceId: input.attendanceId,
-      strategy,
-      professionalUserId: input.professionalUserId,
-    });
+    const record =
+      current ??
+      (strategy
+        ? await mealPlanRepository.getOrCreateDraft({
+            patientId: input.patientId,
+            attendanceId: input.attendanceId,
+            strategy,
+            professionalUserId: input.professionalUserId,
+            sourcePlan: latestDelivered ?? undefined,
+          })
+        : await mealPlanRepository.getOrCreateManualDraft({
+            patientId: input.patientId,
+            attendanceId: input.attendanceId,
+            professionalUserId: input.professionalUserId,
+            sourcePlan: latestDelivered ?? undefined,
+          }));
+
+    const measureOptions = await householdMeasureRepository.findConfirmedOptionsByFoodIds(
+      record.meals.flatMap((meal) => meal.items.map((item) => item.catalogFoodId)),
+    );
+    const hydratedRecord = attachConfirmedIbgeMeasures(record, measureOptions);
 
     return {
       plan: assembleMealPlanView({
-        record,
-        strategy,
+        record: hydratedRecord,
+        strategy: strategy ?? undefined,
         scenario: input.scenario,
       }),
-      record,
+      record: hydratedRecord,
       strategy,
     };
   },

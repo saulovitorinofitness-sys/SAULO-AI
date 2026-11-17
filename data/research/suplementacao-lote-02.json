@@ -1,0 +1,327 @@
+{
+  "batch": {
+    "id": "SUPLEMENTACAO-LOTE-02",
+    "title": "Lote 02 — suplementação para conferência",
+    "status": "IMPORTADO",
+    "preparedAt": "2026-11-06",
+    "candidateCount": 3,
+    "databaseImportAuthorized": true,
+    "databaseImportAuthorizedAt": "2026-11-06",
+    "databaseImportAuthorization": "Autorização explícita do usuário para cadastrar os três candidatos pelo serviço existente da Biblioteca Científica.",
+    "scope": "Preparações simples, não proprietárias e reproduzíveis, pertinentes ao atendimento nutricional habitual.",
+    "regulatoryBasis": "Resolução CFN nº 656/2020 e marco sanitário vigente da Anvisa para suplementos alimentares. Ingredientes, limites, público e advertências devem ser conferidos no produto regularizado antes de eventual uso.",
+    "databaseComparison": {
+      "checkedAt": "2026-11-06",
+      "importedModelsChecked": 234,
+      "manualTestModelsChecked": 1,
+      "manualTestModelName": "TESTE — SEM VALIDADE CLÍNICA",
+      "result": "Nenhum equivalente exato. Há três misturas importadas que contêm ácido fólico, mas nenhuma preparação isolada de 400 µg para o período periconcepcional. Não há preparação equivalente de sulfato ferroso 40 mg de ferro elementar nem de creatina monohidratada 3 g. Ocorrências textuais de 'creatina' dentro de 'pancreatina' foram descartadas como falsos positivos."
+    },
+    "importExecution": {
+      "executedAt": "2026-11-06T23:52:32.560Z",
+      "service": "scientificLibraryService.createMany",
+      "professionalUserId": "00000000-0000-4000-8000-000000000001",
+      "professionalName": "Saulo Xavier Vitorino",
+      "importFileName": "suplementacao-lote-02.json",
+      "before": {
+        "allScientificLibraryRecords": 310,
+        "nutritionFormulaModels": 235,
+        "importedModels": 234,
+        "manualModels": 1,
+        "lot02Models": 0
+      },
+      "after": {
+        "allScientificLibraryRecords": 313,
+        "nutritionFormulaModels": 238,
+        "importedModels": 237,
+        "manualModels": 1,
+        "lot02Models": 3
+      },
+      "created": [
+        {
+          "id": "6c7d616b-3a76-4c0d-a0ff-b6141e8e2a0c",
+          "name": "Ácido fólico 400 µg — período periconcepcional"
+        },
+        {
+          "id": "3742190d-427e-4e8d-8f2a-9f0b43a68322",
+          "name": "Sulfato ferroso — 40 mg de ferro elementar — prevenção na gestação"
+        },
+        {
+          "id": "a9d123f5-710a-49a5-90af-71ffe378281b",
+          "name": "Creatina monohidratada 3 g/dia — uso estudado"
+        }
+      ],
+      "reapplicationCheck": {
+        "created": 0,
+        "duplicates": 3,
+        "finalLot02Models": 3
+      }
+    }
+  },
+  "professionalQualificationPending": {
+    "scope": "Revisão futura do fluxo de Fitoterápicos",
+    "status": "PENDENTE_DE_VERIFICACAO",
+    "note": "Verificar, no momento adequado e sem presumir a situação do usuário, se há habilitação para Fitoterapia registrada no respectivo CRN quando a preparação estiver sujeita ao art. 3º, inciso II, da Resolução CFN nº 680/2021, conforme a retificação publicada em 24/05/2021. A inscrição ativa no CRN, isoladamente, não confirma essa habilitação específica.",
+    "references": [
+      {
+        "title": "Resolução CFN nº 680/2021",
+        "url": "https://www.cfn.org.br/wp-content/uploads/resolucoes/DOU_680.pdf"
+      },
+      {
+        "title": "Retificação da Resolução CFN nº 680/2021",
+        "url": "https://www.cfn.org.br/wp-content/uploads/resolucoes/DOU_680ret.pdf"
+      }
+    ]
+  },
+  "candidates": [
+    {
+      "area": "NUTRITION",
+      "domain": "SUPPLEMENT",
+      "name": "Ácido fólico 400 µg — período periconcepcional",
+      "description": "Suplementação periconcepcional com ácido fólico isolado, na quantidade estudada e recomendada em material oficial brasileiro, para redução do risco de defeitos do tubo neural.",
+      "tags": [
+        "lote externo 02",
+        "ácido fólico",
+        "periconcepcional",
+        "prevenção específica"
+      ],
+      "source": "Ministério da Saúde; Berry et al., New England Journal of Medicine",
+      "professionalNotes": "Candidato para conferência, sem importação. Este item é de prevenção específica no período periconcepcional; não representa tratamento de deficiência documentada de folato e não deve ser extrapolado para gestação de alto risco.",
+      "status": "DRAFT",
+      "externalCode": "EXT-SUP-02-001-FOLIC-400",
+      "classificationSystem": "Suplementação simples — prevenção específica",
+      "sourceVersion": "Caderneta da Gestante, 8ª edição revisada; estudo original de 1999",
+      "attributes": {
+        "Tipo de formulação": "SUPPLEMENT",
+        "Situação nutricional": "PREVENCAO_ESPECIFICA_NAO_DEFICIENCIA_DOCUMENTADA",
+        "Disponibilidade": "MODELO_EDITAVEL_AUTORIZADO_PARA_IMPORTACAO",
+        "Componentes e quantidades": "Ácido fólico — 400 µg por dose",
+        "Forma química": "Ácido fólico",
+        "Apresentação": "Comprimido ou pílula oral contendo 400 µg de ácido fólico isolado; a pílula foi a apresentação do estudo original.",
+        "Forma de uso": "Tomar 400 µg por via oral, uma vez ao dia, iniciando pelo menos 30 dias antes da concepção e mantendo até a 12ª semana de gestação.",
+        "Público": "Mulheres em planejamento reprodutivo e gestantes de baixo risco no início da gestação, no contexto de prevenção primária descrito pelas fontes.",
+        "Cuidados essenciais": "Não reutilizar este modelo para tratar deficiência de folato. Situações de maior risco, uso de medicamentos e antecedentes de defeito do tubo neural exigem avaliação e protocolo próprios. Conferir a apresentação e os limites autorizados para o produto escolhido.",
+        "Diferenciação de uso": "Prevenção periconcepcional; não é um esquema de correção de deficiência documentada.",
+        "Página ou seção": "Caderneta da Gestante: orientação sobre uso diário desde pelo menos 30 dias antes da gravidez até a 12ª semana; Berry et al.: Abstract/Methods.",
+        "Verificação de duplicidade": "Sem equivalente exato nos 234 modelos importados ou no modelo manual de teste. Três modelos importados contêm ácido fólico dentro de misturas com outras finalidades e composições."
+      },
+      "dataNature": "SCIENTIFIC",
+      "editorialStatus": "DRAFT",
+      "publicationType": "OBSERVATIONAL_STUDY",
+      "evidenceCategory": "OBSERVATIONAL_STUDY",
+      "technicalContent": "Ácido fólico isolado 400 µg por dose oral diária. O estudo original utilizou uma pílula contendo 400 µg, do exame pré-nupcial ao fim do primeiro trimestre; a orientação oficial brasileira delimita pelo menos 30 dias antes da concepção até a 12ª semana.",
+      "professionalApplication": "Modelo simples para conferência editorial e profissional no contexto periconcepcional, sem liberação automática.",
+      "targetPopulation": "Mulheres no período periconcepcional e início da gestação, fora de protocolos específicos de alto risco.",
+      "indications": "Finalidade descrita: reduzir o risco de defeitos do tubo neural no período periconcepcional.",
+      "contraindications": "As fontes consultadas não fornecem uma lista completa de contraindicações para um modelo genérico; avaliar individualmente antes do uso.",
+      "precautions": "Distinguir prevenção de tratamento de deficiência; revisar medicamentos, antecedentes obstétricos e condições que alterem o protocolo.",
+      "limitations": "A população e a finalidade são específicas. Não generalizar a dose para tratamento de deficiência, gestação de alto risco ou outras indicações.",
+      "editorialVersion": 1,
+      "references": [
+        {
+          "sourceTitle": "Caderneta da Gestante — 8ª edição revisada",
+          "fullCitation": "Brasil. Ministério da Saúde. Caderneta da Gestante. 8ª ed. rev. Brasília: Ministério da Saúde.",
+          "authors": "Ministério da Saúde",
+          "institutionOrJournal": "Ministério da Saúde",
+          "publicationYear": 2024,
+          "officialUrl": "https://bvsms.saude.gov.br/bvs/publicacoes/caderneta_gestante_8ed_rev.pdf",
+          "publicationType": "TECHNICAL_BOOK_OR_MANUAL",
+          "evidenceCategory": "TECHNICAL_REFERENCE",
+          "language": "Português",
+          "notes": "Fonte oficial para o período de uso. A quantidade de 400 µg é detalhada no programa e em manuais oficiais correlatos do Ministério da Saúde."
+        },
+        {
+          "sourceTitle": "Cuidado pré-natal de rotina — planejamento terapêutico",
+          "fullCitation": "Brasil. Ministério da Saúde. Linhas de Cuidado: pré-natal de baixo risco — planejamento terapêutico.",
+          "authors": "Ministério da Saúde",
+          "institutionOrJournal": "Ministério da Saúde",
+          "officialUrl": "https://linhasdecuidado.saude.gov.br/portal/pre-natal-baixo-risco/unidade-de-atencao-primaria/planejamento-terapeutico/",
+          "publicationType": "PROFESSIONAL_PROTOCOL",
+          "evidenceCategory": "GUIDELINE_OR_CONSENSUS",
+          "language": "Português",
+          "notes": "Fonte oficial para 400 µg/0,4 mg em comprimido ou solução oral nos casos de baixo risco e para a separação explícita dos protocolos de alto risco."
+        },
+        {
+          "sourceTitle": "Prevention of neural-tube defects with folic acid in China",
+          "fullCitation": "Berry RJ, Li Z, Erickson JD, et al. Prevention of neural-tube defects with folic acid in China. N Engl J Med. 1999;341(20):1485-1490.",
+          "authors": "Berry RJ; Li Z; Erickson JD; et al.",
+          "institutionOrJournal": "New England Journal of Medicine",
+          "publicationYear": 1999,
+          "doi": "10.1056/NEJM199911113412001",
+          "pmid": "10559448",
+          "officialUrl": "https://pubmed.ncbi.nlm.nih.gov/10559448/",
+          "publicationType": "OBSERVATIONAL_STUDY",
+          "evidenceCategory": "OBSERVATIONAL_STUDY",
+          "language": "Inglês",
+          "notes": "Estudo original de campanha de saúde pública; não foi ensaio randomizado. Utilizou pílula com 400 µg de ácido fólico isolado uma vez ao dia."
+        }
+      ]
+    },
+    {
+      "area": "NUTRITION",
+      "domain": "SUPPLEMENT",
+      "name": "Sulfato ferroso — 40 mg de ferro elementar — prevenção na gestação",
+      "description": "Suplementação profilática com 40 mg de ferro elementar ao dia para prevenção de anemia em gestantes de baixo risco, da 20ª semana até o terceiro mês pós-parto ou pós-aborto.",
+      "tags": [
+        "lote externo 02",
+        "sulfato ferroso",
+        "ferro elementar",
+        "prevenção na gestação",
+        "MIP"
+      ],
+      "source": "Ministério da Saúde — Linha de Cuidado do pré-natal de baixo risco; Anvisa — RDC nº 107/2016 consolidada",
+      "professionalNotes": "Modelo editável autorizado para importação. Uso profilático específico na gestação de baixo risco; não apresentar 40 mg/dia como tratamento genérico de anemia nem como protocolo para gestação de alto risco.",
+      "status": "DRAFT",
+      "externalCode": "EXT-SUP-02-002-FESO4-40",
+      "classificationSystem": "Protocolo oficial — prevenção de anemia na gestação de baixo risco",
+      "sourceVersion": "Linha de Cuidado do pré-natal de baixo risco; RDC nº 107/2016, redação da RDC nº 242/2018",
+      "attributes": {
+        "Tipo de formulação": "SUPPLEMENT",
+        "Situação nutricional": "PREVENCAO_DE_ANEMIA_NA_GESTACAO_DE_BAIXO_RISCO",
+        "Disponibilidade": "MODELO_EDITAVEL_AUTORIZADO_PARA_IMPORTACAO",
+        "Componentes e quantidades": "Sulfato ferroso — quantidade suficiente para fornecer 40 mg de ferro elementar por comprimido",
+        "Forma química": "Sulfato ferroso; a dose é expressa como ferro elementar",
+        "Apresentação": "Comprimido ou comprimido revestido, uso adulto",
+        "Forma de uso": "Tomar 1 comprimido por via oral, uma vez ao dia, fornecendo 40 mg de ferro elementar, a partir da 20ª semana de gestação até o terceiro mês pós-parto ou pós-aborto. A apresentação oficial orienta uso em jejum.",
+        "Público": "Gestantes de baixo risco, da 20ª semana de gestação ao terceiro mês pós-parto ou pós-aborto.",
+        "Cuidados essenciais": "Uso profilático, não tratamento genérico de anemia. Avaliar doença hepática, úlcera péptica, alcoolismo, insuficiência renal, hipersensibilidade, tolerância e interações. A fonte do medicamento veda o uso para anemia hemolítica em pacientes recebendo transfusão sanguínea e em uso de ferro parenteral.",
+        "Diferenciação de uso": "Prevenção de anemia na gestação de baixo risco; não é esquema de tratamento de anemia diagnosticada.",
+        "Página ou seção": "Linha de Cuidado do pré-natal de baixo risco: Planejamento terapêutico / Sulfato ferroso; RDC nº 107/2016 consolidada: linha 'Sulfato ferroso'.",
+        "Verificação de duplicidade": "Sem equivalente exato nos 234 modelos importados ou no modelo manual de teste. Modelos importados com outros sais ou ferro em misturas não foram considerados duplicatas."
+      },
+      "dataNature": "OFFICIAL_DATABASE",
+      "editorialStatus": "DRAFT",
+      "publicationType": "OFFICIAL_DATABASE",
+      "evidenceCategory": "OFFICIAL_DATABASE",
+      "technicalContent": "Sulfato ferroso em comprimido ou comprimido revestido, equivalente a 40 mg de ferro elementar por unidade. Uso profilático diário da 20ª semana de gestação ao terceiro mês pós-parto ou pós-aborto; a apresentação oficial orienta ingestão em jejum.",
+      "professionalApplication": "Modelo específico de prevenção de anemia em gestantes de baixo risco, com contexto e período preservados da fonte oficial.",
+      "targetPopulation": "Gestantes de baixo risco, da 20ª semana de gestação até o terceiro mês pós-parto ou pós-aborto.",
+      "indications": "Prevenção de anemia durante a gestação de baixo risco e no período pós-parto ou pós-aborto delimitado pela fonte.",
+      "contraindications": "Não utilizar para anemia hemolítica em pacientes recebendo transfusão sanguínea e em uso de ferro por via parenteral; considerar hipersensibilidade e as condições clínicas listadas na fonte oficial.",
+      "precautions": "Doença hepática, úlcera péptica gástrica ou duodenal, alcoolismo e insuficiência renal; evitar uso além de seis meses sem reavaliação.",
+      "limitations": "Não utilizar este modelo como tratamento genérico de anemia, protocolo de alto risco ou recomendação fora do período definido pela fonte.",
+      "editorialVersion": 1,
+      "references": [
+        {
+          "sourceTitle": "Cuidado pré-natal de rotina — planejamento terapêutico",
+          "fullCitation": "Brasil. Ministério da Saúde. Linhas de Cuidado: pré-natal de baixo risco — planejamento terapêutico.",
+          "authors": "Ministério da Saúde",
+          "institutionOrJournal": "Ministério da Saúde",
+          "officialUrl": "https://linhasdecuidado.saude.gov.br/portal/pre-natal-baixo-risco/unidade-de-atencao-primaria/planejamento-terapeutico/",
+          "publicationType": "PROFESSIONAL_PROTOCOL",
+          "evidenceCategory": "GUIDELINE_OR_CONSENSUS",
+          "language": "Português",
+          "notes": "Fonte do público, da finalidade profilática, da quantidade de 40 mg de ferro elementar ao dia e do período da 20ª semana ao terceiro mês pós-parto ou pós-aborto."
+        },
+        {
+          "sourceTitle": "Resolução RDC nº 107, de 5 de setembro de 2016 — texto consolidado",
+          "fullCitation": "Brasil. Agência Nacional de Vigilância Sanitária. Resolução RDC nº 107, de 5 de setembro de 2016. Altera a RDC nº 199/2006 sobre medicamentos de notificação simplificada; linha do sulfato ferroso com redação dada pela RDC nº 242/2018.",
+          "authors": "Agência Nacional de Vigilância Sanitária",
+          "institutionOrJournal": "Ministério da Saúde / Anvisa",
+          "publicationYear": 2016,
+          "officialUrl": "https://anvisalegis.datalegis.net/action/ActionDatalegis.php?acao=abrirTextoAto&cod_menu=9882&cod_modulo=310&link=S&numeroAto=00000107&orgao=RDC%2FDC%2FANVISA%2FMS&seqAto=000&tipo=RDC&valorAno=2016",
+          "publicationType": "OFFICIAL_DATABASE",
+          "evidenceCategory": "OFFICIAL_DATABASE",
+          "language": "Português",
+          "notes": "Texto oficial consolidado consultado para composição, apresentação, posologia adulta, finalidade e advertências da preparação."
+        },
+        {
+          "sourceTitle": "Resolução CFN nº 656/2020",
+          "fullCitation": "Conselho Federal de Nutricionistas. Resolução nº 656, de 15 de junho de 2020. Dispõe sobre a prescrição dietética, pelo nutricionista, de suplementos alimentares.",
+          "authors": "Conselho Federal de Nutricionistas",
+          "institutionOrJournal": "Conselho Federal de Nutricionistas",
+          "publicationYear": 2020,
+          "officialUrl": "https://cfn.org.br/wp-content/uploads/resolucoes/DOU_656.pdf",
+          "publicationType": "GUIDELINE_OR_CONSENSUS",
+          "evidenceCategory": "GUIDELINE_OR_CONSENSUS",
+          "language": "Português",
+          "notes": "Base profissional para prescrição dietética de suplementos e MIP à base de vitaminas e minerais, com avaliação, registro e monitoramento."
+        }
+      ]
+    },
+    {
+      "area": "NUTRITION",
+      "domain": "SUPPLEMENT",
+      "name": "Creatina monohidratada 3 g/dia — uso estudado",
+      "description": "Preparação simples de creatina monohidratada na quantidade de 3 g ao dia; o estudo original observou o uso por 28 dias para elevar gradualmente a creatina muscular em homens adultos, sem estabelecer duração obrigatória universal.",
+      "tags": [
+        "lote externo 02",
+        "creatina monohidratada",
+        "adultos",
+        "uso estudado"
+      ],
+      "source": "Anvisa — Voto nº 135/2025 e ata da ROP nº 8/2025; Hultman et al.",
+      "professionalNotes": "Modelo editável autorizado para importação. É uso estudado em adultos saudáveis, não correção de deficiência documentada. Os 28 dias descrevem o período do estudo e não uma duração obrigatória para todas as pessoas. Não converter o achado em promessa geral de desempenho, hipertrofia ou benefício clínico.",
+      "status": "DRAFT",
+      "externalCode": "EXT-SUP-02-003-CREATINE-3G",
+      "classificationSystem": "Suplementação simples — formulação estudada",
+      "sourceVersion": "Hultman et al. 1996; deliberação Anvisa de junho de 2025",
+      "attributes": {
+        "Tipo de formulação": "SUPPLEMENT",
+        "Situação nutricional": "USO_EM_OUTRA_SITUACAO_NAO_DEFICIENCIA_DOCUMENTADA",
+        "Disponibilidade": "MODELO_EDITAVEL_AUTORIZADO_PARA_IMPORTACAO",
+        "Componentes e quantidades": "Creatina monohidratada — 3 g por dose",
+        "Forma química": "Creatina monohidratada",
+        "Apresentação": "Pó oral medido para fornecer 3 g por dose",
+        "Forma de uso": "Tomar 3 g por via oral, uma vez ao dia. No estudo original, o período observado foi de 28 dias; isso não define duração obrigatória universal. Não foi estabelecido horário relativo ao treino.",
+        "Público": "Homens adultos saudáveis no estudo original; o limite regulatório citado é destinado a adultos.",
+        "Cuidados essenciais": "Usar somente produto regularizado e com a fonte de creatina autorizada. A deliberação da Anvisa manteve restrições para gestantes, lactantes e menores de 19 anos. Avaliar condições clínicas, medicamentos e ingestão total antes de prescrever.",
+        "Diferenciação de uso": "Uso em outra situação; não corresponde a tratamento de deficiência nutricional documentada.",
+        "Página ou seção": "Voto nº 135/2025/SEI/DIRE2/Anvisa: fundamentação e voto; Hultman et al.: Abstract/Methods.",
+        "Verificação de duplicidade": "Sem equivalente exato nos 234 modelos importados ou no modelo manual de teste. Resultados textuais contendo 'pancreatina' foram descartados como falsos positivos."
+      },
+      "dataNature": "SCIENTIFIC",
+      "editorialStatus": "DRAFT",
+      "publicationType": "CLINICAL_TRIAL",
+      "evidenceCategory": "CLINICAL_TRIAL",
+      "technicalContent": "Creatina monohidratada em pó, 3 g por dose oral diária. O estudo observou 28 dias, sem fase de carga e sem horário específico inferido; esse período não é apresentado como duração obrigatória universal.",
+      "professionalApplication": "Modelo simples para conferência editorial em adultos, limitado ao protocolo e ao desfecho diretamente estudados.",
+      "targetPopulation": "Adultos; o estudo original incluiu homens adultos saudáveis.",
+      "indications": "Finalidade estudada: aumento gradual do conteúdo muscular total de creatina.",
+      "contraindications": "Não destinado a gestantes, lactantes ou menores de 19 anos segundo as restrições regulatórias mantidas pela Anvisa na deliberação de 2025.",
+      "precautions": "Confirmar regularização do produto, fonte autorizada, pureza, público e advertências do rótulo; avaliar contexto clínico e uso concomitante.",
+      "limitations": "Os 28 dias são o período do estudo, não duração obrigatória para todos. Não generalizar para mulheres, idosos, pessoas com doença ou desfechos não avaliados; o estudo não autoriza promessa geral de desempenho ou hipertrofia.",
+      "editorialVersion": 1,
+      "references": [
+        {
+          "sourceTitle": "Voto nº 135/2025/SEI/DIRE2/Anvisa",
+          "fullCitation": "Agência Nacional de Vigilância Sanitária. Voto nº 135/2025/SEI/DIRE2/Anvisa, processo nº 25351.912934/2025-01. Proposta de alteração da IN nº 28/2018 para o limite máximo de creatina em suplementos destinados a adultos.",
+          "authors": "Agência Nacional de Vigilância Sanitária",
+          "institutionOrJournal": "Anvisa",
+          "publicationYear": 2025,
+          "officialUrl": "https://www.gov.br/anvisa/pt-br/composicao/diretoria-colegiada/reunioes-da-diretoria/votos/2025/rop-8.2025/2-5.pdf",
+          "publicationType": "OFFICIAL_DATABASE",
+          "evidenceCategory": "OFFICIAL_DATABASE",
+          "language": "Português",
+          "notes": "A Diretoria aprovou ampliação do limite máximo de 3 g para 5 g/dia para adultos, mantendo requisitos de pureza, composição e qualidade e restrições para gestantes, lactantes e menores de 19 anos. O candidato conserva 3 g/dia, quantidade do estudo original."
+        },
+        {
+          "sourceTitle": "Muscle creatine loading in men",
+          "fullCitation": "Hultman E, Söderlund K, Timmons JA, Cederblad G, Greenhaff PL. Muscle creatine loading in men. J Appl Physiol. 1996;81(1):232-237.",
+          "authors": "Hultman E; Söderlund K; Timmons JA; Cederblad G; Greenhaff PL",
+          "institutionOrJournal": "Journal of Applied Physiology",
+          "publicationYear": 1996,
+          "doi": "10.1152/jappl.1996.81.1.232",
+          "pmid": "8828669",
+          "officialUrl": "https://pubmed.ncbi.nlm.nih.gov/8828669/",
+          "publicationType": "CLINICAL_TRIAL",
+          "evidenceCategory": "CLINICAL_TRIAL",
+          "language": "Inglês",
+          "notes": "Estudo original em homens; 3 g/dia por 28 dias produziram aumento gradual de aproximadamente 20% na creatina muscular total."
+        },
+        {
+          "sourceTitle": "Resolução CFN nº 656/2020",
+          "fullCitation": "Conselho Federal de Nutricionistas. Resolução nº 656, de 15 de junho de 2020. Dispõe sobre a prescrição dietética, pelo nutricionista, de suplementos alimentares.",
+          "authors": "Conselho Federal de Nutricionistas",
+          "institutionOrJournal": "Conselho Federal de Nutricionistas",
+          "publicationYear": 2020,
+          "officialUrl": "https://cfn.org.br/wp-content/uploads/resolucoes/DOU_656.pdf",
+          "publicationType": "GUIDELINE_OR_CONSENSUS",
+          "evidenceCategory": "GUIDELINE_OR_CONSENSUS",
+          "language": "Português",
+          "notes": "Base profissional geral: a suplementação deve integrar a avaliação e o plano alimentar, considerar interações, limites e acompanhamento."
+        }
+      ]
+    }
+  ]
+}

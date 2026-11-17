@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { calculateNutritionAdequacy } from "./adequacy-engine";
+import {
+  calculateNutritionAdequacy,
+  canFinalizeMealPlanNutrition,
+  nutritionTargetsOutsideTolerance,
+} from "./adequacy-engine";
 
 const target = {
   energyKcal: 2_000,
@@ -59,4 +63,61 @@ test("aceita limites parametrizados por nutriente", () => {
   });
 
   assert.equal(result.metrics.proteinGrams.status, "ADEQUATE");
+});
+
+test("rejeita conclusão ou aprovação quando carboidratos excedem a tolerância final", () => {
+  const finalTarget = {
+    energyKcal: 1_836,
+    proteinGrams: 114.7,
+    carbohydratesGrams: 206.5,
+    fatsGrams: 61.2,
+  };
+  const generated = {
+    energyKcal: 1_888.8,
+    proteinGrams: 112.1,
+    carbohydratesGrams: 234.6,
+    fatsGrams: 55.7,
+  };
+
+  assert.equal(
+    canFinalizeMealPlanNutrition({ target: finalTarget, actual: generated }),
+    false,
+  );
+  assert.deepEqual(
+    nutritionTargetsOutsideTolerance({ target: finalTarget, actual: generated }),
+    ["carbohydratesGrams", "fatsGrams"],
+  );
+});
+
+test("permite conclusão somente quando energia e os três macronutrientes estão em ±5%", () => {
+  const finalTarget = {
+    energyKcal: 1_836,
+    proteinGrams: 114.7,
+    carbohydratesGrams: 206.5,
+    fatsGrams: 61.2,
+  };
+
+  assert.equal(
+    canFinalizeMealPlanNutrition({
+      target: finalTarget,
+      actual: {
+        energyKcal: 1_820,
+        proteinGrams: 113,
+        carbohydratesGrams: 210,
+        fatsGrams: 60,
+      },
+    }),
+    true,
+  );
+});
+
+test("fibra igual ou acima da meta mínima é classificada como adequada", () => {
+  const result = calculateNutritionAdequacy({
+    target: { ...target, fiberGrams: 25 },
+    actual: { ...target, fiberGrams: 27.5 },
+  });
+
+  assert.equal(result.metrics.fiberGrams.status, "ADEQUATE");
+  assert.equal(result.metrics.fiberGrams.adherencePercent, 100);
+  assert.equal(result.needsAdjustment.includes("fiberGrams"), false);
 });

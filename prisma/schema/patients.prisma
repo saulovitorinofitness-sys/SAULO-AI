@@ -28,6 +28,10 @@ model Patient {
   insurance                 PatientInsurance?
   emergencyContacts         PatientEmergencyContact[]
   clinicalEvolutionSessions ClinicalEvolutionSession[]
+  appointments              Appointment[]
+  studentPortalLink         StudentPortalLink?         @relation("StudentPortalPatient")
+  studentPortalInvitations  StudentPortalInvitation[]  @relation("StudentPortalInvitationPatient")
+  studentPortalReleases     StudentPortalRelease[]      @relation("StudentPortalReleasePatient")
 
   @@index([fullName])
   @@index([status])

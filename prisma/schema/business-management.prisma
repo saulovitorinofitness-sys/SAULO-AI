@@ -1,0 +1,198 @@
+model BusinessUnit {
+  id                           String                             @id @default(uuid()) @db.Uuid
+  code                         String                             @unique
+  name                         String
+  legalName                    String?
+  tradeName                    String?
+  legalTaxIdType               EmployerTaxIdType?
+  legalTaxIdEncrypted          String?
+  addressStreet                String?
+  addressNumber                String?
+  addressComplement            String?
+  addressNeighborhood          String?
+  addressPostalCode            String?                            @db.VarChar(8)
+  addressCity                  String?
+  addressState                 String?                            @db.Char(2)
+  status                       BusinessUnitStatus                 @default(ACTIVE)
+  createdAt                    DateTime                           @default(now())
+  updatedAt                    DateTime                           @updatedAt
+  financialCategories          FinancialCategory[]
+  costCenters                  CostCenter[]
+  financialAccounts            FinancialAccount[]
+  financialEntries             FinancialEntry[]
+  jobRoles                     JobRole[]
+  employments                  Employment[]
+  employmentCompensations      EmploymentCompensation[]
+  payrollPeriods               PayrollPeriod[]
+  payrollStatements            PayrollStatement[]
+  payrollLineItems             PayrollLineItem[]
+  payrollAdjustments           PayrollAdjustment[]
+  payrollReceipts              PayrollReceipt[]
+  salaryPaymentConfirmations   PayrollSalaryPaymentConfirmation[]
+  serviceReceipts              ServiceReceipt[]
+  professionalServiceProviders ProfessionalServiceLegalProvider[] @relation("ProfessionalServiceBusinessProvider")
+
+  @@index([status])
+}
+
+model FinancialCategory {
+  id             String                   @id @default(uuid()) @db.Uuid
+  code           String                   @unique
+  name           String
+  type           FinancialEntryType
+  businessUnitId String?                  @db.Uuid
+  status         FinancialReferenceStatus @default(ACTIVE)
+  createdAt      DateTime                 @default(now())
+  updatedAt      DateTime                 @updatedAt
+
+  businessUnit     BusinessUnit?    @relation(fields: [businessUnitId], references: [id], onDelete: Restrict)
+  financialEntries FinancialEntry[]
+
+  @@index([businessUnitId, type, status])
+  @@index([type, status])
+}
+
+model CostCenter {
+  id             String                   @id @default(uuid()) @db.Uuid
+  code           String
+  name           String
+  businessUnitId String                   @db.Uuid
+  status         FinancialReferenceStatus @default(ACTIVE)
+  createdAt      DateTime                 @default(now())
+  updatedAt      DateTime                 @updatedAt
+
+  businessUnit     BusinessUnit     @relation(fields: [businessUnitId], references: [id], onDelete: Restrict)
+  financialEntries FinancialEntry[]
+
+  @@unique([businessUnitId, code])
+  @@index([businessUnitId, status])
+}
+
+model FinancialAccount {
+  id             String                   @id @default(uuid()) @db.Uuid
+  code           String
+  name           String
+  type           FinancialAccountType
+  businessUnitId String                   @db.Uuid
+  status         FinancialReferenceStatus @default(ACTIVE)
+  createdAt      DateTime                 @default(now())
+  updatedAt      DateTime                 @updatedAt
+
+  businessUnit     BusinessUnit          @relation(fields: [businessUnitId], references: [id], onDelete: Restrict)
+  financialEntries FinancialEntry[]
+  settlements      FinancialSettlement[]
+
+  @@unique([businessUnitId, code])
+  @@index([businessUnitId, status])
+  @@index([type, status])
+}
+
+model PaymentMethod {
+  id        String                   @id @default(uuid()) @db.Uuid
+  code      String                   @unique
+  name      String
+  type      PaymentMethodType
+  status    FinancialReferenceStatus @default(ACTIVE)
+  createdAt DateTime                 @default(now())
+  updatedAt DateTime                 @updatedAt
+
+  financialEntries FinancialEntry[]
+  settlements      FinancialSettlement[]
+
+  @@index([type, status])
+}
+
+model FinancialEntry {
+  id                  String                    @id @default(uuid()) @db.Uuid
+  type                FinancialEntryType
+  competence          DateTime                  @db.Date
+  dueDate             DateTime                  @db.Date
+  amount              Decimal                   @db.Decimal(14, 2)
+  description         String
+  observation         String?
+  status              FinancialEntryStatus      @default(PENDING)
+  origin              FinancialEntryOrigin      @default(MANUAL)
+  sourceSystem        FinancialSourceSystem     @default(GESTAO_SV)
+  managementNature    FinancialManagementNature @default(FORECAST)
+  sourceType          String?
+  sourceId            String?
+  importBatchId       String?                   @db.Uuid
+  businessUnitId      String                    @db.Uuid
+  financialCategoryId String                    @db.Uuid
+  costCenterId        String?                   @db.Uuid
+  financialAccountId  String?                   @db.Uuid
+  paymentMethodId     String?                   @db.Uuid
+  createdAt           DateTime                  @default(now())
+  updatedAt           DateTime                  @updatedAt
+
+  businessUnit                    BusinessUnit                            @relation(fields: [businessUnitId], references: [id], onDelete: Restrict)
+  financialCategory               FinancialCategory                       @relation(fields: [financialCategoryId], references: [id], onDelete: Restrict)
+  costCenter                      CostCenter?                             @relation(fields: [costCenterId], references: [id], onDelete: Restrict)
+  financialAccount                FinancialAccount?                       @relation(fields: [financialAccountId], references: [id], onDelete: Restrict)
+  paymentMethod                   PaymentMethod?                          @relation(fields: [paymentMethodId], references: [id], onDelete: Restrict)
+  importBatch                     FinancialImportBatch?                   @relation(fields: [importBatchId], references: [id], onDelete: Restrict)
+  settlements                     FinancialSettlement[]
+  payrollStatement                PayrollStatement?                       @relation("PayrollStatementFinancialEntry")
+  salaryPaymentConfirmation       PayrollSalaryPaymentConfirmation?
+  serviceReceipt                  ServiceReceipt?                         @relation("ServiceReceiptFinancialEntry")
+  professionalServiceCharge       ProfessionalServiceCharge?              @relation("ProfessionalServiceFinancialEntry")
+  professionalServiceReceiptClaim ProfessionalServiceFinancialEntryClaim? @relation("ProfessionalServiceReceiptFinancialEntryClaim")
+
+  @@unique([businessUnitId, sourceType, sourceId])
+  @@index([businessUnitId, competence])
+  @@index([businessUnitId, dueDate, status])
+  @@index([financialCategoryId])
+  @@index([costCenterId])
+  @@index([financialAccountId])
+  @@index([paymentMethodId])
+  @@index([importBatchId])
+  @@index([businessUnitId, managementNature, competence])
+  @@index([sourceSystem, managementNature])
+  @@index([type, status])
+}
+
+model FinancialImportBatch {
+  id               String                     @id @default(uuid()) @db.Uuid
+  sourceSystem     FinancialSourceSystem
+  competence       DateTime                   @db.Date
+  fileName         String
+  fileHash         String
+  importedAt       DateTime                   @default(now())
+  importedByUserId String                     @db.Uuid
+  status           FinancialImportBatchStatus @default(PENDING)
+  externalId       String?
+  snapshot         Json?
+  createdAt        DateTime                   @default(now())
+  updatedAt        DateTime                   @updatedAt
+
+  importedBy       User             @relation("FinancialImportBatchImporter", fields: [importedByUserId], references: [id], onDelete: Restrict)
+  financialEntries FinancialEntry[]
+
+  @@unique([sourceSystem, fileHash])
+  @@unique([sourceSystem, externalId])
+  @@index([competence, sourceSystem, status])
+  @@index([importedByUserId, importedAt])
+}
+
+model FinancialSettlement {
+  id                 String   @id @default(uuid()) @db.Uuid
+  financialEntryId   String   @db.Uuid
+  amount             Decimal  @db.Decimal(14, 2)
+  settlementDate     DateTime @db.Date
+  financialAccountId String   @db.Uuid
+  paymentMethodId    String   @db.Uuid
+  observation        String?
+  idempotencyKey     String   @unique
+  createdAt          DateTime @default(now())
+
+  financialEntry             FinancialEntry                    @relation(fields: [financialEntryId], references: [id], onDelete: Restrict)
+  financialAccount           FinancialAccount                  @relation(fields: [financialAccountId], references: [id], onDelete: Restrict)
+  paymentMethod              PaymentMethod                     @relation(fields: [paymentMethodId], references: [id], onDelete: Restrict)
+  salaryPaymentConfirmation  PayrollSalaryPaymentConfirmation?
+  professionalServicePayment ProfessionalServicePayment?       @relation("ProfessionalServicePaymentSettlement")
+  professionalServiceRefund  ProfessionalServiceRefund?        @relation("ProfessionalServiceRefundSettlement")
+
+  @@index([financialEntryId, settlementDate])
+  @@index([financialAccountId, settlementDate])
+  @@index([paymentMethodId, settlementDate])
+}

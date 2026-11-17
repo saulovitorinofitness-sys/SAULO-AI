@@ -1,0 +1,524 @@
+enum EmployeeStatus {
+  ACTIVE
+  INACTIVE
+  ARCHIVED
+}
+
+enum JobRoleStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum EmploymentType {
+  EMPLOYEE
+  AUTONOMOUS
+}
+
+enum EmploymentStatus {
+  ACTIVE
+  SUSPENDED
+  TERMINATED
+}
+
+enum EmploymentWorkSchedule {
+  FULL_TIME
+  PART_TIME
+  HOURLY
+  CUSTOM
+}
+
+enum CompensationUnit {
+  MONTHLY
+  HOURLY
+  PER_SERVICE
+}
+
+enum PayrollPeriodStatus {
+  OPEN
+  CALCULATED
+  CLOSED
+}
+
+enum PayrollStatementStatus {
+  DRAFT
+  CALCULATED
+  CLOSED
+  VOIDED
+}
+
+enum PayrollLineItemType {
+  EARNING
+  BENEFIT
+  DEDUCTION
+}
+
+enum PayrollLineItemOrigin {
+  CALCULATED
+  MANUAL
+  ADJUSTMENT
+}
+
+enum PayrollAdjustmentType {
+  CREDIT
+  DEBIT
+}
+
+enum PayrollAdjustmentStatus {
+  PENDING
+  APPLIED
+  CANCELLED
+}
+
+enum ReceiptStatus {
+  DRAFT
+  ISSUED
+  VOIDED
+}
+
+enum EmployerTaxIdType {
+  CNPJ
+  CPF
+}
+
+enum PayrollDocumentKind {
+  LEGACY_DEMONSTRATIVE
+  SALARY_RECEIPT
+}
+
+enum PayrollSalaryPaymentMethod {
+  CASH
+  PIX
+  BANK_TRANSFER
+  BANK_DEPOSIT
+}
+
+enum PayrollReceiptEvidenceKind {
+  BANK_PROOF
+  SIGNED_COPY
+}
+
+enum ServiceProviderType {
+  AUTONOMOUS
+  COMPANY
+}
+
+model Employee {
+  id                        String         @id @default(uuid()) @db.Uuid
+  userId                    String?        @unique @db.Uuid
+  fullName                  String
+  taxIdentifierHash         String?        @unique @db.VarChar(64)
+  taxIdentifierEncrypted    String?
+  birthDate                 DateTime?      @db.Date
+  identityDocumentEncrypted String?
+  identityIssuer            String?        @db.VarChar(40)
+  identityState             String?        @db.Char(2)
+  socialSecurityHash        String?        @unique @db.VarChar(64)
+  socialSecurityEncrypted   String?
+  phone                     String?        @db.VarChar(30)
+  email                     String?        @db.VarChar(180)
+  postalCode                String?        @db.VarChar(8)
+  addressStreet             String?        @db.VarChar(180)
+  addressNumber             String?        @db.VarChar(30)
+  addressComplement         String?        @db.VarChar(120)
+  addressNeighborhood       String?        @db.VarChar(120)
+  addressCity               String?        @db.VarChar(120)
+  addressState              String?        @db.Char(2)
+  paymentMethod             String?        @db.VarChar(30)
+  paymentDetailsEncrypted   String?
+  status                    EmployeeStatus @default(ACTIVE)
+  createdByUserId           String         @db.Uuid
+  updatedByUserId           String         @db.Uuid
+  createdAt                 DateTime       @default(now())
+  updatedAt                 DateTime       @updatedAt
+  deletedAt                 DateTime?
+
+  user                         User?                              @relation("EmployeeSystemUser", fields: [userId], references: [id], onDelete: Restrict)
+  createdBy                    User                               @relation("EmployeeCreator", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  updatedBy                    User                               @relation("EmployeeUpdater", fields: [updatedByUserId], references: [id], onDelete: Restrict)
+  employments                  Employment[]
+  professionalServiceProviders ProfessionalServiceLegalProvider[] @relation("ProfessionalServiceIndividualProvider")
+
+  @@index([fullName])
+  @@index([status, deletedAt])
+  @@index([birthDate])
+}
+
+model JobRole {
+  id              String        @id @default(uuid()) @db.Uuid
+  businessUnitId  String        @db.Uuid
+  code            String
+  name            String
+  description     String?
+  status          JobRoleStatus @default(ACTIVE)
+  createdByUserId String        @db.Uuid
+  updatedByUserId String        @db.Uuid
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  businessUnit BusinessUnit @relation(fields: [businessUnitId], references: [id], onDelete: Restrict)
+  createdBy    User         @relation("JobRoleCreator", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  updatedBy    User         @relation("JobRoleUpdater", fields: [updatedByUserId], references: [id], onDelete: Restrict)
+  employments  Employment[]
+
+  @@unique([businessUnitId, code])
+  @@unique([id, businessUnitId])
+  @@index([businessUnitId, status])
+  @@index([businessUnitId, name])
+}
+
+model Employment {
+  id                 String                 @id @default(uuid()) @db.Uuid
+  employeeId         String                 @db.Uuid
+  businessUnitId     String                 @db.Uuid
+  jobRoleId          String                 @db.Uuid
+  code               String
+  type               EmploymentType
+  status             EmploymentStatus       @default(ACTIVE)
+  workSchedule       EmploymentWorkSchedule @default(FULL_TIME)
+  weeklyWorkingHours Decimal?               @db.Decimal(5, 2)
+  startedAt          DateTime               @db.Date
+  endedAt            DateTime?              @db.Date
+  createdByUserId    String                 @db.Uuid
+  updatedByUserId    String                 @db.Uuid
+  createdAt          DateTime               @default(now())
+  updatedAt          DateTime               @updatedAt
+
+  employee        Employee                 @relation(fields: [employeeId], references: [id], onDelete: Restrict)
+  businessUnit    BusinessUnit             @relation(fields: [businessUnitId], references: [id], onDelete: Restrict)
+  jobRole         JobRole                  @relation(fields: [jobRoleId, businessUnitId], references: [id, businessUnitId], onDelete: Restrict)
+  createdBy       User                     @relation("EmploymentCreator", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  updatedBy       User                     @relation("EmploymentUpdater", fields: [updatedByUserId], references: [id], onDelete: Restrict)
+  compensations   EmploymentCompensation[]
+  statements      PayrollStatement[]
+  serviceReceipts ServiceReceipt[]
+
+  @@unique([businessUnitId, code])
+  @@unique([id, businessUnitId])
+  @@index([employeeId, status])
+  @@index([businessUnitId, status])
+  @@index([jobRoleId, businessUnitId])
+  @@index([startedAt, endedAt])
+}
+
+model EmploymentCompensation {
+  id              String           @id @default(uuid()) @db.Uuid
+  employmentId    String           @db.Uuid
+  businessUnitId  String           @db.Uuid
+  amount          Decimal          @db.Decimal(14, 2)
+  unit            CompensationUnit @default(MONTHLY)
+  effectiveFrom   DateTime         @db.Date
+  effectiveTo     DateTime?        @db.Date
+  changeReason    String
+  createdByUserId String           @db.Uuid
+  updatedByUserId String           @db.Uuid
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  employment   Employment         @relation(fields: [employmentId, businessUnitId], references: [id, businessUnitId], onDelete: Restrict)
+  businessUnit BusinessUnit       @relation(fields: [businessUnitId], references: [id], onDelete: Restrict)
+  createdBy    User               @relation("EmploymentCompensationCreator", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  updatedBy    User               @relation("EmploymentCompensationUpdater", fields: [updatedByUserId], references: [id], onDelete: Restrict)
+  statements   PayrollStatement[]
+
+  @@unique([employmentId, effectiveFrom])
+  @@index([businessUnitId, effectiveFrom])
+  @@index([employmentId, effectiveFrom, effectiveTo])
+}
+
+model PayrollPeriod {
+  id                 String              @id @default(uuid()) @db.Uuid
+  businessUnitId     String              @db.Uuid
+  competence         DateTime            @db.Date
+  status             PayrollPeriodStatus @default(OPEN)
+  calculatedAt       DateTime?
+  calculatedByUserId String?             @db.Uuid
+  closedAt           DateTime?
+  closedByUserId     String?             @db.Uuid
+  closeReason        String?
+  createdByUserId    String              @db.Uuid
+  updatedByUserId    String              @db.Uuid
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  businessUnit BusinessUnit       @relation(fields: [businessUnitId], references: [id], onDelete: Restrict)
+  calculatedBy User?              @relation("PayrollPeriodCalculator", fields: [calculatedByUserId], references: [id], onDelete: Restrict)
+  closedBy     User?              @relation("PayrollPeriodCloser", fields: [closedByUserId], references: [id], onDelete: Restrict)
+  createdBy    User               @relation("PayrollPeriodCreator", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  updatedBy    User               @relation("PayrollPeriodUpdater", fields: [updatedByUserId], references: [id], onDelete: Restrict)
+  statements   PayrollStatement[]
+
+  @@unique([businessUnitId, competence])
+  @@unique([id, businessUnitId])
+  @@index([businessUnitId, status, competence])
+}
+
+model PayrollStatement {
+  id                 String                 @id @default(uuid()) @db.Uuid
+  businessUnitId     String                 @db.Uuid
+  payrollPeriodId    String                 @db.Uuid
+  employmentId       String                 @db.Uuid
+  compensationId     String?                @db.Uuid
+  financialEntryId   String?                @unique @db.Uuid
+  status             PayrollStatementStatus @default(DRAFT)
+  grossAmount        Decimal                @default(0) @db.Decimal(14, 2)
+  benefitAmount      Decimal                @default(0) @db.Decimal(14, 2)
+  deductionAmount    Decimal                @default(0) @db.Decimal(14, 2)
+  adjustmentAmount   Decimal                @default(0) @db.Decimal(14, 2)
+  netAmount          Decimal                @default(0) @db.Decimal(14, 2)
+  calculationVersion Int                    @default(1)
+  calculatedAt       DateTime?
+  calculatedByUserId String?                @db.Uuid
+  closedAt           DateTime?
+  closedByUserId     String?                @db.Uuid
+  closeReason        String?
+  voidedAt           DateTime?
+  voidedByUserId     String?                @db.Uuid
+  voidReason         String?
+  createdByUserId    String                 @db.Uuid
+  updatedByUserId    String                 @db.Uuid
+  createdAt          DateTime               @default(now())
+  updatedAt          DateTime               @updatedAt
+
+  businessUnit               BusinessUnit                       @relation(fields: [businessUnitId], references: [id], onDelete: Restrict)
+  payrollPeriod              PayrollPeriod                      @relation(fields: [payrollPeriodId, businessUnitId], references: [id, businessUnitId], onDelete: Restrict)
+  employment                 Employment                         @relation(fields: [employmentId, businessUnitId], references: [id, businessUnitId], onDelete: Restrict)
+  compensation               EmploymentCompensation?            @relation(fields: [compensationId], references: [id], onDelete: Restrict)
+  financialEntry             FinancialEntry?                    @relation("PayrollStatementFinancialEntry", fields: [financialEntryId], references: [id], onDelete: Restrict)
+  calculatedBy               User?                              @relation("PayrollStatementCalculator", fields: [calculatedByUserId], references: [id], onDelete: Restrict)
+  closedBy                   User?                              @relation("PayrollStatementCloser", fields: [closedByUserId], references: [id], onDelete: Restrict)
+  voidedBy                   User?                              @relation("PayrollStatementVoider", fields: [voidedByUserId], references: [id], onDelete: Restrict)
+  createdBy                  User                               @relation("PayrollStatementCreator", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  updatedBy                  User                               @relation("PayrollStatementUpdater", fields: [updatedByUserId], references: [id], onDelete: Restrict)
+  lineItems                  PayrollLineItem[]
+  sourceAdjustments          PayrollAdjustment[]                @relation("PayrollAdjustmentSourceStatement")
+  appliedAdjustments         PayrollAdjustment[]                @relation("PayrollAdjustmentAppliedStatement")
+  receipts                   PayrollReceipt[]
+  salaryPaymentConfirmations PayrollSalaryPaymentConfirmation[]
+
+  @@unique([payrollPeriodId, employmentId])
+  @@unique([id, businessUnitId])
+  @@index([businessUnitId, status])
+  @@index([employmentId, status])
+  @@index([compensationId])
+}
+
+model PayrollLineItem {
+  id                 String                @id @default(uuid()) @db.Uuid
+  payrollStatementId String                @db.Uuid
+  businessUnitId     String                @db.Uuid
+  type               PayrollLineItemType
+  origin             PayrollLineItemOrigin @default(CALCULATED)
+  code               String
+  description        String
+  quantity           Decimal?              @db.Decimal(14, 4)
+  unitAmount         Decimal?              @db.Decimal(14, 4)
+  amount             Decimal               @db.Decimal(14, 2)
+  affectsNet         Boolean               @default(true)
+  createdByUserId    String                @db.Uuid
+  updatedByUserId    String                @db.Uuid
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+
+  payrollStatement PayrollStatement @relation(fields: [payrollStatementId, businessUnitId], references: [id, businessUnitId], onDelete: Restrict)
+  businessUnit     BusinessUnit     @relation(fields: [businessUnitId], references: [id], onDelete: Restrict)
+  createdBy        User             @relation("PayrollLineItemCreator", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  updatedBy        User             @relation("PayrollLineItemUpdater", fields: [updatedByUserId], references: [id], onDelete: Restrict)
+
+  @@unique([payrollStatementId, code])
+  @@index([businessUnitId, type])
+  @@index([payrollStatementId, type])
+}
+
+model PayrollAdjustment {
+  id                        String                  @id @default(uuid()) @db.Uuid
+  businessUnitId            String                  @db.Uuid
+  sourcePayrollStatementId  String                  @db.Uuid
+  appliedPayrollStatementId String?                 @db.Uuid
+  type                      PayrollAdjustmentType
+  status                    PayrollAdjustmentStatus @default(PENDING)
+  amount                    Decimal                 @db.Decimal(14, 2)
+  reason                    String
+  createdByUserId           String                  @db.Uuid
+  appliedAt                 DateTime?
+  appliedByUserId           String?                 @db.Uuid
+  cancelledAt               DateTime?
+  cancelledByUserId         String?                 @db.Uuid
+  cancellationReason        String?
+  createdAt                 DateTime                @default(now())
+
+  businessUnit            BusinessUnit      @relation(fields: [businessUnitId], references: [id], onDelete: Restrict)
+  sourcePayrollStatement  PayrollStatement  @relation("PayrollAdjustmentSourceStatement", fields: [sourcePayrollStatementId, businessUnitId], references: [id, businessUnitId], onDelete: Restrict)
+  appliedPayrollStatement PayrollStatement? @relation("PayrollAdjustmentAppliedStatement", fields: [appliedPayrollStatementId, businessUnitId], references: [id, businessUnitId], onDelete: Restrict)
+  createdBy               User              @relation("PayrollAdjustmentCreator", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  appliedBy               User?             @relation("PayrollAdjustmentApplier", fields: [appliedByUserId], references: [id], onDelete: Restrict)
+  cancelledBy             User?             @relation("PayrollAdjustmentCanceller", fields: [cancelledByUserId], references: [id], onDelete: Restrict)
+
+  @@index([businessUnitId, status])
+  @@index([sourcePayrollStatementId, status])
+  @@index([appliedPayrollStatementId])
+}
+
+model PayrollReceipt {
+  id                    String              @id @default(uuid()) @db.Uuid
+  businessUnitId        String              @db.Uuid
+  payrollStatementId    String              @db.Uuid
+  receiptNumber         String
+  version               Int                 @default(1)
+  status                ReceiptStatus       @default(DRAFT)
+  kind                  PayrollDocumentKind @default(LEGACY_DEMONSTRATIVE)
+  paymentConfirmationId String?             @db.Uuid
+  documentHash          String?             @db.VarChar(64)
+  storageKey            String?
+  issuedAt              DateTime?
+  issuedByUserId        String?             @db.Uuid
+  voidedAt              DateTime?
+  voidedByUserId        String?             @db.Uuid
+  voidReason            String?
+  createdByUserId       String              @db.Uuid
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  businessUnit        BusinessUnit                      @relation(fields: [businessUnitId], references: [id], onDelete: Restrict)
+  payrollStatement    PayrollStatement                  @relation(fields: [payrollStatementId, businessUnitId], references: [id, businessUnitId], onDelete: Restrict)
+  issuedBy            User?                             @relation("PayrollReceiptIssuer", fields: [issuedByUserId], references: [id], onDelete: Restrict)
+  voidedBy            User?                             @relation("PayrollReceiptVoider", fields: [voidedByUserId], references: [id], onDelete: Restrict)
+  createdBy           User                              @relation("PayrollReceiptCreator", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  paymentConfirmation PayrollSalaryPaymentConfirmation? @relation(fields: [paymentConfirmationId], references: [id], onDelete: Restrict, map: "PayrollReceipt_paymentConfirmationId_fkey")
+  snapshot            PayrollReceiptSnapshot?
+  evidences           PayrollReceiptEvidence[]
+
+  @@unique([businessUnitId, receiptNumber])
+  @@unique([payrollStatementId, version])
+  @@index([businessUnitId, status, issuedAt])
+  @@index([kind, businessUnitId, issuedAt], map: "PayrollReceipt_kind_unit_issued_idx")
+  @@index([paymentConfirmationId], map: "PayrollReceipt_confirmation_idx")
+}
+
+model PayrollSalaryPaymentConfirmation {
+  id                    String                     @id @default(uuid()) @db.Uuid
+  idempotencyKey        String                     @unique(map: "SalaryPayment_idempotency_key") @db.VarChar(120)
+  requestSha256         String                     @db.VarChar(64)
+  businessUnitId        String                     @db.Uuid
+  payrollStatementId    String                     @db.Uuid
+  financialEntryId      String                     @unique(map: "SalaryPayment_entry_key") @db.Uuid
+  financialSettlementId String                     @unique(map: "SalaryPayment_settlement_key") @db.Uuid
+  paidAt                DateTime                   @db.Date
+  method                PayrollSalaryPaymentMethod
+  paidAmount            Decimal                    @db.Decimal(14, 2)
+  bankReference         String?                    @db.VarChar(180)
+  confirmedByUserId     String                     @db.Uuid
+  confirmedAt           DateTime                   @default(now())
+
+  businessUnit        BusinessUnit                  @relation(fields: [businessUnitId], references: [id], onDelete: Restrict, map: "SalaryPayment_unit_fkey")
+  payrollStatement    PayrollStatement              @relation(fields: [payrollStatementId, businessUnitId], references: [id, businessUnitId], onDelete: Restrict, map: "SalaryPayment_statement_fkey")
+  financialEntry      FinancialEntry                @relation(fields: [financialEntryId], references: [id], onDelete: Restrict, map: "SalaryPayment_entry_fkey")
+  financialSettlement FinancialSettlement           @relation(fields: [financialSettlementId], references: [id], onDelete: Restrict, map: "SalaryPayment_settlement_fkey")
+  confirmedBy         User                          @relation("PayrollSalaryPaymentConfirmer", fields: [confirmedByUserId], references: [id], onDelete: Restrict, map: "SalaryPayment_confirmer_fkey")
+  receipts            PayrollReceipt[]
+  reversal            PayrollSalaryPaymentReversal?
+
+  @@index([payrollStatementId, businessUnitId], map: "SalaryPayment_statement_unit_idx")
+  @@index([businessUnitId, paidAt], map: "SalaryPayment_unit_paid_idx")
+}
+
+model PayrollSalaryPaymentReversal {
+  id                       String   @id @default(uuid()) @db.Uuid
+  idempotencyKey           String   @unique @db.VarChar(120)
+  requestSha256            String   @db.VarChar(64)
+  businessUnitId           String   @db.Uuid
+  payrollStatementId       String   @db.Uuid
+  paymentConfirmationId    String   @unique @db.Uuid
+  receiptId                String   @unique @db.Uuid
+  originalFinancialEntryId String   @db.Uuid
+  originalSettlementId     String   @db.Uuid
+  reason                   String   @db.VarChar(500)
+  reversedAt               DateTime @default(now())
+  reversedByUserId         String   @db.Uuid
+
+  paymentConfirmation PayrollSalaryPaymentConfirmation @relation(fields: [paymentConfirmationId], references: [id], onDelete: Restrict)
+
+  @@index([businessUnitId, reversedAt])
+  @@index([payrollStatementId, reversedAt])
+}
+
+model PayrollReceiptSnapshot {
+  receiptId         String   @id @db.Uuid
+  schemaVersion     Int
+  payloadCiphertext Bytes
+  encryptionVersion Int
+  payloadSha256     String   @db.VarChar(64)
+  createdAt         DateTime @default(now())
+
+  receipt PayrollReceipt @relation(fields: [receiptId], references: [id], onDelete: Restrict, map: "SalarySnapshot_receipt_fkey")
+}
+
+model PayrollReceiptEvidence {
+  id                 String                     @id @default(uuid()) @db.Uuid
+  receiptId          String                     @db.Uuid
+  businessUnitId     String                     @db.Uuid
+  payrollStatementId String                     @db.Uuid
+  employeeId         String                     @db.Uuid
+  kind               PayrollReceiptEvidenceKind
+  storageKey         String                     @unique(map: "SalaryEvidence_storage_key") @db.VarChar(500)
+  originalFileName   String?                    @db.VarChar(255)
+  mimeType           String?                    @db.VarChar(80)
+  byteLength         Int?
+  sha256             String                     @unique(map: "SalaryEvidence_hash_key") @db.VarChar(64)
+  signedAt           DateTime?                  @db.Date
+  recordedByUserId   String                     @db.Uuid
+  recordedAt         DateTime                   @default(now())
+
+  receipt    PayrollReceipt              @relation(fields: [receiptId], references: [id], onDelete: Restrict, map: "SalaryEvidence_receipt_fkey")
+  recordedBy User                        @relation("PayrollReceiptEvidenceRecorder", fields: [recordedByUserId], references: [id], onDelete: Restrict, map: "SalaryEvidence_recorder_fkey")
+  blob       PayrollPaymentEvidenceBlob?
+
+  @@unique([receiptId, kind, sha256], map: "SalaryEvidence_receipt_kind_hash_key")
+  @@index([receiptId, kind, recordedAt], map: "SalaryEvidence_receipt_kind_date_idx")
+}
+
+model PayrollPaymentEvidenceBlob {
+  evidenceId String @id @db.Uuid
+  content    Bytes
+
+  evidence PayrollReceiptEvidence @relation(fields: [evidenceId], references: [id], onDelete: Restrict, map: "SalaryEvidenceBlob_evidence_fkey")
+}
+
+model ServiceReceipt {
+  id                              String              @id @default(uuid()) @db.Uuid
+  businessUnitId                  String              @db.Uuid
+  providerEmploymentId            String?             @db.Uuid
+  financialEntryId                String?             @unique @db.Uuid
+  providerType                    ServiceProviderType
+  receiptNumber                   String
+  competence                      DateTime            @db.Date
+  serviceDate                     DateTime            @db.Date
+  serviceDescription              String
+  recipientName                   String
+  recipientTaxIdentifierHash      String?             @db.VarChar(64)
+  recipientTaxIdentifierEncrypted String?
+  amount                          Decimal             @db.Decimal(14, 2)
+  status                          ReceiptStatus       @default(DRAFT)
+  documentHash                    String?             @db.VarChar(64)
+  storageKey                      String?
+  issuedAt                        DateTime?
+  issuedByUserId                  String?             @db.Uuid
+  voidedAt                        DateTime?
+  voidedByUserId                  String?             @db.Uuid
+  voidReason                      String?
+  createdByUserId                 String              @db.Uuid
+  createdAt                       DateTime            @default(now())
+  updatedAt                       DateTime            @updatedAt
+
+  businessUnit                           BusinessUnit                            @relation(fields: [businessUnitId], references: [id], onDelete: Restrict)
+  providerEmployment                     Employment?                             @relation(fields: [providerEmploymentId, businessUnitId], references: [id, businessUnitId], onDelete: Restrict)
+  financialEntry                         FinancialEntry?                         @relation("ServiceReceiptFinancialEntry", fields: [financialEntryId], references: [id], onDelete: Restrict)
+  issuedBy                               User?                                   @relation("ServiceReceiptIssuer", fields: [issuedByUserId], references: [id], onDelete: Restrict)
+  voidedBy                               User?                                   @relation("ServiceReceiptVoider", fields: [voidedByUserId], references: [id], onDelete: Restrict)
+  createdBy                              User                                    @relation("ServiceReceiptCreator", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  professionalServiceFinancialEntryClaim ProfessionalServiceFinancialEntryClaim? @relation("LegacyServiceReceiptFinancialEntryClaim")
+
+  @@unique([businessUnitId, receiptNumber])
+  @@index([businessUnitId, competence, status])
+  @@index([providerEmploymentId, competence])
+  @@index([recipientTaxIdentifierHash])
+}

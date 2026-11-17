@@ -1,0 +1,610 @@
+spreadsheetRow,sourceCode,evonutName,evonutSource,masterFoodId,masterFoodName,masterSource,matchMethod,conflict
+9,6,"Abacate, cru",INSA,cef1b32b-3471-4056-bf79-a103e1040830,"Abacate, cru",TACO,NAME_DIFFERENT_SOURCE_ANALYSIS_ONLY,NOME_SEMELHANTE_MAS_FONTE_DIFERENTE
+10,7,"Abacate, cru",TACO,2d8b970c-9d8e-4c21-bde3-5d9eea0e3440,"Aveia, flocos, crua",TACO,SOURCE_CODE_AND_NAME,CODIGO_COINCIDE_MAS_NOME_DIVERGE
+21,18,"Abacaxi, cru",TACO,330b0545-2c1c-47f4-85ad-82fb0aa25ebc,"Bolo, pronto, milho",TACO,SOURCE_CODE_AND_NAME,CODIGO_COINCIDE_MAS_NOME_DIVERGE
+26,23,"Abacaxi, polpa, congelada",TACO,dd735693-1ab5-4dc1-bfb9-bc87923a88f6,"Cereais, mingau, milho, infantil",TACO,SOURCE_CODE_AND_NAME,CODIGO_COINCIDE_MAS_NOME_DIVERGE
+27,24,"Abacaxi, polpa, congelada",TBCA,b89425cd-47f4-4b16-b2d4-40e43042f00c,"Abacaxi, polpa, congelada",TACO,NAME_DIFFERENT_SOURCE_ANALYSIS_ONLY,NOME_SEMELHANTE_MAS_FONTE_DIFERENTE
+32,29,"Abadejo, filé, congelado, assado",TACO,3278a7b8-21a3-40d1-a650-bfc30eeec5d9,"Curau, milho verde",TACO,SOURCE_CODE_AND_NAME,CODIGO_COINCIDE_MAS_NOME_DIVERGE
+33,30,"Abadejo, filé, congelado, cru",TACO,8b0f69dc-4e54-41e5-9763-69e33497b8a3,"Curau, milho verde, mistura para",TACO,SOURCE_CODE_AND_NAME,CODIGO_COINCIDE_MAS_NOME_DIVERGE
+34,31,"Abadejo, filé, congelado, grelhado",TACO,93917621-8c58-4297-a52a-935bb2b1093d,"Farinha, de arroz, enriquecida",TACO,SOURCE_CODE_AND_NAME,CODIGO_COINCIDE_MAS_NOME_DIVERGE
+35,32,"Abadejo, filé, congelado, cozido",TACO,7eaa8770-86fb-4f83-aad7-a6c98fdcab47,"Farinha, de centeio, integral",TACO,SOURCE_CODE_AND_NAME,CODIGO_COINCIDE_MAS_NOME_DIVERGE
+40,37,"Abiu, cru",TACO,47ce6a69-07c3-4f72-85cd-382323c281b5,"Lasanha, massa fresca, cozida",TACO,SOURCE_CODE_AND_NAME,CODIGO_COINCIDE_MAS_NOME_DIVERGE
+57,54,"Abóbora, cabotian, cozida",TACO,a2275138-c02c-4cd6-a44e-c71fdd39950d,"Pão, trigo, sovado",TACO,SOURCE_CODE_AND_NAME,CODIGO_COINCIDE_MAS_NOME_DIVERGE
+58,55,"Abóbora, cabotian, crua",TACO,54921cf9-be12-4d9c-89cc-1bf7c8b11ed6,"Pastel, de carne, cru",TACO,SOURCE_CODE_AND_NAME,CODIGO_COINCIDE_MAS_NOME_DIVERGE
+59,56,"Abóbora, menina brasileira, crua",TACO,95f8aedd-e39b-4730-9503-ad8273e3880b,"Pastel, de carne, frito",TACO,SOURCE_CODE_AND_NAME,CODIGO_COINCIDE_MAS_NOME_DIVERGE
+60,57,"Abóbora, moranga, crua",TACO,38accc6f-1b3b-4e97-8bf9-39f8cf7312ff,"Pastel, de queijo, cru",TACO,SOURCE_CODE_AND_NAME,CODIGO_COINCIDE_MAS_NOME_DIVERGE
+61,58,"Abóbora, moranga, refogada",TACO,7239ae18-72ca-43f5-ab10-e90970934c53,"Pastel, de queijo, frito",TACO,SOURCE_CODE_AND_NAME,CODIGO_COINCIDE_MAS_NOME_DIVERGE
+62,59,"Abóbora, pescoço, crua",TACO,483786e5-bdf5-4a73-a8bd-e1a32a71d1e8,"Pastel, massa, crua",TACO,SOURCE_CODE_AND_NAME,CODIGO_COINCIDE_MAS_NOME_DIVERGE
+75,72,"Abobrinha, italiana, cozida",TACO,d5b85fad-bbdf-43a0-b853-a854da280d90,"Abobrinha, italiana, refogada",TACO,SOURCE_CODE_AND_NAME,CODIGO_COINCIDE_MAS_NOME_DIVERGE
+76,73,"Abobrinha, italiana, crua",TACO,47f2fa1d-f2ec-48b9-bd85-a1f4d7b53638,"Abobrinha, paulista, crua",TACO,SOURCE_CODE_AND_NAME,CODIGO_COINCIDE_MAS_NOME_DIVERGE
+77,74,"Abobrinha, italiana, refogada",TACO,49d2b026-37d4-48fa-9cbc-31239ee9b1d7,"Acelga, crua",TACO,SOURCE_CODE_AND_NAME,CODIGO_COINCIDE_MAS_NOME_DIVERGE
+78,75,"Abobrinha, paulista, crua",TACO,9a2f7be2-b44a-4a27-98f8-e841ae38797b,"Agrião, cru",TACO,SOURCE_CODE_AND_NAME,CODIGO_COINCIDE_MAS_NOME_DIVERGE
+96,93,"Açaí, polpa, com xarope de guaraná e glucose",TACO,d83a2a31-966d-4a6e-9c9e-001c04a85baa,"Batata, inglesa, frita",TACO,SOURCE_CODE_AND_NAME,CODIGO_COINCIDE_MAS_NOME_DIVERGE
+97,94,"Açaí, polpa, com xarope de guaraná e glucose",TBCA,0d0851ac-db7f-44e0-abb9-898479494608,"Açaí, polpa, com xarope de guaraná e glucose",TACO,NAME_DIFFERENT_SOURCE_ANALYSIS_ONLY,NOME_SEMELHANTE_MAS_FONTE_DIFERENTE
+98,95,"Açaí, polpa, congelada",TACO,24075fbe-e91f-4241-9ed4-a7ffdca07fd4,"Berinjela, cozida",TACO,SOURCE_CODE_AND_NAME,CODIGO_COINCIDE_MAS_NOME_DIVERGE
+101,98,Acarajé,IBGE,f9bb73c2-6ef8-44ac-bcd0-92e47a4db548,Acarajé,TACO,NAME_DIFFERENT_SOURCE_ANALYSIS_ONLY,NOME_SEMELHANTE_MAS_FONTE_DIFERENTE
+102,99,Acarajé,TACO,3baed133-073f-427f-a9a2-8a0c517fbd82,"Biscoito, polvilho doce",TACO,SOURCE_CODE_AND_NAME,CODIGO_COINCIDE_MAS_NOME_DIVERGE
+103,100,Acarajé,TBCA,f9bb73c2-6ef8-44ac-bcd0-92e47a4db548,Acarajé,TACO,NAME_DIFFERENT_SOURCE_ANALYSIS_ONLY,NOME_SEMELHANTE_MAS_FONTE_DIFERENTE
+104,101,Acarajé,Tucunduva,f9bb73c2-6ef8-44ac-bcd0-92e47a4db548,Acarajé,TACO,NAME_DIFFERENT_SOURCE_ANALYSIS_ONLY,NOME_SEMELHANTE_MAS_FONTE_DIFERENTE
+113,110,"Acelga, crua",TACO,0d28f71f-047b-4a37-8224-d32022272017,"Cenoura, crua",TACO,SOURCE_CODE_AND_NAME,CODIGO_COINCIDE_MAS_NOME_DIVERGE
+128,125,"Acerola, crua",TACO,b22310be-b20d-4d28-be2e-34ddfd503e2d,"Feijão, broto, cru",TACO,SOURCE_CODE_AND_NAME,CODIGO_COINCIDE_MAS_NOME_DIVERGE
+129,126,"Acerola, polpa, congelada",TACO,c6b7e951-c7fc-4f77-be89-224bf1a7027a,"Inhame, cru",TACO,SOURCE_CODE_AND_NAME,CODIGO_COINCIDE_MAS_NOME_DIVERGE
+139,136,"Achocolatado, pó",TACO,a1a47316-c83e-4a92-a63c-e9f5c9a68c22,"Nhoque, batata, cozido",TACO,SOURCE_CODE_AND_NAME,CODIGO_COINCIDE_MAS_NOME_DIVERGE
+163,160,"Açúcar, cristal",TACO,b9d66d3e-f59a-42b7-9dd4-929addfc318c,"Tomate, purê",TACO,SOURCE_CODE_AND_NAME,CODIGO_COINCIDE_MAS_NOME_DIVERGE
+164,161,"Açúcar, cristal",TBCA,a5223c0e-4b1a-4ea9-9c96-c5f041fdc89d,"Açúcar, cristal",TACO,NAME_GROUP_ANALYSIS_ONLY,CORRESPONDENCIA_ANALITICA_SEM_FONTE_COMPATIVEL
+165,162,"Açúcar, mascavo",TACO,427108d1-05b2-494a-a69b-104988405397,"Vagem, crua",TACO,SOURCE_CODE_AND_NAME,CODIGO_COINCIDE_MAS_NOME_DIVERGE
+166,163,"Açúcar, mascavo",TBCA,4a8c1d38-f134-4e24-bd53-d0802a33056e,"Açúcar, mascavo",TACO,NAME_GROUP_ANALYSIS_ONLY,CORRESPONDENCIA_ANALITICA_SEM_FONTE_COMPATIVEL
+167,164,"Açúcar, refinado",TACO,0a7ca578-c16d-453d-8446-1d6cf9b4251b,"Abacaxi, cru",TACO,SOURCE_CODE_AND_NAME,CODIGO_COINCIDE_MAS_NOME_DIVERGE
+202,199,"Agrião, cru",TACO,8df2e317-8840-44a2-af37-655aaa9dbbda,"Goiaba, doce, cascão",TACO,SOURCE_CODE_AND_NAME,CODIGO_COINCIDE_MAS_NOME_DIVERGE
+240,237,"Aipo, cru",TACO,4c0460ab-249b-4258-89bc-ee003aacb5fe,"Mexerica, Murcote, crua",TACO,SOURCE_CODE_AND_NAME,CODIGO_COINCIDE_MAS_NOME_DIVERGE
+274,271,"Alface, americana, crua",TACO,f7560978-58e1-4cf0-ae0f-900858f02b97,"Óleo, de pequi",TACO,SOURCE_CODE_AND_NAME,CODIGO_COINCIDE_MAS_NOME_DIVERGE
+275,272,"Alface, crespa, crua",TACO,ecaf7cf1-ced9-4668-967a-1c0b6963ffe0,"Óleo, de soja",TACO,SOURCE_CODE_AND_NAME,CODIGO_COINCIDE_MAS_NOME_DIVERGE
+276,273,"Alface, lisa, crua",TACO,fab6218a-bcda-4b5a-b3e9-710a5e3d37c2,"Abadejo, filé, congelado, assado",TACO,SOURCE_CODE_AND_NAME,CODIGO_COINCIDE_MAS_NOME_DIVERGE
+277,274,"Alface, roxa, crua",TACO,cf8437ce-d875-4faf-8326-1757d9ceb587,"Abadejo, filé, congelado,cozido",TACO,SOURCE_CODE_AND_NAME,CODIGO_COINCIDE_MAS_NOME_DIVERGE
+284,281,"Alfavaca, crua",TACO,703c119d-0b35-418b-acb7-6f5dfa7972b6,"Cação, posta, com farinha de trigo, frita",TACO,SOURCE_CODE_AND_NAME,CODIGO_COINCIDE_MAS_NOME_DIVERGE
+298,295,"Alho, cru",TACO,716243ea-582b-4f98-94da-646343efad21,"Dourada de água doce, fresca",TACO,SOURCE_CODE_AND_NAME,CODIGO_COINCIDE_MAS_NOME_DIVERGE
+300,297,"Alho-poró, cru",TACO,22c9e017-e826-4606-a6e1-ee60e02cfab0,"Lambari, congelado, frito",TACO,SOURCE_CODE_AND_NAME,CODIGO_COINCIDE_MAS_NOME_DIVERGE
+307,304,"Almeirão, cru",TACO,d437af19-aad4-4008-9023-8f73fcedb8ea,"Pescada, branca, crua",TACO,SOURCE_CODE_AND_NAME,CODIGO_COINCIDE_MAS_NOME_DIVERGE
+308,305,"Almeirão, refogado",TACO,0aff9418-b3e5-41d1-81c3-0a69d01d51b7,"Pescada, branca, frita",TACO,SOURCE_CODE_AND_NAME,CODIGO_COINCIDE_MAS_NOME_DIVERGE
+373,370,"Ameixa, calda, enlatada",TACO,ff1630c4-1539-468b-b8f7-100482252e41,"Carne, bovina, miolo de alcatra, sem gordura, grelhado",TACO,SOURCE_CODE_AND_NAME,CODIGO_COINCIDE_MAS_NOME_DIVERGE
+375,372,"Ameixa, crua",TACO,ffe82851-2568-4455-9f84-15fc0bbf3508,"Carne, bovina, músculo, sem gordura, cru",TACO,SOURCE_CODE_AND_NAME,CODIGO_COINCIDE_MAS_NOME_DIVERGE
+376,373,"Ameixa, em calda, enlatada, drenada",TACO,7edc4adf-2855-4a86-9941-d3f3e5433013,"Carne, bovina, paleta, com gordura, crua",TACO,SOURCE_CODE_AND_NAME,CODIGO_COINCIDE_MAS_NOME_DIVERGE
+389,386,"Amêndoa, torrada, salgada",TACO,a5f38fe3-82d7-49ae-912f-6b365a478cd2,"Coxinha de frango, frita",TACO,SOURCE_CODE_AND_NAME,CODIGO_COINCIDE_MAS_NOME_DIVERGE
+404,401,"Amendoim, grão, cru",TACO,25080d9f-15cf-4c02-b0b6-1a981d275e63,"Frango, filé, à milanesa",TACO,SOURCE_CODE_AND_NAME,CODIGO_COINCIDE_MAS_NOME_DIVERGE
+405,402,"Amendoim, grão, cru",TBCA,36f9d79d-93f8-49c8-befa-f42371d04a78,"Amendoim, grão, cru",TACO,NAME_GROUP_ANALYSIS_ONLY,CORRESPONDENCIA_ANALITICA_SEM_FONTE_COMPATIVEL
+410,407,"Amendoim, torrado, salgado",TACO,ca57dffc-6a8d-41bc-af57-b39d7d699ecb,"Frango, peito, com pele, cru",TACO,SOURCE_CODE_AND_NAME,CODIGO_COINCIDE_MAS_NOME_DIVERGE
+435,432,Apresuntado,IBGE,aeccb8f3-e072-4c90-a5b8-ec38f8f9d3cf,Apresuntado,TACO,NAME_GROUP_ANALYSIS_ONLY,CORRESPONDENCIA_ANALITICA_SEM_FONTE_COMPATIVEL
+436,433,Apresuntado,TACO,e3002405-2d2b-4089-9e38-628aa18c0af0,"Porco, lombo, cru",TACO,SOURCE_CODE_AND_NAME,CODIGO_COINCIDE_MAS_NOME_DIVERGE
+437,434,Apresuntado,Tucunduva,aeccb8f3-e072-4c90-a5b8-ec38f8f9d3cf,Apresuntado,TACO,NAME_GROUP_ANALYSIS_ONLY,CORRESPONDENCIA_ANALITICA_SEM_FONTE_COMPATIVEL
+462,459,Arroz carreteiro,IBGE,7edc761a-9c3d-4a38-8594-536234fc8fbc,Arroz carreteiro,TACO,NAME_DIFFERENT_SOURCE_ANALYSIS_ONLY,NOME_SEMELHANTE_MAS_FONTE_DIFERENTE
+463,460,Arroz carreteiro,TACO,5b2675b3-c524-48b3-8d9a-abc08b9d679d,"Leite, fermentado",TACO,SOURCE_CODE_AND_NAME,CODIGO_COINCIDE_MAS_NOME_DIVERGE
+464,461,Arroz carreteiro,TBCA,7edc761a-9c3d-4a38-8594-536234fc8fbc,Arroz carreteiro,TACO,NAME_DIFFERENT_SOURCE_ANALYSIS_ONLY,NOME_SEMELHANTE_MAS_FONTE_DIFERENTE
+521,518,"Arroz, integral, cozido",TACO,84a50c42-c578-4d11-8b8d-09f9c85ea0cc,Shoyu,TACO,SOURCE_CODE_AND_NAME,CODIGO_COINCIDE_MAS_NOME_DIVERGE
+525,522,"Arroz, integral, cru",TACO,4210aeb6-3099-46a1-af27-80c17386eb0b,"Chantilly, spray, com gordura vegetal",TACO,SOURCE_CODE_AND_NAME,CODIGO_COINCIDE_MAS_NOME_DIVERGE
+531,528,"Arroz, tipo 1, cozido",TACO,a9d058c0-af3f-4829-940d-249843774b62,Barreado,TACO,SOURCE_CODE_AND_NAME,CODIGO_COINCIDE_MAS_NOME_DIVERGE
+532,529,"Arroz, tipo 1, cru",TACO,d5e9d099-0fdf-4d9d-8d8e-994ad9351f5f,"Bife à cavalo, com contra filé",TACO,SOURCE_CODE_AND_NAME,CODIGO_COINCIDE_MAS_NOME_DIVERGE
+533,530,"Arroz, tipo 2, cozido",TACO,6432867f-0ea6-4df5-9327-5ebb8471e513,Bolinho de arroz,TACO,SOURCE_CODE_AND_NAME,CODIGO_COINCIDE_MAS_NOME_DIVERGE
+534,531,"Arroz, tipo 2, cru",TACO,60ffaeef-c07d-41a3-afbe-3d956209654c,Camarão à baiana,TACO,SOURCE_CODE_AND_NAME,CODIGO_COINCIDE_MAS_NOME_DIVERGE
+561,558,"Atemóia, crua",TACO,b9b40f31-6e46-4787-8b58-4de9d8ca9a03,"Amendoim, torrado, salgado",TACO,SOURCE_CODE_AND_NAME,CODIGO_COINCIDE_MAS_NOME_DIVERGE
+580,577,"Atum, conserva em óleo",TACO,06b4cddf-7dca-4b9e-8d08-389f53f1440e,"Lentilha, cozida",TACO,SOURCE_CODE_AND_NAME,CODIGO_COINCIDE_MAS_NOME_DIVERGE
+581,578,"Atum, fresco, cru",TACO,ccdda4e6-ddce-45e7-9d88-890c8bdbcdf9,"Lentilha, crua",TACO,SOURCE_CODE_AND_NAME,CODIGO_COINCIDE_MAS_NOME_DIVERGE
+592,589,"Aveia, flocos, crua",TACO,de59f5ae-a220-4bd0-b117-efb782246bab,"Castanha-do-Brasil, crua",TACO,SOURCE_CODE_AND_NAME,CODIGO_COINCIDE_MAS_NOME_DIVERGE
+593,590,"Aveia, flocos, crua",TBCA,2d8b970c-9d8e-4c21-bde3-5d9eea0e3440,"Aveia, flocos, crua",TACO,NAME_DIFFERENT_SOURCE_ANALYSIS_ONLY,NOME_SEMELHANTE_MAS_FONTE_DIFERENTE
+648,645,"Azeitona, preta, conserva",TACO,9f7be46c-22b8-4af0-b83b-a2dcf7779197,"Azeitona, preta, conserva",TACO,SOURCE_NORMALIZED_NAME,Magnésio:4.762!=5
+649,646,"Azeitona, verde, conserva",TACO,f055a449-83f0-4820-acaf-7f6ee69c9ab2,"Azeitona, verde, conserva",TACO,SOURCE_NORMALIZED_NAME,Fósforo:5.36!=5
+698,695,"Baião de dois, arroz e feijão-de-corda",TACO,02b56fee-0446-49a7-8b4e-7e18b6ce4758,"Baião de dois, arroz e feijão-de-corda",TACO,SOURCE_NORMALIZED_NAME,Magnésio:18.677666666666667!=19|Colesterol:4.103333333333333!=4
+722,719,"Banana, da terra, crua",TACO,1b7999ba-3c20-43e8-90fb-6eef26aa1ab4,"Banana, da terra, crua",TACO,SOURCE_NORMALIZED_NAME,Cálcio:4.151!=4|Fósforo:25.516666666666666!=26|Vitamina A (RE):238.83333333333334!=119
+726,723,"Banana, doce em barra",TACO,9401df0d-ce98-4a41-8916-7ac8498275b5,"Banana, doce em barra",TACO,SOURCE_NORMALIZED_NAME,Sódio:9.882333333333333!=10|Vitamina A (RE):27.355555555555554!=14
+728,725,"Banana, figo, crua",TACO,cffab4cb-cd59-4e8b-8c23-19963512b878,"Banana, figo, crua",TACO,SOURCE_NORMALIZED_NAME,Cálcio:6.356333333333333!=6|Fósforo:15.821666666666667!=16
+731,728,"Banana, maçã, crua",TACO,10ba1322-e2ba-404c-a4cd-1813a4840b95,"Banana, maçã, crua",TACO,SOURCE_NORMALIZED_NAME,Cálcio:3.22!=3|Magnésio:23.686666666666667!=24|Fósforo:28.683333333333334!=29|Vitamina A (RE):6.416666666666667!=3
+734,731,"Banana, nanica, crua",TACO,c7f01927-1566-415f-ad8d-b639af6a94a4,"Banana, nanica, crua",TACO,SOURCE_NORMALIZED_NAME,Cálcio:3.4166666666666665!=3|Fósforo:26.72!=27|Vitamina A (RE):13.625!=7
+736,733,"Banana, ouro, crua",TACO,33ec215a-0c52-4bb8-bc4a-eae2f43de4a8,"Banana, ouro, crua",TACO,SOURCE_NORMALIZED_NAME,Cálcio:3.186666666666666!=3|Magnésio:28.383333333333336!=28|Fósforo:22.27!=22|Vitamina A (RE):49.708333333333336!=25
+738,735,"Banana, pacova, crua",TACO,f8c55df7-fecf-49ef-b85b-6988ab5870a0,"Banana, pacova, crua",TACO,SOURCE_NORMALIZED_NAME,Cálcio:5.490333333333333!=5|Magnésio:30.412333333333336!=30|Fósforo:19.753!=20
+740,737,"Banana, prata, crua",TACO,aed7b6fc-1570-4b38-a3ec-d4211b7aacb4,"Banana, prata, crua",TACO,SOURCE_NORMALIZED_NAME,Cálcio:7.5633333333333335!=8|Magnésio:26.29!=26|Vitamina A (RE):32.41666666666667!=16
+815,812,Barreado,TACO,a9d058c0-af3f-4829-940d-249843774b62,Barreado,TACO,SOURCE_NORMALIZED_NAME,Cálcio:14.512333333333336!=15|Magnésio:21.371333333333336!=21
+816,813,Barreado,Tucunduva,a9d058c0-af3f-4829-940d-249843774b62,Barreado,TACO,NAME_DIFFERENT_SOURCE_ANALYSIS_ONLY,NOME_SEMELHANTE_MAS_FONTE_DIFERENTE
+874,871,"Batata, baroa, cozida",TACO,ef72ecc5-dd28-43a9-a6b7-8d7ec1af8fda,"Batata, baroa, cozida",TACO,SOURCE_NORMALIZED_NAME,Cálcio:11.85!=12|Magnésio:7.576!=8|Fósforo:29.475!=29
+875,872,"Batata, baroa, crua",TACO,c08067ac-8de5-4582-9418-f9446e93362c,"Batata, baroa, crua",TACO,SOURCE_NORMALIZED_NAME,Vitamina A (RE):24.5!=12
+876,873,"Batata, doce, cozida",TACO,107f7e4b-e567-485c-909d-2925e174eb93,"Batata, doce, cozida",TACO,SOURCE_NORMALIZED_NAME,Magnésio:11.159666666666666!=11|Fósforo:15.394!=15|Sódio:2.699!=3
+877,874,"Batata, doce, crua",TACO,ef58e13b-c9e4-4f81-a537-cf31ccc87c67,"Batata, doce, crua",TACO,SOURCE_NORMALIZED_NAME,Fósforo:36.46!=36|Sódio:8.773333333333333!=9
+879,876,"Batata, frita, tipo chips, industrializada",TACO,4b9b7a75-7767-4637-ba3b-ac1ce19e270c,"Batata, frita, tipo chips, industrializada",TACO,SOURCE_NORMALIZED_NAME,Cálcio:11.597666666666667!=12
+880,877,"Batata, inglesa, cozida",TACO,01c4d35c-784c-43c6-b9dd-15842cbbe8c4,"Batata, inglesa, cozida",TACO,SOURCE_NORMALIZED_NAME,Cálcio:3.52!=4|Magnésio:5.425!=5|Fósforo:24.342333333333332!=24|Sódio:2.2936666666666667!=2
+881,878,"Batata, inglesa, crua",TACO,08d85ad5-d08e-4a8d-8c50-3ac3737eaec6,"Batata, inglesa, crua",TACO,SOURCE_NORMALIZED_NAME,Cálcio:3.55!=4|Magnésio:14.58!=15|Fósforo:38.53666666666666!=39
+882,879,"Batata, inglesa, frita",TACO,d83a2a31-966d-4a6e-9c9e-001c04a85baa,"Batata, inglesa, frita",TACO,SOURCE_NORMALIZED_NAME,Cálcio:6.2763333333333335!=6
+883,880,"Batata, inglesa, sauté",TACO,208d4aeb-b851-4c42-9a63-d906dcf6e87b,"Batata, inglesa, sauté",TACO,SOURCE_NORMALIZED_NAME,Cálcio:4.181!=4|Magnésio:6.456333333333333!=6|Sódio:8.182!=8
+940,937,"Bebida isotônica, sabores variados",TACO,c7aa36a8-5eaf-469e-b341-f4da95c2c2aa,"Bebida isotônica, sabores variados",TACO,SOURCE_NORMALIZED_NAME,Energia:25.613333333333344!=26|Cálcio:1.2333333333333334!=1
+941,938,"Bebida isotônica, sabores variados",TBCA,c7aa36a8-5eaf-469e-b341-f4da95c2c2aa,"Bebida isotônica, sabores variados",TACO,NAME_DIFFERENT_SOURCE_ANALYSIS_ONLY,NOME_SEMELHANTE_MAS_FONTE_DIFERENTE
+949,946,"Bebida láctea, pêssego",TACO,4f04cbca-f370-4253-9c37-dd63a09c55ff,"Bebida láctea, pêssego",TACO,SOURCE_NORMALIZED_NAME,Magnésio:8.593333333333334!=9|Colesterol:5.36975!=5
+998,995,"Berinjela, cozida",TACO,24075fbe-e91f-4241-9ed4-a7ffdca07fd4,"Berinjela, cozida",TACO,SOURCE_NORMALIZED_NAME,Cálcio:10.771333333333333!=11|Magnésio:8.815666666666667!=9|Sódio:1.325!=1
+999,996,"Berinjela, crua",TACO,cfa08990-849e-4f9d-8440-f63d36efb1ba,"Berinjela, crua",TACO,SOURCE_NORMALIZED_NAME,Energia:19.62775362318839!=20|Cálcio:9.22!=9|Fósforo:20.463333333333335!=20|Vitamina A (RE):24!=12
+1016,1013,"Beterraba, cozida",TACO,57be8f1c-c208-439f-8aa6-f8c634185a1a,"Beterraba, cozida",TACO,SOURCE_NORMALIZED_NAME,Cálcio:15.255333333333333!=15|Magnésio:16.541666666666668!=17|Sódio:22.761666666666667!=23
+1017,1014,"Beterraba, crua",TACO,7358657f-af47-40e2-aaee-d8c2aec5b1c0,"Beterraba, crua",TACO,SOURCE_NORMALIZED_NAME,Magnésio:24.433333333333337!=24|Fósforo:19.386666666666667!=19|Sódio:9.72!=10
+1022,1019,"Bife à cavalo, com contra filé",TACO,d5e9d099-0fdf-4d9d-8d8e-994ad9351f5f,"Bife à cavalo, com contra filé",TACO,SOURCE_NORMALIZED_NAME,Magnésio:19.487333333333332!=19
+1184,1181,"Biscoito, doce, maisena",TBCA,f6424696-08ac-41d7-ad5c-a17d0c9c1336,"Biscoito, doce, maisena",TACO,NAME_DIFFERENT_SOURCE_ANALYSIS_ONLY,NOME_SEMELHANTE_MAS_FONTE_DIFERENTE
+1197,1194,"Biscoito, doce, wafer, recheado de chocolate",TACO,8d07123d-ae5c-43f6-b4b9-c6d6fa2a906e,"Biscoito, doce, wafer, recheado de chocolate",TACO,SOURCE_NORMALIZED_NAME,Cálcio:23.343333333333334!=23
+1198,1195,"Biscoito, doce, wafer, recheado de morango",TACO,46d82abd-7f81-4dd7-adff-e9200f53444f,"Biscoito, doce, wafer, recheado de morango",TACO,SOURCE_NORMALIZED_NAME,Cálcio:13.706666666666665!=14|Magnésio:18.54!=19|Colesterol:1.2673333333333334!=1
+1203,1200,"Biscoito, polvilho doce",TACO,3baed133-073f-427f-a9a2-8a0c517fbd82,"Biscoito, polvilho doce",TACO,SOURCE_NORMALIZED_NAME,Cálcio:30.454333333333334!=30|Magnésio:5.845!=6|Fósforo:23.319!=23|Colesterol:9.385!=9
+1209,1206,"Biscoito, salgado, cream cracker",TBCA,e21e3031-b4ee-4110-bb05-1132c47e4513,"Biscoito, salgado, cream cracker",TACO,NAME_DIFFERENT_SOURCE_ANALYSIS_ONLY,NOME_SEMELHANTE_MAS_FONTE_DIFERENTE
+1291,1288,Bolinho de arroz,TACO,6432867f-0ea6-4df5-9327-5ebb8471e513,Bolinho de arroz,TACO,SOURCE_NORMALIZED_NAME,Cálcio:23.569666666666667!=24|Magnésio:13.452666666666667!=13
+1292,1289,Bolinho de arroz,TBCA,6432867f-0ea6-4df5-9327-5ebb8471e513,Bolinho de arroz,TACO,NAME_DIFFERENT_SOURCE_ANALYSIS_ONLY,NOME_SEMELHANTE_MAS_FONTE_DIFERENTE
+1293,1290,Bolinho de arroz,Tucunduva,6432867f-0ea6-4df5-9327-5ebb8471e513,Bolinho de arroz,TACO,NAME_DIFFERENT_SOURCE_ANALYSIS_ONLY,NOME_SEMELHANTE_MAS_FONTE_DIFERENTE
+1385,1382,"Bolo, pronto, aipim",TACO,2b10f5bb-3ca9-4308-8824-de00c7ac2554,"Bolo, pronto, aipim",TACO,SOURCE_NORMALIZED_NAME,Magnésio:10.344!=10
+1386,1383,"Bolo, pronto, aipim",TBCA,2b10f5bb-3ca9-4308-8824-de00c7ac2554,"Bolo, pronto, aipim",TACO,NAME_DIFFERENT_SOURCE_ANALYSIS_ONLY,NOME_SEMELHANTE_MAS_FONTE_DIFERENTE
+1387,1384,"Bolo, pronto, chocolate",TACO,7e879d4b-6570-4666-a0ec-37d1135987f6,"Bolo, pronto, chocolate",TACO,SOURCE_NORMALIZED_NAME,Magnésio:27.686666666666667!=28
+1388,1385,"Bolo, pronto, chocolate",TBCA,7e879d4b-6570-4666-a0ec-37d1135987f6,"Bolo, pronto, chocolate",TACO,NAME_DIFFERENT_SOURCE_ANALYSIS_ONLY,NOME_SEMELHANTE_MAS_FONTE_DIFERENTE
+1389,1386,"Bolo, pronto, coco",TACO,d9c34b62-5ad4-48d0-a6dc-26dcca33b9cc,"Bolo, pronto, coco",TACO,SOURCE_NORMALIZED_NAME,Magnésio:16.251666666666665!=16
+1390,1387,"Bolo, pronto, coco",TBCA,d9c34b62-5ad4-48d0-a6dc-26dcca33b9cc,"Bolo, pronto, coco",TACO,NAME_DIFFERENT_SOURCE_ANALYSIS_ONLY,NOME_SEMELHANTE_MAS_FONTE_DIFERENTE
+1391,1388,"Bolo, pronto, milho",TACO,330b0545-2c1c-47f4-85ad-82fb0aa25ebc,"Bolo, pronto, milho",TACO,SOURCE_NORMALIZED_NAME,Magnésio:10.249!=10
+1392,1389,"Bolo, pronto, milho",TBCA,330b0545-2c1c-47f4-85ad-82fb0aa25ebc,"Bolo, pronto, milho",TACO,NAME_DIFFERENT_SOURCE_ANALYSIS_ONLY,NOME_SEMELHANTE_MAS_FONTE_DIFERENTE
+1439,1436,"Brócolis, cozido",TACO,9a6d2de7-d43d-4539-b489-77d0ff8ede84,"Brócolis, cozido",TACO,SOURCE_NORMALIZED_NAME,Energia:24.63616311136879!=25|Magnésio:14.546666666666667!=15|Sódio:2.122!=2
+1440,1437,"Brócolis, cru",TACO,03a0cd77-7fc0-4ed3-a255-f1c9066a63b0,"Brócolis, cru",TACO,SOURCE_NORMALIZED_NAME,Energia:25.495131884057955!=25|Magnésio:29.566666666666666!=30|Sódio:3.3333333333333335!=3|Vitamina A (RE):279.3333333333333!=140
+1473,1470,"Cação, posta, com farinha de trigo, frita",TACO,703c119d-0b35-418b-acb7-6f5dfa7972b6,"Cação, posta, com farinha de trigo, frita",TACO,SOURCE_NORMALIZED_NAME,Cálcio:30.441999999999997!=30|Magnésio:25.507!=26|Vitamina A (RE):17.37666666666667!=17
+1474,1471,"Cação, posta, cozida",TACO,3814123a-987f-4d4c-96c4-84f2705e1c36,"Cação, posta, cozida",TACO,SOURCE_NORMALIZED_NAME,Cálcio:10.324666666666667!=10|Vitamina A (RE):11.623333333333335!=12
+1475,1472,"Cação, posta, crua",TACO,347a9a92-57b9-44e6-a6a0-21ff5a65c7d5,"Cação, posta, crua",TACO,SOURCE_NORMALIZED_NAME,Cálcio:8.703666666666665!=9|Magnésio:19.299000000000003!=19
+1480,1477,"Cacau, cru",TACO,c4a1c569-c0f5-4b18-9463-10338954a73a,"Cacau, cru",TACO,SOURCE_NORMALIZED_NAME,Magnésio:24.616333333333333!=25|Fósforo:9.337333333333333!=9|Sódio:0.7003333333333334!=1
+1511,1508,"Café, infusão 10%",TACO,3f4ceaef-bce6-4592-889c-0ab9797b76fe,"Café, infusão 10%",TACO,SOURCE_NORMALIZED_NAME,Cálcio:3.159333333333333!=3|Magnésio:9.661666666666667!=10|Fósforo:9.495333333333333!=9
+1518,1515,"Cajá, polpa, congelada",TACO,3de38c4d-e96e-442f-ac1c-594e2ff6f414,"Cajá, polpa, congelada",TACO,SOURCE_NORMALIZED_NAME,Energia:26.332269311050553!=26|Cálcio:9.160666666666666!=9|Magnésio:7.171333333333333!=7|Fósforo:25.655!=26|Vitamina A (RE):106!=53
+1519,1516,"Cajá, polpa, congelada",TBCA,3de38c4d-e96e-442f-ac1c-594e2ff6f414,"Cajá, polpa, congelada",TACO,NAME_DIFFERENT_SOURCE_ANALYSIS_ONLY,NOME_SEMELHANTE_MAS_FONTE_DIFERENTE
+1520,1517,"Cajá-Manga, cru",TACO,1da18009-7284-4f9d-81f2-60dcf925aac6,"Cajá-Manga, cru",TACO,SOURCE_NORMALIZED_NAME,Cálcio:12.744!=13|Magnésio:11.283999999999999!=11|Fósforo:24.469666666666665!=24|Sódio:1.4386666666666665!=1
+1528,1525,"Caju, cru",TACO,358e1648-3f84-4595-9a8c-f61eab52d8fc,"Caju, cru",TACO,SOURCE_NORMALIZED_NAME,Cálcio:1.4166666666666667!=1|Magnésio:10.11!=10|Fósforo:15.636666666666665!=16|Vitamina A (RE):14.666!=7
+1529,1526,"Caju, polpa, congelada",TACO,34e89552-dfec-419e-b447-ac19e319e650,"Caju, polpa, congelada",TACO,SOURCE_NORMALIZED_NAME,Energia:36.568679999999965!=37|Cálcio:0.8393333333333334!=1|Fósforo:9.773333333333333!=10|Sódio:4.161666666666666!=4|Vitamina A (RE):22!=11
+1534,1531,"Caju, suco concentrado, envasado",TACO,6be509bd-e99c-43a6-ab83-522a0ec76e23,"Caju, suco concentrado, envasado",TACO,SOURCE_NORMALIZED_NAME,Magnésio:8.447000000000001!=8|Fósforo:11.400333333333334!=11|Vitamina A (RE):10!=5
+1581,1578,Camarão à baiana,TBCA,60ffaeef-c07d-41a3-afbe-3d956209654c,Camarão à baiana,TACO,NAME_DIFFERENT_SOURCE_ANALYSIS_ONLY,NOME_SEMELHANTE_MAS_FONTE_DIFERENTE
+1599,1596,"Camarão, Rio Grande, grande, cru",TACO,eb90f297-5c09-498c-a0e8-b0c22c7e16b4,"Camarão, Rio Grande, grande, cru",TACO,SOURCE_NORMALIZED_NAME,Magnésio:27.367!=27
+1617,1614,"Canjica, branca, crua",TACO,d70593ae-ae7c-46a0-9fd6-36c51a922c95,"Canjica, branca, crua",TACO,SOURCE_NORMALIZED_NAME,Magnésio:12.325!=12|Fósforo:48.498!=48|Sódio:0.7896666666666666!=1
+1618,1615,"Canjica, com leite integral",TACO,21146329-5085-4b94-82b5-e67fc6706c0e,"Canjica, com leite integral",TACO,SOURCE_NORMALIZED_NAME,Cálcio:42.562666666666665!=43|Magnésio:5.838333333333334!=6|Fósforo:40.583333333333336!=41|Sódio:27.58666666666667!=28|Colesterol:1.3506666666666665!=1
+1649,1646,"Caqui, chocolate, cru",TACO,aeac51a1-0af8-4671-9898-91d40b4a874a,"Caqui, chocolate, cru",TACO,SOURCE_NORMALIZED_NAME,Magnésio:8.547333333333334!=9|Fósforo:18.429666666666666!=18|Sódio:2.1833333333333336!=2
+1659,1656,"Cará, cozido",TACO,dbe8f838-40b6-4821-89e3-75c87d4a46e3,"Cará, cozido",TACO,SOURCE_NORMALIZED_NAME,Cálcio:5.168333333333334!=5|Magnésio:14.838666666666667!=15
+1660,1657,"Cará, cru",TACO,bf22966a-755d-4c79-ad40-8319418ea040,"Cará, cru",TACO,SOURCE_NORMALIZED_NAME,Magnésio:11.466666666666667!=11
+1665,1662,"Carambola, crua",TACO,3e6049ee-af18-4bae-8805-cf19f07e8a55,"Carambola, crua",TACO,SOURCE_NORMALIZED_NAME,Cálcio:4.788333333333333!=5|Magnésio:7.361!=7|Fósforo:10.749!=11
+1932,1929,"Carne, bovina, acém, moído, cru",TACO,ee0a77e6-8465-44b8-97d2-856fe04ed578,"Carne, bovina, acém, moído, cru",TACO,SOURCE_NORMALIZED_NAME,Cálcio:2.61!=3|Vitamina A (RE):2.32!=2
+1933,1930,"Carne, bovina, acém, sem gordura, cozido",TACO,94ecb7f3-815d-428f-a481-a69f13676f61,"Carne, bovina, acém, sem gordura, cozido",TACO,SOURCE_NORMALIZED_NAME,Cálcio:7.11!=7|Magnésio:14.44!=14
+1934,1931,"Carne, bovina, acém, sem gordura, cru",TACO,8a4bb0b8-8212-4513-af57-9e7ca1c4c00a,"Carne, bovina, acém, sem gordura, cru",TACO,SOURCE_NORMALIZED_NAME,Cálcio:4.716666666666668!=5|Magnésio:13.276666666666666!=13|Vitamina A (RE):2.1733333333333333!=2
+1935,1932,"Carne, bovina, almôndegas, cruas",TACO,279d3994-c4be-4edd-8a93-c34dd01df854,"Carne, bovina, almôndegas, cruas",TACO,SOURCE_NORMALIZED_NAME,Cálcio:22.231666666666666!=22|Magnésio:23.750666666666664!=24|Colesterol:33.59895!=34
+1936,1933,"Carne, bovina, almôndegas, fritas",TACO,81cd872d-77d3-448b-8244-423bf5c897bb,"Carne, bovina, almôndegas, fritas",TACO,SOURCE_NORMALIZED_NAME,Colesterol:36.38066666666666!=36
+1937,1934,"Carne, bovina, bucho, cozido",TACO,96f9617c-d172-477e-b2fc-3e476e016b7e,"Carne, bovina, bucho, cozido",TACO,SOURCE_NORMALIZED_NAME,Cálcio:13.21!=13|Magnésio:7.413333333333334!=7
+1938,1935,"Carne, bovina, bucho, cru",TACO,18576245-1a82-49ad-b996-147cd35d24cd,"Carne, bovina, bucho, cru",TACO,SOURCE_NORMALIZED_NAME,Magnésio:6.403333333333333!=6
+1939,1936,"Carne, bovina, capa de contra-filé, com gordura, crua",TACO,b3de9f17-19fc-4a90-801f-0195fade1d7e,"Carne, bovina, capa de contra-filé, com gordura, crua",TACO,SOURCE_NORMALIZED_NAME,Cálcio:5.86!=6|Magnésio:17.453333333333333!=17|Vitamina A (RE):3.763333333333333!=4
+1940,1937,"Carne, bovina, capa de contra-filé, com gordura, grelhada",TACO,f4900472-f662-4f7a-b180-ace57b2d753d,"Carne, bovina, capa de contra-filé, com gordura, grelhada",TACO,SOURCE_NORMALIZED_NAME,Cálcio:7.256666666666667!=7|Magnésio:18.38!=18
+1941,1938,"Carne, bovina, capa de contra-filé, sem gordura, crua",TACO,4e40bc7e-e23f-4d65-bd96-87dd29379fb2,"Carne, bovina, capa de contra-filé, sem gordura, crua",TACO,SOURCE_NORMALIZED_NAME,Cálcio:6.496666666666667!=6|Magnésio:19.586666666666666!=20
+1943,1940,"Carne, bovina, charque, cozido",TACO,1180019a-4765-4b41-90d6-7a19b1d2ece7,"Carne, bovina, charque, cozido",TACO,SOURCE_NORMALIZED_NAME,Magnésio:12.807333333333332!=13
+1944,1941,"Carne, bovina, charque, cru",TACO,cae5deef-53ce-46d9-8497-35e97fdf2021,"Carne, bovina, charque, cru",TACO,SOURCE_NORMALIZED_NAME,Cálcio:15.176!=15|Magnésio:13.360333333333331!=13
+1945,1942,"Carne, bovina, contra-filé de costela, cru",TACO,4dc364e3-869e-4721-bb6f-19a1ad852592,"Carne, bovina, contra-filé de costela, cru",TACO,SOURCE_NORMALIZED_NAME,Cálcio:3.16!=3|Sódio:38.52333333333333!=39
+1946,1943,"Carne, bovina, contra-filé de costela, grelhado",TACO,a7dedea3-e753-401b-be49-5241fea0c6d6,"Carne, bovina, contra-filé de costela, grelhado",TACO,SOURCE_NORMALIZED_NAME,Cálcio:4.286666666666666!=4|Magnésio:23.566666666666666!=24
+1947,1944,"Carne, bovina, contra-filé, à milanesa",TACO,50b44b2b-fce2-49ae-b0fa-9462a3da7dbf,"Carne, bovina, contra-filé, à milanesa",TACO,SOURCE_NORMALIZED_NAME,Cálcio:14.672000000000002!=15
+1948,1945,"Carne, bovina, contra-filé, com gordura, cru",TACO,0dae3af6-40ef-4fba-87b8-d99428eff3cb,"Carne, bovina, contra-filé, com gordura, cru",TACO,SOURCE_NORMALIZED_NAME,Cálcio:3.673!=4|Vitamina A (RE):3.587!=4
+1949,1946,"Carne, bovina, contra-filé, com gordura, grelhado",TACO,39e81f56-60e8-4041-8985-ee9f67701310,"Carne, bovina, contra-filé, com gordura, grelhado",TACO,SOURCE_NORMALIZED_NAME,Cálcio:4.463333333333334!=4|Magnésio:18.66!=19
+1950,1947,"Carne, bovina, contra-filé, sem gordura, cru",TACO,a7c2884b-a1b2-41e9-a4a1-6c6b26bbf02f,"Carne, bovina, contra-filé, sem gordura, cru",TACO,SOURCE_NORMALIZED_NAME,Cálcio:4.196666666666666!=4|Magnésio:20.62666666666667!=21
+1952,1949,"Carne, bovina, costela, assada",TACO,17fc4e6c-8866-46e8-b218-29e4a54ee091,"Carne, bovina, costela, assada",TACO,SOURCE_NORMALIZED_NAME,Magnésio:19.546666666666667!=20
+1953,1950,"Carne, bovina, costela, crua",TACO,ff7a611f-b20a-4d0b-8f81-75ed05b83b7e,"Carne, bovina, costela, crua",TACO,SOURCE_NORMALIZED_NAME,Magnésio:11.676666666666668!=12|Vitamina A (RE):4.566666666666666!=5
+1954,1951,"Carne, bovina, coxão duro, sem gordura, cozido",TACO,267058fa-745c-4d28-aa31-d4849b6e193a,"Carne, bovina, coxão duro, sem gordura, cozido",TACO,SOURCE_NORMALIZED_NAME,Magnésio:13.79!=14
+1956,1953,"Carne, bovina, coxão mole, sem gordura, cozido",TACO,ee562c0f-6131-4b84-abab-5241140ec526,"Carne, bovina, coxão mole, sem gordura, cozido",TACO,SOURCE_NORMALIZED_NAME,Cálcio:3.733333333333333!=4|Magnésio:13.47!=13|Sódio:43.50333333333333!=44|Vitamina A (RE):2.4666666666666663!=2
+1957,1954,"Carne, bovina, coxão mole, sem gordura, cru",TACO,13a4c884-4ec1-49b1-bb36-22b7c3ba7bca,"Carne, bovina, coxão mole, sem gordura, cru",TACO,SOURCE_NORMALIZED_NAME,Magnésio:20.716666666666665!=21|Vitamina A (RE):2.61!=3
+1958,1955,"Carne, bovina, cupim, assado",TACO,365a475d-e74b-4ef4-a2ec-ece16d51c263,"Carne, bovina, cupim, assado",TACO,SOURCE_NORMALIZED_NAME,Cálcio:7.623333333333332!=8|Magnésio:18.206666666666667!=18
+1959,1956,"Carne, bovina, cupim, cru",TACO,f4822ec3-dc7c-49a6-9796-b161eec712c0,"Carne, bovina, cupim, cru",TACO,SOURCE_NORMALIZED_NAME,Cálcio:3.5666666666666664!=4|Magnésio:12.76!=13|Vitamina A (RE):2.703333333333333!=3
+1960,1957,"Carne, bovina, fígado, cru",TACO,a2ad36e9-8608-423e-9169-f8b6f827cafc,"Carne, bovina, fígado, cru",TACO,SOURCE_NORMALIZED_NAME,Cálcio:4.156666666666666!=4|Magnésio:12.42!=12
+1961,1958,"Carne, bovina, fígado, grelhado",TACO,092a2a47-31cc-43d5-82bc-4543299af5f1,"Carne, bovina, fígado, grelhado",TACO,SOURCE_NORMALIZED_NAME,Cálcio:5.56!=6|Magnésio:9.696666666666665!=10
+1962,1959,"Carne, bovina, filé mingnon, sem gordura, cru",TACO,d4863bc2-63ee-4edf-94cc-a55ee293552e,"Carne, bovina, filé mingnon, sem gordura, cru",TACO,SOURCE_NORMALIZED_NAME,Magnésio:21.39!=21|Vitamina A (RE):3.63!=4
+1963,1960,"Carne, bovina, filé mingnon, sem gordura, grelhado",TACO,902db318-a6d2-46e6-91ff-2a46d7a0bd4e,"Carne, bovina, filé mingnon, sem gordura, grelhado",TACO,SOURCE_NORMALIZED_NAME,Cálcio:4.31!=4
+1964,1961,"Carne, bovina, flanco, sem gordura, cozido",TACO,c7f1eb2a-ba1b-4172-acbd-3900c53a8aaa,"Carne, bovina, flanco, sem gordura, cozido",TACO,SOURCE_NORMALIZED_NAME,Cálcio:3.533333333333333!=4|Magnésio:13.613333333333335!=14|Vitamina A (RE):1.76!=2
+1965,1962,"Carne, bovina, flanco, sem gordura, cru",TACO,6e132754-a9be-4f7e-bdc5-048894530975,"Carne, bovina, flanco, sem gordura, cru",TACO,SOURCE_NORMALIZED_NAME,Cálcio:2.813333333333333!=3
+1966,1963,"Carne, bovina, fraldinha, com gordura, cozida",TACO,f8c3852b-45ae-464b-9225-63dd919b9312,"Carne, bovina, fraldinha, com gordura, cozida",TACO,SOURCE_NORMALIZED_NAME,Cálcio:3.2133333333333334!=3|Magnésio:14.476666666666667!=14
+1967,1964,"Carne, bovina, fraldinha, com gordura, crua",TACO,d1f5a76e-2c25-4c7c-a011-87476f86bfd6,"Carne, bovina, fraldinha, com gordura, crua",TACO,SOURCE_NORMALIZED_NAME,Cálcio:3.106666666666667!=3|Vitamina A (RE):4.6433333333333335!=5
+1968,1965,"Carne, bovina, lagarto, cozido",TACO,bf07bf82-4e5f-40ac-a230-d44b782a0774,"Carne, bovina, lagarto, cozido",TACO,SOURCE_NORMALIZED_NAME,Cálcio:3.533333333333333!=4|Vitamina A (RE):2.8966666666666665!=3
+1969,1966,"Carne, bovina, lagarto, cru",TACO,70bdb893-b4a5-4d96-a7ba-f017b00a9963,"Carne, bovina, lagarto, cru",TACO,SOURCE_NORMALIZED_NAME,Cálcio:2.5933333333333333!=3|Magnésio:19.67!=20
+1970,1967,"Carne, bovina, língua, cozida",TACO,cd7e6126-0ef0-4160-8957-214b02b31940,"Carne, bovina, língua, cozida",TACO,SOURCE_NORMALIZED_NAME,Magnésio:11.54!=12
+1971,1968,"Carne, bovina, língua, crua",TACO,2b108bce-15cc-4a7a-bfdc-174672860181,"Carne, bovina, língua, crua",TACO,SOURCE_NORMALIZED_NAME,Magnésio:15.303333333333333!=15
+1972,1969,"Carne, bovina, maminha, crua",TACO,b5627d60-efcb-4176-82f7-0d4c54f08ef9,"Carne, bovina, maminha, crua",TACO,SOURCE_NORMALIZED_NAME,Cálcio:2.83!=3|Magnésio:15.656666666666666!=16|Sódio:37.416666666666664!=37|Vitamina A (RE):3.176666666666667!=3
+1973,1970,"Carne, bovina, maminha, grelhada",TACO,a40a3908-02b0-4cf6-8abe-b1285935432f,"Carne, bovina, maminha, grelhada",TACO,SOURCE_NORMALIZED_NAME,Cálcio:4.17!=4
+1974,1971,"Carne, bovina, miolo de alcatra, sem gordura, cru",TACO,94d84eb9-a379-4025-9fc9-674b7260144e,"Carne, bovina, miolo de alcatra, sem gordura, cru",TACO,SOURCE_NORMALIZED_NAME,Cálcio:3.186666666666667!=3|Vitamina A (RE):3.516666666666667!=4
+1975,1972,"Carne, bovina, miolo de alcatra, sem gordura, grelhado",TACO,ff1630c4-1539-468b-b8f7-100482252e41,"Carne, bovina, miolo de alcatra, sem gordura, grelhado",TACO,SOURCE_NORMALIZED_NAME,Cálcio:4.51!=5
+1976,1973,"Carne, bovina, músculo, sem gordura, cozido",TACO,e3c2bc6d-98ae-424b-a47b-2d1fdda69b33,"Carne, bovina, músculo, sem gordura, cozido",TACO,SOURCE_NORMALIZED_NAME,Magnésio:13.416666666666666!=13
+1977,1974,"Carne, bovina, músculo, sem gordura, cru",TACO,ffe82851-2568-4455-9f84-15fc0bbf3508,"Carne, bovina, músculo, sem gordura, cru",TACO,SOURCE_NORMALIZED_NAME,Cálcio:3.64!=4|Magnésio:17.45!=17
+1978,1975,"Carne, bovina, paleta, com gordura, crua",TACO,7edc4adf-2855-4a86-9941-d3f3e5433013,"Carne, bovina, paleta, com gordura, crua",TACO,SOURCE_NORMALIZED_NAME,Cálcio:4.36!=4|Magnésio:14.15!=14
+1979,1976,"Carne, bovina, paleta, sem gordura, cozida",TACO,550bc1f9-3b8d-4e16-9274-cd19a5885d64,"Carne, bovina, paleta, sem gordura, cozida",TACO,SOURCE_NORMALIZED_NAME,Cálcio:5.6433333333333335!=6|Magnésio:17.66!=18
+1980,1977,"Carne, bovina, paleta, sem gordura, crua",TACO,c125f298-bd81-4483-9028-9a34a57ac60b,"Carne, bovina, paleta, sem gordura, crua",TACO,SOURCE_NORMALIZED_NAME,Cálcio:3.62!=4|Magnésio:17.513333333333335!=18|Vitamina A (RE):3.27!=3
+1981,1978,"Carne, bovina, patinho, sem gordura, cru",TACO,512e7f90-c178-4d70-878f-383f93a05b8b,"Carne, bovina, patinho, sem gordura, cru",TACO,SOURCE_NORMALIZED_NAME,Cálcio:3.296666666666667!=3|Vitamina A (RE):1.5066666666666666!=2
+1982,1979,"Carne, bovina, patinho, sem gordura, grelhado",TACO,9b802e2d-a4e8-4e97-8c89-a755f999e20a,"Carne, bovina, patinho, sem gordura, grelhado",TACO,SOURCE_NORMALIZED_NAME,Cálcio:4.796666666666666!=5
+1984,1981,"Carne, bovina, peito, sem gordura, cru",TACO,56f3f248-08fa-4135-b7bb-9af156819431,"Carne, bovina, peito, sem gordura, cru",TACO,SOURCE_NORMALIZED_NAME,Magnésio:15.323333333333332!=15|Vitamina A (RE):4.25!=4
+1985,1982,"Carne, bovina, picanha, com gordura, crua",TACO,e9f47a8d-d5d0-42c4-bc46-30968918cdcb,"Carne, bovina, picanha, com gordura, crua",TACO,SOURCE_NORMALIZED_NAME,Cálcio:2.4166666666666665!=2|Magnésio:14.216666666666667!=14|Vitamina A (RE):3.46!=3
+1987,1984,"Carne, bovina, picanha, sem gordura, crua",TACO,32bece40-74dc-4822-a1bd-c9ab691111d9,"Carne, bovina, picanha, sem gordura, crua",TACO,SOURCE_NORMALIZED_NAME,Cálcio:3.393333333333333!=3|Magnésio:20.25!=20
+1988,1985,"Carne, bovina, picanha, sem gordura, grelhada",TACO,ab076007-b048-40cf-a553-eb49f607502f,"Carne, bovina, picanha, sem gordura, grelhada",TACO,SOURCE_NORMALIZED_NAME,Cálcio:4.43!=4|Magnésio:25.416666666666668!=25
+1989,1986,"Carne, bovina, seca, cozida",TACO,7ffb6c57-5e89-41e2-a467-271eac0474f8,"Carne, bovina, seca, cozida",TACO,SOURCE_NORMALIZED_NAME,Cálcio:12.763666666666666!=13
+1990,1987,"Carne, bovina, seca, crua",TACO,4ce0c6c6-bfde-450c-8312-a96c7fbee734,"Carne, bovina, seca, crua",TACO,SOURCE_NORMALIZED_NAME,Magnésio:12.219666666666669!=12
+2103,2100,"Caruru, cru",TACO,d92d8cb1-90bf-49a7-ad7d-bcf32234422f,"Caruru, cru",TACO,SOURCE_NORMALIZED_NAME,Sódio:13.665!=14|Vitamina A (RE):1906!=953
+2124,2121,"Castanha-de-caju, torrada, salgada",TACO,e2179246-44f6-4a9c-8b7f-a0f1ece513e8,"Castanha-de-caju, torrada, salgada",TACO,SOURCE_NORMALIZED_NAME,Cálcio:32.58766666666667!=33
+2125,2122,"Castanha-do-Brasil, crua",TACO,de59f5ae-a220-4bd0-b117-efb782246bab,"Castanha-do-Brasil, crua",TACO,SOURCE_NORMALIZED_NAME,Sódio:0.6539999999999999!=1
+2129,2126,"Catalonha, crua",TACO,7c494ba8-ad5f-41ac-96fa-78edaf93af0d,"Catalonha, crua",TACO,SOURCE_NORMALIZED_NAME,Magnésio:17.295666666666666!=17|Sódio:9.393666666666666!=9
+2130,2127,"Catalonha, refogada",TACO,97ee88fa-b8bb-4593-b0c6-f72f64be64d3,"Catalonha, refogada",TACO,SOURCE_NORMALIZED_NAME,Magnésio:16.345666666666666!=16|Fósforo:35.36166666666667!=35|Sódio:24.719333333333335!=25|Vitamina A (RE):850!=425
+2158,2155,"Cebola, crua",TACO,2d0e678a-5116-44a5-ada3-ad626a5a6d4f,"Cebola, crua",TACO,SOURCE_NORMALIZED_NAME,Energia:39.420046376811584!=39|Sódio:0.5966666666666667!=1
+2161,2158,"Cebolinha, crua",TACO,c00f3625-ab4c-43b5-8970-0ce36155ae4c,"Cebolinha, crua",TACO,SOURCE_NORMALIZED_NAME,Energia:19.515885507246438!=20|Magnésio:24.593333333333334!=25|Sódio:1.6033333333333335!=2|Vitamina A (RE):134.41666666666669!=67
+2184,2181,"Cenoura, cozida",TACO,3eea8ed6-3a3d-47e6-ac2f-b815316dee04,"Cenoura, cozida",TACO,SOURCE_NORMALIZED_NAME,Cálcio:25.617!=26|Magnésio:14.475333333333333!=14|Sódio:7.881!=8|Vitamina A (RE):612!=306
+2185,2182,"Cenoura, crua",TACO,0d28f71f-047b-4a37-8224-d32022272017,"Cenoura, crua",TACO,SOURCE_NORMALIZED_NAME,Cálcio:22.54!=23|Magnésio:11.226666666666667!=11|Sódio:3.3333333333333335!=3|Vitamina A (RE):1326!=663
+2200,2197,"Cereais, milho, flocos, com sal",TACO,87d2a8a3-88a4-4c19-b09d-e1b2df2883a0,"Cereais, milho, flocos, com sal",TACO,SOURCE_NORMALIZED_NAME,Cálcio:1.8136666666666665!=2
+2201,2198,"Cereais, milho, flocos, sem sal",TACO,5180c796-948e-42e6-930a-df9c6aa3d586,"Cereais, milho, flocos, sem sal",TACO,SOURCE_NORMALIZED_NAME,Magnésio:16.548666666666666!=17|Potássio:28.697333333333333!=29
+2223,2220,"Cereal matinal, milho",TACO,e5485d9b-537b-4e41-a940-55d84fba3d30,"Cereal matinal, milho",TACO,SOURCE_NORMALIZED_NAME,Vitamina A (RE):30.916666666666668!=15
+2226,2223,"Cereal matinal, milho, açúcar",TACO,7757cd93-d54b-4b64-92b5-44044c4f0589,"Cereal matinal, milho, açúcar",TACO,SOURCE_NORMALIZED_NAME,Vitamina A (RE):30.916666666666668!=15
+2247,2244,"Cerveja, pilsen 2",TACO,cec7eced-a2e8-41e8-b93c-b0d5a780cc7c,"Cerveja, pilsen 2",TACO,SOURCE_NORMALIZED_NAME,Magnésio:6.743666666666666!=7|Sódio:4.230333333333333!=4|Potássio:29.46666666666667!=29
+2260,2257,"Chá, erva-doce, infusão 5%",TACO,3eaf96b8-dee8-42cc-9a91-65872806120f,"Chá, erva-doce, infusão 5%",TACO,SOURCE_NORMALIZED_NAME,Energia:1.3970599738756386!=1|Magnésio:0.8809999999999999!=1|Fósforo:0.651!=1|Sódio:0.6253333333333334!=1
+2263,2260,"Chá, mate, infusão 5%",TACO,87f1713b-4023-4d59-ba67-b9fa184d1e08,"Chá, mate, infusão 5%",TACO,SOURCE_NORMALIZED_NAME,Energia:2.730749951124143!=3|Cálcio:0.6446666666666666!=1|Potássio:5.336333333333333!=5
+2264,2261,"Chá, preto, infusão 5%",TACO,80ee26dd-a6fb-40d3-9ae6-68658cc55bdb,"Chá, preto, infusão 5%",TACO,SOURCE_NORMALIZED_NAME,Energia:2.24790995796521!=2|Cálcio:0.25233333333333335!=0|Fósforo:1.5113333333333332!=2|Potássio:13.437666666666665!=13
+2281,2278,"Chantilly, spray, com gordura vegetal",TACO,4210aeb6-3099-46a1-af27-80c17386eb0b,"Chantilly, spray, com gordura vegetal",TACO,SOURCE_NORMALIZED_NAME,Cálcio:2.2743333333333333!=2|Magnésio:0.8463333333333334!=1|Fósforo:15.646333333333333!=16|Potássio:5.1113333333333335!=5
+2288,2285,"Charuto, de repolho",TACO,6b796e72-345c-467f-a7cf-b2c8e5cdbd21,"Charuto, de repolho",TACO,SOURCE_NORMALIZED_NAME,Magnésio:13.459666666666669!=13|Colesterol:21.34266666666667!=21
+2315,2312,"Chicória, crua",TACO,57bd72a5-17e1-47cc-b9f8-54424b80b1c5,"Chicória, crua",TACO,SOURCE_NORMALIZED_NAME,Energia:13.837120289855097!=14|Fósforo:13.377666666666665!=13|Sódio:13.522333333333334!=14
+2374,2371,"Chocolate, ao leite",TACO,e93b4060-77d1-41b6-8b4b-66fd0cc66871,"Chocolate, ao leite",TACO,SOURCE_NORMALIZED_NAME,Colesterol:16.5175!=17
+2380,2377,"Chocolate, ao leite, com castanha do Pará",TACO,ab6f48b6-5b15-4e7d-8b91-d9977b69fa17,"Chocolate, ao leite, com castanha do Pará",TACO,SOURCE_NORMALIZED_NAME,Colesterol:15.501333333333333!=16
+2381,2378,"Chocolate, ao leite, com castanha do Pará",TBCA,ab6f48b6-5b15-4e7d-8b91-d9977b69fa17,"Chocolate, ao leite, com castanha do Pará",TACO,NAME_GROUP_ANALYSIS_ONLY,CORRESPONDENCIA_ANALITICA_SEM_FONTE_COMPATIVEL
+2383,2380,"Chocolate, ao leite, dietético",TBCA,6c7e1bd2-cc53-4f57-b926-d2ff334d61a9,"Chocolate, ao leite, dietético",TACO,NAME_GROUP_ANALYSIS_ONLY,CORRESPONDENCIA_ANALITICA_SEM_FONTE_COMPATIVEL
+2384,2381,"Chocolate, ao leite, dietético",TBCA,6c7e1bd2-cc53-4f57-b926-d2ff334d61a9,"Chocolate, ao leite, dietético",TACO,NAME_GROUP_ANALYSIS_ONLY,CORRESPONDENCIA_ANALITICA_SEM_FONTE_COMPATIVEL
+2387,2384,"Chocolate, meio amargo",TACO,39b4ddf4-0e9f-417f-b4b9-ac34659284ad,"Chocolate, meio amargo",TACO,SOURCE_NORMALIZED_NAME,Sódio:8.866999999999999!=9|Colesterol:2.2203333333333335!=2
+2388,2385,"Chocolate, meio amargo",TBCA,39b4ddf4-0e9f-417f-b4b9-ac34659284ad,"Chocolate, meio amargo",TACO,NAME_GROUP_ANALYSIS_ONLY,CORRESPONDENCIA_ANALITICA_SEM_FONTE_COMPATIVEL
+2414,2411,"Chuchu, cozido",TACO,7b559614-dcf2-4407-802c-7979ac2326f6,"Chuchu, cozido",TACO,SOURCE_NORMALIZED_NAME,Energia:18.53979053137702!=19|Cálcio:7.827333333333333!=8|Fósforo:12.805!=13|Sódio:1.8073333333333335!=2
+2415,2412,"Chuchu, cru",TACO,79545646-6d9b-4556-af40-bf90256f9789,"Chuchu, cru",TACO,SOURCE_NORMALIZED_NAME,Cálcio:11.506666666666668!=12|Magnésio:7.226666666666667!=7|Fósforo:17.743333333333332!=18
+2430,2427,"Ciriguela, crua",TACO,91de2952-6488-434f-8cee-2ccf231ad33d,"Ciriguela, crua",TACO,SOURCE_NORMALIZED_NAME,Cálcio:27.414!=27|Sódio:1.6823333333333335!=2
+2444,2441,Cocada branca,TACO,0926836b-117f-438b-be6b-0c332130c5c5,Cocada branca,TACO,SOURCE_NORMALIZED_NAME,Magnésio:17.408666666666665!=17
+2456,2453,"Coco, água de",TACO,b1922402-c479-4bae-a463-1066ea6a5a92,"Coco, água de",TACO,SOURCE_NORMALIZED_NAME,Energia:21.50859424050649!=22|Magnésio:5.158333333333334!=5|Fósforo:3.755333333333333!=4|Sódio:1.782333333333333!=2
+2457,2454,"Coco, cru",TACO,5d9ba535-4a34-4adc-8f9f-1989515da539,"Coco, cru",TACO,SOURCE_NORMALIZED_NAME,Cálcio:6.484500000000001!=6|Sódio:15.32!=15
+2478,2475,"Coentro, folhas desidratadas",TACO,6803f9d7-4b26-45bf-b776-ded60d38c8f2,"Coentro, folhas desidratadas",TACO,SOURCE_NORMALIZED_NAME,Sódio:18.255333333333333!=18
+2550,2547,"Corimbatá, assado",TACO,12147a38-5988-4c52-9193-73e17b58d1b7,"Corimbatá, assado",TACO,SOURCE_NORMALIZED_NAME,Cálcio:22.304333333333332!=22|Sódio:40.425999999999995!=40
+2555,2552,"Corvina de água doce, crua",TACO,76d72338-eaab-43d1-8c16-c594890ea41b,"Corvina de água doce, crua",TACO,SOURCE_NORMALIZED_NAME,Cálcio:39.43!=39|Magnésio:24.5!=25|Vitamina A (RE):8.12!=8
+2557,2554,"Corvina do mar, crua",TACO,65b37d2f-ece1-4618-b239-a72293f3db54,"Corvina do mar, crua",TACO,SOURCE_NORMALIZED_NAME,Magnésio:23.75!=24
+2559,2556,"Corvina grande, cozida",TACO,7beeb9cc-e30b-45ae-be8c-764c4e3a0664,"Corvina grande, cozida",TACO,SOURCE_NORMALIZED_NAME,Magnésio:22.22266666666667!=22|Vitamina A (RE):6.276666666666666!=6
+2642,2639,"Couve, manteiga, crua",TACO,786cbec2-5f85-4135-aa29-bfd110ef7473,"Couve, manteiga, crua",TACO,SOURCE_NORMALIZED_NAME,Sódio:6.171!=6|Vitamina A (RE):496!=248
+2643,2640,"Couve, manteiga, refogada",TACO,f39b3dae-95ca-4ff4-ae97-85bbaf1e4854,"Couve, manteiga, refogada",TACO,SOURCE_NORMALIZED_NAME,Fósforo:33.406666666666666!=33|Sódio:11.446666666666667!=11|Vitamina A (RE):384!=192
+2653,2650,"Couve-flor, cozida",TACO,82d52ab1-bc04-4cc9-b3bb-54513f044d91,"Couve-flor, cozida",TACO,SOURCE_NORMALIZED_NAME,Magnésio:5.4446666666666665!=5|Fósforo:25.43166666666667!=25|Sódio:1.7876666666666665!=2
+2654,2651,"Couve-flor, crua",TACO,743bdd94-0db3-4b6c-b0b4-fdf7ad8ba218,"Couve-flor, crua",TACO,SOURCE_NORMALIZED_NAME,Energia:22.56334927536229!=23|Sódio:3.436666666666666!=3|Vitamina A (RE):2!=1
+2680,2677,"Coxinha de frango, frita",TACO,a5f38fe3-82d7-49ae-912f-6b365a478cd2,"Coxinha de frango, frita",TACO,SOURCE_NORMALIZED_NAME,Cálcio:18.333333333333332!=18|Magnésio:16.782666666666668!=17|Colesterol:14.806333333333333!=15
+2707,2704,Creme de leite,IBGE,14fd52a0-0ddd-434c-a643-cf51dc38e7b1,Creme de Leite,TACO,NAME_GROUP_ANALYSIS_ONLY,CORRESPONDENCIA_ANALITICA_SEM_FONTE_COMPATIVEL
+2708,2705,Creme de Leite,TACO,14fd52a0-0ddd-434c-a643-cf51dc38e7b1,Creme de Leite,TACO,SOURCE_NORMALIZED_NAME,Magnésio:7.540666666666667!=8
+2720,2717,"Creme de milho, pó",TBCA,e0eb981d-2327-4afa-bf52-a0d1d5da9cd6,"Creme de milho, pó",TACO,NAME_DIFFERENT_SOURCE_ANALYSIS_ONLY,NOME_SEMELHANTE_MAS_FONTE_DIFERENTE
+2760,2757,"Croquete, de carne, cru",TACO,87165b89-824a-4e31-981f-012b3bcee410,"Croquete, de carne, cru",TACO,SOURCE_NORMALIZED_NAME,Cálcio:15.496666666666668!=15|Magnésio:23.635!=24
+2761,2758,"Croquete, de carne, frito",TACO,0f5b832e-b176-472e-95d4-dcfa6c0c4812,"Croquete, de carne, frito",TACO,SOURCE_NORMALIZED_NAME,Magnésio:29.521666666666665!=30
+2783,2780,"Cupuaçu, cru",TACO,e560b475-0082-497e-8213-131fa3c6803a,"Cupuaçu, cru",TACO,SOURCE_NORMALIZED_NAME,Fósforo:21.2815!=21|Sódio:3.196!=3
+2785,2782,"Cupuaçu, polpa, congelada",TACO,ebdd4a20-fa98-49c8-ab61-0f9365fc9838,"Cupuaçu, polpa, congelada",TACO,SOURCE_NORMALIZED_NAME,Cálcio:5.490666666666667!=5|Fósforo:14.196333333333333!=14|Sódio:0.6890000000000001!=1
+2786,2783,"Cupuaçu, polpa, congelada",TBCA,ebdd4a20-fa98-49c8-ab61-0f9365fc9838,"Cupuaçu, polpa, congelada",TACO,NAME_DIFFERENT_SOURCE_ANALYSIS_ONLY,NOME_SEMELHANTE_MAS_FONTE_DIFERENTE
+2791,2788,"Curau, milho verde",TACO,3278a7b8-21a3-40d1-a650-bfc30eeec5d9,"Curau, milho verde",TACO,SOURCE_NORMALIZED_NAME,Sódio:20.512!=21|Vitamina A (RE):20.07!=16|Colesterol:4.742!=5
+2792,2789,"Curau, milho verde, mistura para",TACO,8b0f69dc-4e54-41e5-9763-69e33497b8a3,"Curau, milho verde, mistura para",TACO,SOURCE_NORMALIZED_NAME,Magnésio:8.500666666666666!=9
+2804,2801,"Cuscuz, de milho, cozido com sal",TACO,8469e219-ff3b-4d61-a21c-5210a334c0e0,"Cuscuz, de milho, cozido com sal",TACO,SOURCE_NORMALIZED_NAME,Cálcio:1.5406666666666666!=2|Magnésio:2.718!=3|Potássio:10.853666666666667!=11
+2805,2802,"Cuscuz, paulista",TACO,073ea43c-ca54-42d1-8685-6e639265a595,"Cuscuz, paulista",TACO,SOURCE_NORMALIZED_NAME,Cálcio:14.161333333333333!=14
+2807,2804,"Cuxá, molho",TACO,56091f5a-0039-480a-852b-603a639ac55a,"Cuxá, molho",TACO,SOURCE_NORMALIZED_NAME,Magnésio:33.57933333333333!=34|Vitamina A (RE):32.580555555555556!=16
+2825,2822,Dobradinha,TACO,840b2740-7b7c-4313-a2a3-c979c4793d4e,Dobradinha,TACO,SOURCE_NORMALIZED_NAME,Cálcio:11.336666666666666!=11|Magnésio:8.250333333333332!=8
+2826,2823,Dobradinha,Tucunduva,840b2740-7b7c-4313-a2a3-c979c4793d4e,Dobradinha,TACO,NAME_DIFFERENT_SOURCE_ANALYSIS_ONLY,NOME_SEMELHANTE_MAS_FONTE_DIFERENTE
+2869,2866,"Doce, de abóbora, cremoso",TACO,135c5d1a-3d23-47b6-81bc-d17b988955cd,"Doce, de abóbora, cremoso",TACO,SOURCE_NORMALIZED_NAME,Magnésio:5.521000000000001!=6|Fósforo:13.735666666666667!=14
+2870,2867,"Doce, de leite, cremoso",TACO,af446d6d-05c9-4f11-adb5-8451421cae87,"Doce, de leite, cremoso",TACO,SOURCE_NORMALIZED_NAME,Magnésio:16.262!=16|Vitamina A (RE):35.63666666666667!=36
+2882,2879,"Dourada de água doce, fresca",TACO,716243ea-582b-4f98-94da-646343efad21,"Dourada de água doce, fresca",TACO,SOURCE_NORMALIZED_NAME,Cálcio:12.133000000000001!=12|Magnésio:26.262666666666664!=26
+2897,2894,"Empada de frango, pré-cozida, assada",TACO,68719138-a3fb-4831-a4b5-f55aec87c479,"Empada de frango, pré-cozida, assada",TACO,SOURCE_NORMALIZED_NAME,Cálcio:15.609333333333334!=16|Magnésio:18.304666666666666!=18|Colesterol:22.719666666666665!=23
+2898,2895,"Empada, de frango, pré-cozida",TACO,a9b63c2e-8a16-4506-8926-979dc3dfd4a0,"Empada, de frango, pré-cozida",TACO,SOURCE_NORMALIZED_NAME,Cálcio:13.562666666666667!=14|Magnésio:17.334!=17|Colesterol:23.280999999999995!=23
+2959,2956,"Ervilha, em vagem",TACO,382c7573-f919-4cef-b00e-c31a76e6fc46,"Ervilha, em vagem",TACO,SOURCE_NORMALIZED_NAME,Cálcio:24.443966666666668!=24
+2965,2962,"Ervilha, enlatada, drenada",TACO,1993a914-0831-4571-b4d4-b103453324bd,"Ervilha, enlatada, drenada",TACO,SOURCE_NORMALIZED_NAME,Vitamina A (RE):9.166666666666668!=5
+2966,2963,"Ervilha, enlatada, drenada",TBCA,1993a914-0831-4571-b4d4-b103453324bd,"Ervilha, enlatada, drenada",TACO,NAME_DIFFERENT_SOURCE_ANALYSIS_ONLY,NOME_SEMELHANTE_MAS_FONTE_DIFERENTE
+3016,3013,"Espinafre, Nova Zelândia, cru",TACO,30bff731-fabc-4897-8767-f36184626a23,"Espinafre, Nova Zelândia, cru",TACO,SOURCE_NORMALIZED_NAME,Fósforo:25.433333333333334!=25|Vitamina A (RE):484!=242
+3017,3014,"Espinafre, Nova Zelândia, refogado",TACO,16f02ef4-fb28-4883-bd32-2397de0c0f8b,"Espinafre, Nova Zelândia, refogado",TACO,SOURCE_NORMALIZED_NAME,Fósforo:33.50566666666666!=34|Vitamina A (RE):623.8333333333333!=312
+3022,3019,Estrogonofe de carne,TACO,1a650388-2c6e-4685-8882-df439b3c8064,Estrogonofe de carne,TACO,SOURCE_NORMALIZED_NAME,Cálcio:28.317999999999998!=28|Magnésio:21.511666666666667!=22
+3100,3097,"Farinha, de arroz, enriquecida",TACO,93917621-8c58-4297-a52a-935bb2b1093d,"Farinha, de arroz, enriquecida",TACO,SOURCE_NORMALIZED_NAME,Cálcio:1.1226666666666667!=1|Magnésio:4.3!=4|Potássio:12.540666666666667!=13
+3103,3100,"Farinha, de mandioca, torrada",TACO,8a874f0f-9eba-4972-ba55-9a4044b5eecb,"Farinha, de mandioca, torrada",TACO,SOURCE_NORMALIZED_NAME,Sódio:10.31!=10
+3104,3101,"Farinha, de mesocarpo de babaçu, crua",TACO,a2fd2615-cdf3-43ae-967e-0f186004611f,"Farinha, de mesocarpo de babaçu, crua",TACO,SOURCE_NORMALIZED_NAME,Fósforo:25.560999999999996!=26|Sódio:12.463000000000001!=12
+3105,3102,"Farinha, de milho, amarela",TACO,164fdd42-51eb-43c3-80f3-fed7e86530e2,"Farinha, de milho, amarela",TACO,SOURCE_NORMALIZED_NAME,Cálcio:1.285!=1|Vitamina A (RE):18!=9
+3106,3103,"Farinha, de puba",TACO,60b66119-978b-435a-b926-84bad15dfbbe,"Farinha, de puba",TACO,SOURCE_NORMALIZED_NAME,Magnésio:27.486666666666665!=27|Fósforo:32.63966666666666!=33|Sódio:3.607666666666667!=4
+3108,3105,"Farinha, de rosca",TBCA,4a0e3786-9350-4d35-8859-9e4464557f13,"Farinha, de rosca",TACO,NAME_DIFFERENT_SOURCE_ANALYSIS_ONLY,NOME_SEMELHANTE_MAS_FONTE_DIFERENTE
+3109,3106,"Farinha, de trigo",TACO,84dff193-87ba-4535-98cc-5ccd9967ca7f,"Farinha, de trigo",TACO,SOURCE_NORMALIZED_NAME,Sódio:0.7366666666666667!=1
+3110,3107,"Farinha, láctea, de cereais",TACO,66a0857f-050a-4d13-98d2-1f3d06174bc1,"Farinha, láctea, de cereais",TACO,SOURCE_NORMALIZED_NAME,Colesterol:11.2718!=11
+3142,3139,"Fécula, de mandioca",TACO,19c7f5f8-26a8-4716-93c1-35d96102a409,"Fécula, de mandioca",TACO,SOURCE_NORMALIZED_NAME,Sódio:2.449!=2
+3183,3180,"Feijão, broto, cru",TACO,b22310be-b20d-4d28-be2e-34ddfd503e2d,"Feijão, broto, cru",TACO,SOURCE_NORMALIZED_NAME,Cálcio:14.482666666666667!=14|Sódio:1.7930000000000001!=2
+3184,3181,"Feijão, carioca, cozido",TACO,91fb4aa1-05ff-486f-8e3d-33703319ac1e,"Feijão, carioca, cozido",TACO,SOURCE_NORMALIZED_NAME,Cálcio:26.594666666666665!=27|Sódio:1.7590000000000001!=2
+3189,3186,"Feijão, carioca, cru",TBCA,9eca2ab0-e2c8-446d-833f-2954e4ff78b6,"Feijão, carioca, cru",TACO,NAME_GROUP_ANALYSIS_ONLY,CORRESPONDENCIA_ANALITICA_SEM_FONTE_COMPATIVEL
+3190,3187,"Feijão, fradinho, cozido",TACO,3f2eff33-c562-4cdd-83ac-dbcb7f40014c,"Feijão, fradinho, cozido",TACO,SOURCE_NORMALIZED_NAME,Cálcio:17.453333333333333!=17
+3194,3191,"Feijão, fradinho, cru",TACO,cd3fd146-4f80-439a-876e-9b97497edb07,"Feijão, fradinho, cru",TACO,SOURCE_NORMALIZED_NAME,Sódio:10.313666666666668!=10
+3195,3192,"Feijão, fradinho, cru",TBCA,cd3fd146-4f80-439a-876e-9b97497edb07,"Feijão, fradinho, cru",TACO,NAME_GROUP_ANALYSIS_ONLY,CORRESPONDENCIA_ANALITICA_SEM_FONTE_COMPATIVEL
+3201,3198,"Feijão, jalo, cozido",TACO,8ce2caea-d57d-493a-b51f-8ce2cf150cbe,"Feijão, jalo, cozido",TACO,SOURCE_NORMALIZED_NAME,Cálcio:29.400666666666666!=29|Sódio:0.5203333333333333!=1
+3203,3200,"Feijão, jalo, cru",TACO,ffb184ce-ac5b-4f41-ab5d-5238ebfadfdb,"Feijão, jalo, cru",TACO,SOURCE_NORMALIZED_NAME,Sódio:24.580333333333332!=25
+3204,3201,"Feijão, jalo, cru",TBCA,ffb184ce-ac5b-4f41-ab5d-5238ebfadfdb,"Feijão, jalo, cru",TACO,NAME_GROUP_ANALYSIS_ONLY,CORRESPONDENCIA_ANALITICA_SEM_FONTE_COMPATIVEL
+3205,3202,"Feijão, preto, cozido",TACO,a9812b6d-95d3-46d2-9500-424d5ed27e4a,"Feijão, preto, cozido",TACO,SOURCE_NORMALIZED_NAME,Sódio:1.854!=2
+3210,3207,"Feijão, preto, cru",TBCA,9dca51d1-7133-4c06-b3dd-1cf5e7a92b8f,"Feijão, preto, cru",TACO,NAME_GROUP_ANALYSIS_ONLY,CORRESPONDENCIA_ANALITICA_SEM_FONTE_COMPATIVEL
+3211,3208,"Feijão, rajado, cozido",TACO,57138f1a-a3da-4503-9749-5931204b9d09,"Feijão, rajado, cozido",TACO,SOURCE_NORMALIZED_NAME,Sódio:0.6869999999999999!=1
+3213,3210,"Feijão, rajado, cru",TACO,29f7b8fb-575b-45e1-ae27-e888d1ec2f34,"Feijão, rajado, cru",TACO,SOURCE_NORMALIZED_NAME,Sódio:13.650333333333334!=14
+3214,3211,"Feijão, rajado, cru",TBCA,29f7b8fb-575b-45e1-ae27-e888d1ec2f34,"Feijão, rajado, cru",TACO,NAME_GROUP_ANALYSIS_ONLY,CORRESPONDENCIA_ANALITICA_SEM_FONTE_COMPATIVEL
+3215,3212,"Feijão, rosinha, cozido",TACO,d27fb4f1-bde9-4388-a260-0f7438c3dcfd,"Feijão, rosinha, cozido",TACO,SOURCE_NORMALIZED_NAME,Cálcio:19.244!=19
+3217,3214,"Feijão, rosinha, cru",TBCA,621f5af3-bbc6-4344-804a-2aec12915ab8,"Feijão, rosinha, cru",TACO,NAME_GROUP_ANALYSIS_ONLY,CORRESPONDENCIA_ANALITICA_SEM_FONTE_COMPATIVEL
+3218,3215,"Feijão, roxo, cozido",TACO,12f8adf8-5b20-42e6-a708-fd79fb891132,"Feijão, roxo, cozido",TACO,SOURCE_NORMALIZED_NAME,Cálcio:22.532!=23|Magnésio:34.39266666666666!=34|Sódio:1.457!=1
+3220,3217,"Feijão, roxo, cru",TACO,cef9a4bc-05c1-4b83-9fce-ae79460d2f79,"Feijão, roxo, cru",TACO,SOURCE_NORMALIZED_NAME,Sódio:9.757666666666667!=10
+3221,3218,"Feijão, roxo, cru",TBCA,cef9a4bc-05c1-4b83-9fce-ae79460d2f79,"Feijão, roxo, cru",TACO,NAME_GROUP_ANALYSIS_ONLY,CORRESPONDENCIA_ANALITICA_SEM_FONTE_COMPATIVEL
+3304,3301,"Figo, cru",TACO,c884efac-b5ea-40eb-8cc7-7fdf343ab3d0,"Figo, cru",TACO,SOURCE_NORMALIZED_NAME,Energia:41.447126086956516!=41|Cálcio:27.39!=27|Magnésio:11.31!=11|Fósforo:14.57!=15
+3305,3302,"Figo, enlatado, em calda",TACO,318bcc88-46f7-4190-babd-eaeb20a7449b,"Figo, enlatado, em calda",TACO,SOURCE_NORMALIZED_NAME,Cálcio:32.61666666666667!=33|Magnésio:6.85!=7|Fósforo:6.253333333333334!=6|Sódio:6.87!=7
+3306,3303,"Figo, enlatado, em calda",TBCA,318bcc88-46f7-4190-babd-eaeb20a7449b,"Figo, enlatado, em calda",TACO,NAME_DIFFERENT_SOURCE_ANALYSIS_ONLY,NOME_SEMELHANTE_MAS_FONTE_DIFERENTE
+3489,3486,"Frango, asa, com pele, crua",TACO,67506c0d-1374-4c3c-84cf-97707347b773,"Frango, asa, com pele, crua",TACO,SOURCE_NORMALIZED_NAME,Vitamina A (RE):10.373333333333333!=10
+3491,3488,"Frango, caipira, inteiro, com pele, cozido",TACO,b36f4d0c-4f27-4abf-9b2b-faa813477167,"Frango, caipira, inteiro, com pele, cozido",TACO,SOURCE_NORMALIZED_NAME,Cálcio:16.762!=17|Magnésio:18.34866666666667!=18
+3494,3491,"Frango, coração, cru",TACO,1fc53e7a-3b41-4c82-ae49-70e09865991d,"Frango, coração, cru",TACO,SOURCE_NORMALIZED_NAME,Cálcio:5.506666666666667!=6|Vitamina A (RE):9.386666666666667!=9
+3495,3492,"Frango, coração, grelhado",TACO,087f25fd-8327-4460-aca0-d64404fb3321,"Frango, coração, grelhado",TACO,SOURCE_NORMALIZED_NAME,Cálcio:8.351666666666667!=8
+3496,3493,"Frango, coxa, com pele, assada",TACO,e5901110-5ce5-4d48-8b9d-d83c35acba1b,"Frango, coxa, com pele, assada",TACO,SOURCE_NORMALIZED_NAME,Cálcio:8.336333333333334!=8
+3498,3495,"Frango, coxa, sem pele, cozida",TACO,7ec6c6cb-f38e-433f-b049-95b5b90fe6ea,"Frango, coxa, sem pele, cozida",TACO,SOURCE_NORMALIZED_NAME,Cálcio:11.780999999999999!=12|Magnésio:11.143666666666666!=11
+3499,3496,"Frango, coxa, sem pele, crua",TACO,8daccb48-5c32-4235-8830-d7d0852a7eec,"Frango, coxa, sem pele, crua",TACO,SOURCE_NORMALIZED_NAME,Vitamina A (RE):11.663333333333334!=12
+3501,3498,"Frango, filé, à milanesa",TACO,25080d9f-15cf-4c02-b0b6-1a981d275e63,"Frango, filé, à milanesa",TACO,SOURCE_NORMALIZED_NAME,Vitamina A (RE):6.61!=7
+3502,3499,"Frango, inteiro, com pele, cru",TACO,67eb1065-75f0-4874-9ac4-26054419e2c5,"Frango, inteiro, com pele, cru",TACO,SOURCE_NORMALIZED_NAME,Cálcio:6.3!=6|Magnésio:24.30333333333333!=24
+3504,3501,"Frango, inteiro, sem pele, cozido",TACO,02d0cb0c-ebf7-4722-a294-0fcd83abf808,"Frango, inteiro, sem pele, cozido",TACO,SOURCE_NORMALIZED_NAME,Cálcio:8.183333333333332!=8|Magnésio:12.346333333333334!=12
+3505,3502,"Frango, inteiro, sem pele, cru",TACO,1c4c60c4-0af1-4bca-8278-dd78172125ee,"Frango, inteiro, sem pele, cru",TACO,SOURCE_NORMALIZED_NAME,Cálcio:6.523333333333333!=7|Vitamina A (RE):3.67!=4
+3506,3503,"Frango, peito, com pele, assado",TACO,e1b85ece-2e7e-4e23-b73f-4fbe6062cde0,"Frango, peito, com pele, assado",TACO,SOURCE_NORMALIZED_NAME,Cálcio:8.255666666666666!=8|Vitamina A (RE):6.226666666666667!=6
+3507,3504,"Frango, peito, com pele, cru",TACO,ca57dffc-6a8d-41bc-af57-b39d7d699ecb,"Frango, peito, com pele, cru",TACO,SOURCE_NORMALIZED_NAME,Cálcio:8.42!=8|Magnésio:28.29!=28
+3508,3505,"Frango, peito, sem pele, cozido",TACO,77cb80a8-2c9c-43a2-a975-3fac6cb1b247,"Frango, peito, sem pele, cozido",TACO,SOURCE_NORMALIZED_NAME,Cálcio:6.44!=6|Magnésio:13.76!=14
+3509,3506,"Frango, peito, sem pele, cru",TACO,7839fa85-9e06-4125-a063-242764fe834e,"Frango, peito, sem pele, cru",TACO,SOURCE_NORMALIZED_NAME,Cálcio:7.363333333333333!=7
+3510,3507,"Frango, peito, sem pele, grelhado",TACO,9d9202ff-2603-4622-8035-073e18314443,"Frango, peito, sem pele, grelhado",TACO,SOURCE_NORMALIZED_NAME,Cálcio:5.344333333333334!=5|Magnésio:18.273666666666667!=18
+3512,3509,"Frango, sobrecoxa, com pele, assada",TACO,c4d9c3a5-b66e-44bc-aa8c-43ffe9d4ae7f,"Frango, sobrecoxa, com pele, assada",TACO,SOURCE_NORMALIZED_NAME,Cálcio:10.675333333333333!=11|Magnésio:14.595!=15|Vitamina A (RE):8.22!=8
+3513,3510,"Frango, sobrecoxa, com pele, crua",TACO,482f8598-99c2-4de5-93db-3285d2d8638a,"Frango, sobrecoxa, com pele, crua",TACO,SOURCE_NORMALIZED_NAME,Magnésio:21.5!=22|Vitamina A (RE):6.586666666666666!=7
+3514,3511,"Frango, sobrecoxa, sem pele, assada",TACO,33322d33-6d81-4399-8f9c-c5ca4caa4b39,"Frango, sobrecoxa, sem pele, assada",TACO,SOURCE_NORMALIZED_NAME,Cálcio:12.249333333333334!=12|Magnésio:17.233999999999998!=17|Vitamina A (RE):10.7!=11
+3515,3512,"Frango, sobrecoxa, sem pele, crua",TACO,52b4ae7a-00f2-4a47-9cfb-6f3aa5472cb9,"Frango, sobrecoxa, sem pele, crua",TACO,SOURCE_NORMALIZED_NAME,Cálcio:6.293333333333333!=6|Magnésio:26.33!=26
+3527,3524,"Fruta-pão, crua",TACO,2f8cbd50-9e9d-4240-85eb-ae49cfab1e87,"Fruta-pão, crua",TACO,SOURCE_NORMALIZED_NAME,Fósforo:27.393666666666665!=27|Sódio:0.7993333333333333!=1
+3609,3606,"Gelatina, sabores variados, pó",TACO,a80f8883-59ea-4302-85d2-c12466ee1375,"Gelatina, sabores variados, pó",TACO,SOURCE_NORMALIZED_NAME,Magnésio:2.3066666666666666!=2|Potássio:7.25!=7
+3635,3632,"Geleia, mocotó, natural",TBCA,81797a24-a157-4988-8928-79d80be6cb1e,"Geléia, mocotó, natural",TACO,NAME_GROUP_ANALYSIS_ONLY,CORRESPONDENCIA_ANALITICA_SEM_FONTE_COMPATIVEL
+3636,3633,"Geléia, mocotó, natural",TACO,81797a24-a157-4988-8928-79d80be6cb1e,"Geléia, mocotó, natural",TACO,SOURCE_NORMALIZED_NAME,Cálcio:3.5233333333333334!=4|Magnésio:0.7463333333333333!=1
+3650,3647,"Gergelim, semente",TACO,5931f541-e012-4c33-9114-cb2cfb1f1979,"Gergelim, semente",TACO,SOURCE_NORMALIZED_NAME,Sódio:2.5749999999999997!=3
+3651,3648,"Gergelim, semente",TBCA,5931f541-e012-4c33-9114-cb2cfb1f1979,"Gergelim, semente",TACO,NAME_DIFFERENT_SOURCE_ANALYSIS_ONLY,NOME_SEMELHANTE_MAS_FONTE_DIFERENTE
+3657,3654,Glicose de milho,TACO,68ec630a-31b7-4881-8924-d56634ef9bd9,Glicose de milho,TACO,SOURCE_NORMALIZED_NAME,Cálcio:5.665333333333334!=6|Magnésio:1.8953333333333333!=2|Fósforo:4.775666666666667!=5
+3665,3662,"Goiaba, branca, com casca, crua",TACO,45295a06-4263-4164-87cb-aefdac8d7a7d,"Goiaba, branca, com casca, crua",TACO,SOURCE_NORMALIZED_NAME,Fósforo:16.403333333333332!=16
+3667,3664,"Goiaba, doce em pasta",TACO,90cb3ce8-64b0-477d-be22-abfa916c4c23,"Goiaba, doce em pasta",TACO,SOURCE_NORMALIZED_NAME,Magnésio:6.486666666666667!=6|Sódio:3.7!=4|Vitamina A (RE):136.41666666666666!=68
+3668,3665,"Goiaba, doce, cascão",TACO,8df2e317-8840-44a2-af37-655aaa9dbbda,"Goiaba, doce, cascão",TACO,SOURCE_NORMALIZED_NAME,Cálcio:14.699!=15|Magnésio:9.668333333333335!=10|Vitamina A (RE):50.333333333333336!=25
+3669,3666,"Goiaba, doce, cascão",TBCA,8df2e317-8840-44a2-af37-655aaa9dbbda,"Goiaba, doce, cascão",TACO,NAME_DIFFERENT_SOURCE_ANALYSIS_ONLY,NOME_SEMELHANTE_MAS_FONTE_DIFERENTE
+3672,3669,"Goiaba, vermelha, com casca, crua",TACO,433e3b93-b245-49c5-b5d1-3cc37fb69972,"Goiaba, vermelha, com casca, crua",TACO,SOURCE_NORMALIZED_NAME,Cálcio:4.451333333333333!=4|Magnésio:6.8933333333333335!=7|Fósforo:15.37!=15|Vitamina A (RE):38!=19
+3696,3693,"Grão-de-bico, cru",TBCA,9270272f-6358-4917-9e53-e9db5b95c9d9,"Grão-de-bico, cru",TACO,NAME_GROUP_ANALYSIS_ONLY,CORRESPONDENCIA_ANALITICA_SEM_FONTE_COMPATIVEL
+3704,3701,"Grão-de-bico, cru",TACO,9270272f-6358-4917-9e53-e9db5b95c9d9,"Grão-de-bico, cru",TACO,SOURCE_NORMALIZED_NAME,Sódio:5.194!=5
+3710,3707,"Graviola, crua",TACO,f2d36a1b-bebe-40e0-87d9-410ce5131d03,"Graviola, crua",TACO,SOURCE_NORMALIZED_NAME,Magnésio:23.49933333333333!=23|Sódio:4.16!=4
+3712,3709,"Graviola, polpa, congelada",TACO,cccf916d-bd46-406b-a43c-a2a8e9be73e0,"Graviola, polpa, congelada",TACO,SOURCE_NORMALIZED_NAME,Magnésio:9.76!=10|Fósforo:16.588333333333335!=17
+3713,3710,"Graviola, polpa, congelada",TBCA,cccf916d-bd46-406b-a43c-a2a8e9be73e0,"Graviola, polpa, congelada",TACO,NAME_DIFFERENT_SOURCE_ANALYSIS_ONLY,NOME_SEMELHANTE_MAS_FONTE_DIFERENTE
+3724,3721,"Guandu, cru",TACO,befd9845-af4c-410b-a380-7613a070edca,"Guandu, cru",TACO,SOURCE_NORMALIZED_NAME,Sódio:1.617!=2
+3792,3789,"Hambúrguer, bovino, cru",TACO,fff32773-7915-46d4-a03a-98e44f7be1ab,"Hambúrguer, bovino, cru",TACO,SOURCE_NORMALIZED_NAME,Magnésio:24.523!=25
+3793,3790,"Hambúrguer, bovino, cru",TBCA,fff32773-7915-46d4-a03a-98e44f7be1ab,"Hambúrguer, bovino, cru",TACO,NAME_GROUP_ANALYSIS_ONLY,CORRESPONDENCIA_ANALITICA_SEM_FONTE_COMPATIVEL
+3796,3793,"Hambúrguer, bovino, frito",TBCA,92ba01f5-815d-4cf1-942e-eec7e8557d26,"Hambúrguer, bovino, frito",TACO,NAME_GROUP_ANALYSIS_ONLY,CORRESPONDENCIA_ANALITICA_SEM_FONTE_COMPATIVEL
+3798,3795,"Hambúrguer, bovino, grelhado",TBCA,7e425522-3518-4aa9-8052-24056c5580ca,"Hambúrguer, bovino, grelhado",TACO,NAME_GROUP_ANALYSIS_ONLY,CORRESPONDENCIA_ANALITICA_SEM_FONTE_COMPATIVEL
+3837,3834,"Inhame, cru",TACO,c6b7e951-c7fc-4f77-be89-224bf1a7027a,"Inhame, cru",TACO,SOURCE_NORMALIZED_NAME,Cálcio:11.796666666666667!=12
+3932,3929,"Iogurte, natural",TACO,e9648791-6602-4b98-8dba-b7bb96ef48c2,"Iogurte, natural",TACO,SOURCE_NORMALIZED_NAME,Magnésio:11.253333333333332!=11|Colesterol:13.7775!=14
+3935,3932,"Iogurte, natural, desnatado",TACO,4ad0b82a-75f9-45b2-91f0-337c939aee57,"Iogurte, natural, desnatado",TACO,SOURCE_NORMALIZED_NAME,Energia:41.49271128155834!=41|Colesterol:3.3316666666666666!=3
+3936,3933,"Iogurte, natural, desnatado",TBCA,4ad0b82a-75f9-45b2-91f0-337c939aee57,"Iogurte, natural, desnatado",TACO,NAME_GROUP_ANALYSIS_ONLY,CORRESPONDENCIA_ANALITICA_SEM_FONTE_COMPATIVEL
+3938,3935,"Iogurte, sabor abacaxi",TACO,d6aad688-3f42-4340-a295-cf6f0d5efc04,"Iogurte, sabor abacaxi",TACO,SOURCE_NORMALIZED_NAME,Colesterol:5.63!=6
+3939,3936,"Iogurte, sabor morango",TACO,68ffb719-e08b-4994-af8d-c894a9d1f9eb,"Iogurte, sabor morango",TACO,SOURCE_NORMALIZED_NAME,Colesterol:7.494250000000001!=7
+3941,3938,"Iogurte, sabor pêssego",TACO,c5abb21e-f5d8-4d90-af87-fd721439f7c2,"Iogurte, sabor pêssego",TACO,SOURCE_NORMALIZED_NAME,Colesterol:8.4!=8
+3942,3939,"Iogurte, sabor pêssego",TBCA,c5abb21e-f5d8-4d90-af87-fd721439f7c2,"Iogurte, sabor pêssego",TACO,NAME_GROUP_ANALYSIS_ONLY,CORRESPONDENCIA_ANALITICA_SEM_FONTE_COMPATIVEL
+3961,3958,"Jabuticaba, crua",TACO,aec983a2-be88-479b-a887-cf45a8d46624,"Jabuticaba, crua",TACO,SOURCE_NORMALIZED_NAME,Cálcio:8.347999999999999!=8|Magnésio:17.779666666666667!=18|Fósforo:14.549666666666667!=15
+3967,3964,"Jaca, crua",TACO,aaba4aa2-c941-40f3-ac94-7cb288ed68dd,"Jaca, crua",TACO,SOURCE_NORMALIZED_NAME,Cálcio:11.245!=11|Sódio:1.8016666666666667!=2
+3968,3965,"Jaca, crua",TBCA,aaba4aa2-c941-40f3-ac94-7cb288ed68dd,"Jaca, crua",TACO,NAME_DIFFERENT_SOURCE_ANALYSIS_ONLY,NOME_SEMELHANTE_MAS_FONTE_DIFERENTE
+3973,3970,"Jambo, cru",TACO,73f83995-b7af-4fec-b752-0d0096afbc26,"Jambo, cru",TACO,SOURCE_NORMALIZED_NAME,Cálcio:13.8!=14|Magnésio:14.178333333333335!=14|Fósforo:18.358333333333334!=18|Sódio:21.656000000000002!=22
+3977,3974,"Jamelão, cru",TACO,bfc241c2-7754-4a44-8a39-aade3468275a,"Jamelão, cru",TACO,SOURCE_NORMALIZED_NAME,Magnésio:2.1646666666666667!=2|Fósforo:4.117333333333334!=4|Sódio:1.3663333333333334!=1|Vitamina A (RE):7.519444444444444!=4
+3998,3995,"Jiló, cru",TACO,7ce2d073-6350-45b4-949e-2d9731ff86cd,"Jiló, cru",TACO,SOURCE_NORMALIZED_NAME,Energia:27.36514347826087!=27|Magnésio:20.62666666666667!=21|Vitamina A (RE):12.666666666666666!=6
+4002,3999,"Jurubeba, crua",TACO,4144f47f-4767-4020-bef7-ee1fb9420741,"Jurubeba, crua",TACO,SOURCE_NORMALIZED_NAME,Sódio:0.7709999999999999!=1
+4017,4014,"Kiwi, cru",TACO,ea5e29d4-5760-414e-be5e-2fc6a297ba15,"Kiwi, cru",TACO,SOURCE_NORMALIZED_NAME,Magnésio:10.576666666666666!=11|Vitamina A (RE):5.416666666666667!=3
+4035,4032,"Lambari, congelado, cru",TACO,52179705-aab3-4ef0-a8db-70b538d5df56,"Lambari, congelado, cru",TACO,SOURCE_NORMALIZED_NAME,Vitamina A (RE):4.306666666666667!=4
+4036,4033,"Lambari, congelado, frito",TACO,22c9e017-e826-4606-a6e1-ee60e02cfab0,"Lambari, congelado, frito",TACO,SOURCE_NORMALIZED_NAME,Vitamina A (RE):9.446666666666665!=9
+4037,4034,"Lambari, fresco, cru",TACO,365ab194-2bf6-4ea3-8b85-d60dc3a338e3,"Lambari, fresco, cru",TACO,SOURCE_NORMALIZED_NAME,Magnésio:31.60766666666667!=32
+4060,4057,"Laranja, baía, crua",TACO,66abe0f1-8dc6-4f15-94de-4b16efca1fec,"Laranja, baía, crua",TACO,SOURCE_NORMALIZED_NAME,Cálcio:35.407000000000004!=35|Magnésio:9.216666666666667!=9|Vitamina A (RE):3.875!=2
+4062,4059,"Laranja, baía, suco",TACO,f91dd9af-341c-4521-8247-73b98141c72a,"Laranja, baía, suco",TACO,SOURCE_NORMALIZED_NAME,Magnésio:7.8!=8|Vitamina A (RE):4!=2
+4066,4063,"Laranja, da terra, crua",TACO,58f2fb5c-810a-4956-851c-8f60eaca7411,"Laranja, da terra, crua",TACO,SOURCE_NORMALIZED_NAME,Sódio:0.83!=1
+4067,4064,"Laranja, da terra, suco",TACO,fbc57d1f-138f-460e-af49-ee32edc49494,"Laranja, da terra, suco",TACO,SOURCE_NORMALIZED_NAME,Cálcio:13.388333333333334!=13|Magnésio:10.109333333333334!=10|Vitamina A (RE):4.458333333333334!=2
+4069,4066,"Laranja, lima, crua",TACO,e1409209-3b73-4d3f-aad7-9ee88e9f9b29,"Laranja, lima, crua",TACO,SOURCE_NORMALIZED_NAME,Cálcio:31.46666666666667!=31|Magnésio:10.157666666666666!=10|Fósforo:14.510333333333335!=15|Sódio:1.111!=1
+4071,4068,"Laranja, lima, suco",TACO,1edfa07a-7e8c-4576-92fe-f3defd336488,"Laranja, lima, suco",TACO,SOURCE_NORMALIZED_NAME,Cálcio:7.7363333333333335!=8|Fósforo:16.243666666666666!=16
+4075,4072,"Laranja, pera, crua",TACO,94cc7e7a-ced8-43b7-85b2-244b2268e490,"Laranja, pêra, crua",TACO,SOURCE_NORMALIZED_NAME,Magnésio:8.613333333333333!=9|Fósforo:22.683333333333334!=23|Vitamina A (RE):0.9166666666666666!=0
+4077,4074,"Laranja, pera, suco",TACO,6db1334f-5a1d-4a08-9e35-b210c5d43774,"Laranja, pêra, suco",TACO,SOURCE_NORMALIZED_NAME,Cálcio:7.366666666666666!=7|Magnésio:7.586666666666666!=8|Vitamina A (RE):1.2083333333333333!=1
+4081,4078,"Laranja, valência, crua",TACO,676bb9a8-b060-4487-a89b-87c21c5ab751,"Laranja, valência, crua",TACO,SOURCE_NORMALIZED_NAME,Magnésio:14.402666666666667!=14|Fósforo:19.766!=20|Sódio:0.629!=1
+4082,4079,"Laranja, valência, suco",TACO,140eaeb1-b44a-48c0-a924-a25d577f4072,"Laranja, valência, suco",TACO,SOURCE_NORMALIZED_NAME,Magnésio:9.592666666666668!=10|Fósforo:17.265333333333334!=17|Vitamina A (RE):2!=1
+4107,4104,"Lasanha, massa fresca, cozida",TACO,47ce6a69-07c3-4f72-85cd-382323c281b5,"Lasanha, massa fresca, cozida",TACO,SOURCE_NORMALIZED_NAME,Magnésio:3.539!=4
+4108,4105,"Lasanha, massa fresca, crua",TACO,708e84f9-13d5-4e35-b262-5d876e140fe7,"Lasanha, massa fresca, crua",TACO,SOURCE_NORMALIZED_NAME,Cálcio:16.545666666666666!=17|Magnésio:12.591666666666667!=13
+4238,4235,"Leite, condensado",TACO,02bb1812-bfa5-47f6-a7a2-c76bdb6b6d8d,"Leite, condensado",TACO,SOURCE_NORMALIZED_NAME,Colesterol:27.635666666666665!=28
+4239,4236,"Leite, de cabra",TACO,6bd9e9a9-b336-41c1-9e22-15cd6563e366,"Leite, de cabra",TACO,SOURCE_NORMALIZED_NAME,Magnésio:9.798666666666668!=10
+4240,4237,"Leite, de coco",TACO,65342e7a-e366-4f11-b76e-6bdab523216d,"Leite, de coco",TACO,SOURCE_NORMALIZED_NAME,Cálcio:5.8503333333333325!=6|Magnésio:16.825333333333333!=17|Fósforo:25.519000000000002!=26
+4243,4240,"Leite, de vaca, desnatado, UHT",TACO,cf77bfd2-acaf-46a0-a078-1e1cca245452,"Leite, de vaca, desnatado, UHT",TACO,SOURCE_NORMALIZED_NAME,Magnésio:10.3!=10|Fósforo:85.9!=85|Colesterol:3.76!=4
+4244,4241,"Leite, de vaca, integral",TACO,b3b6bc24-0c77-453f-8f16-da4abee669e3,"Leite, de vaca, integral",TACO,SOURCE_NORMALIZED_NAME,Cálcio:108!=123|Magnésio:9.72!=10|Colesterol:12.4!=10|G. saturada:2.02!=1.4|G. monoinsaturada:0.94!=0.7
+4246,4243,"Leite, fermentado",TACO,5b2675b3-c524-48b3-8d9a-abc08b9d679d,"Leite, fermentado",TACO,SOURCE_NORMALIZED_NAME,Magnésio:6.2316666666666665!=6|Sódio:33.43066666666667!=33|Colesterol:1.85166!=2
+4271,4268,"Lentilha, cozida",TACO,06b4cddf-7dca-4b9e-8d08-389f53f1440e,"Lentilha, cozida",TACO,SOURCE_NORMALIZED_NAME,Magnésio:21.646!=22|Sódio:1.1763333333333332!=1
+4298,4295,"Limão, cravo, suco",TACO,768f2d97-f252-42e0-b80e-121721aadc2c,"Limão, cravo, suco",TACO,SOURCE_NORMALIZED_NAME,Cálcio:10.183666666666666!=10|Magnésio:8.857666666666665!=9|Fósforo:11.131666666666668!=11|Vitamina A (RE):31.416666666666668!=16
+4299,4296,"Limão, galego, suco",TACO,a4da5211-7654-4a28-851e-2f3e5da7b348,"Limão, galego, suco",TACO,SOURCE_NORMALIZED_NAME,Energia:22.22504347826089!=22|Cálcio:5.263333333333334!=5
+4301,4298,"Limão, tahiti, cru",TACO,76d0e044-be98-4198-8e47-df18e6573d05,"Limão, tahiti, cru",TACO,SOURCE_NORMALIZED_NAME,Magnésio:9.696!=10|Sódio:1.2483333333333333!=1
+4354,4351,"Linguiça, frango, crua",TBCA,903d4234-2e37-422d-98e4-0c562ac4584b,"Lingüiça, frango, crua",TACO,NAME_GROUP_ANALYSIS_ONLY,CORRESPONDENCIA_ANALITICA_SEM_FONTE_COMPATIVEL
+4355,4352,"Lingüiça, frango, crua",TACO,903d4234-2e37-422d-98e4-0c562ac4584b,"Lingüiça, frango, crua",TACO,SOURCE_NORMALIZED_NAME,Cálcio:10.837666666666665!=11
+4358,4355,"Lingüiça, frango, frita",TACO,ca232d1a-6dc2-4917-9e3a-0ea94573af18,"Lingüiça, frango, frita",TACO,SOURCE_NORMALIZED_NAME,Cálcio:15.481666666666667!=15
+4359,4356,"Linguiça, frango, grelhada",TBCA,27409aa5-d9f6-4305-905b-df3b93bb16f0,"Lingüiça, frango, grelhada",TACO,NAME_GROUP_ANALYSIS_ONLY,CORRESPONDENCIA_ANALITICA_SEM_FONTE_COMPATIVEL
+4363,4360,"Lingüiça, porco, crua",TACO,49d6de0a-6dd8-4df5-a4f4-ed4523346d0c,"Lingüiça, porco, crua",TACO,SOURCE_NORMALIZED_NAME,Cálcio:6.133666666666667!=6
+4365,4362,"Lingüiça, porco, frita",TACO,efc355c9-bdbd-4115-b062-05dad8405f0f,"Lingüiça, porco, frita",TACO,SOURCE_NORMALIZED_NAME,Cálcio:8.475666666666667!=8|Magnésio:18.217666666666666!=18
+4366,4363,"Linguiça, porco, grelhada",TBCA,40213ae5-c783-4127-bdcb-090e72a17999,"Lingüiça, porco, grelhada",TACO,NAME_GROUP_ANALYSIS_ONLY,CORRESPONDENCIA_ANALITICA_SEM_FONTE_COMPATIVEL
+4367,4364,"Lingüiça, porco, grelhada",TACO,40213ae5-c783-4127-bdcb-090e72a17999,"Lingüiça, porco, grelhada",TACO,SOURCE_NORMALIZED_NAME,Cálcio:8.138666666666667!=8|Magnésio:18.785!=19
+4370,4367,"Linhaça, semente",TACO,621a2e86-7504-4529-9fb2-5ef4b0584e95,"Linhaça, semente",TACO,SOURCE_NORMALIZED_NAME,Sódio:8.673333333333334!=9
+4371,4368,"Linhaça, semente",TBCA,621a2e86-7504-4529-9fb2-5ef4b0584e95,"Linhaça, semente",TACO,NAME_DIFFERENT_SOURCE_ANALYSIS_ONLY,NOME_SEMELHANTE_MAS_FONTE_DIFERENTE
+4449,4446,"Maçã, Argentina, com casca, crua",TACO,79bb43a5-ea7b-4443-b5fe-9bb93b2fee8f,"Maçã, Argentina, com casca, crua",TACO,SOURCE_NORMALIZED_NAME,Cálcio:3.392333333333333!=3|Magnésio:4.857666666666666!=5|Fósforo:11.403666666666666!=11|Sódio:1.318!=1
+4452,4449,"Maçã, Fuji, com casca, crua",TACO,4399b291-4fe3-4442-bae5-61ada0e59fdb,"Maçã, Fuji, com casca, crua",TACO,SOURCE_NORMALIZED_NAME,Vitamina A (RE):3.5!=2
+4488,4485,"Macarrão, molho bolognesa",TACO,043f4b33-180b-4ed0-be54-dd408b8dedce,"Macarrão, molho bolognesa",TACO,SOURCE_NORMALIZED_NAME,Cálcio:10.548333333333334!=11
+4503,4500,"Macarrão, trigo, cru",TACO,80394bb9-0aa9-4f62-a0be-492c010e6500,"Macarrão, trigo, cru",TACO,SOURCE_NORMALIZED_NAME,Cálcio:17.3!=17|Magnésio:27.69!=28|Sódio:7.17!=7
+4504,4501,"Macarrão, trigo, cru, com ovos",TACO,efe77b1a-a3f1-4af9-827b-2aa9301d72e5,"Macarrão, trigo, cru, com ovos",TACO,SOURCE_NORMALIZED_NAME,Cálcio:19.453333333333333!=19|Sódio:14.74!=15|Colesterol:17.567999999999998!=18
+4522,4519,"Macaúba, crua",TACO,e11fdf9c-155b-48e8-ae49-695547f0bd0e,"Macaúba, crua",TACO,SOURCE_NORMALIZED_NAME,Sódio:0.6543333333333333!=1|Vitamina A (RE):1020!=510
+4571,4568,"Maionese, tradicional com ovos",TACO,ee33c021-2c2c-4d87-b281-1cfff0cb4238,"Maionese, tradicional com ovos",TACO,SOURCE_NORMALIZED_NAME,Cálcio:3.4783333333333335!=3|Magnésio:0.8553333333333333!=1|Fósforo:14.453333333333333!=14|Colesterol:42.467333333333336!=42
+4582,4579,"Mamão verde, doce em calda, drenado",TACO,d91e2314-e15b-4d10-9cc3-b6cae7f0dfd9,"Mamão verde, doce em calda, drenado",TACO,SOURCE_NORMALIZED_NAME,Cálcio:12.435!=12|Magnésio:4.542666666666666!=5|Fósforo:3.231666666666667!=3|Sódio:4.74!=5|Potássio:8.670333333333334!=9
+4583,4580,"Mamão, doce em calda, drenado",TACO,1c9ed5a6-82fc-465d-9be9-9b5f06545117,"Mamão, doce em calda, drenado",TACO,SOURCE_NORMALIZED_NAME,Magnésio:5.814333333333334!=6|Fósforo:4.481333333333334!=4
+4585,4582,"Mamão, Formosa, cru",TACO,0aa85b3a-63f4-43a8-95d2-ccc3c221854f,"Mamão, Formosa, cru",TACO,SOURCE_NORMALIZED_NAME,Magnésio:17.323333333333334!=17|Fósforo:10.856666666666667!=11|Sódio:3.2566666666666664!=3|Vitamina A (RE):148!=74
+4587,4584,"Mamão, Papaia, cru",TACO,2aacdb24-b923-4f09-8a94-4448692ff209,"Mamão, Papaia, cru",TACO,SOURCE_NORMALIZED_NAME,Cálcio:22.418333333333337!=22|Fósforo:10.669333333333332!=11|Sódio:1.6303333333333334!=2|Vitamina A (RE):118!=59
+4614,4611,"Mandioca, cozida",TACO,97955097-a05b-48f6-94ae-7f6e1ac2ed61,"Mandioca, cozida",TACO,SOURCE_NORMALIZED_NAME,Cálcio:18.628333333333334!=19|Fósforo:22.41033333333333!=22
+4615,4612,"Mandioca, crua",TACO,f771c4a6-ed4b-41e2-8f47-ea50d7e1de38,"Mandioca, crua",TACO,SOURCE_NORMALIZED_NAME,Cálcio:15.19!=15|Magnésio:44.49666666666667!=44|Fósforo:29.426666666666666!=29|Sódio:2.15!=2
+4616,4613,"Mandioca, farofa, temperada",TACO,01ea8c51-28f5-44a0-8970-51712238f2d3,"Mandioca, farofa, temperada",TACO,SOURCE_NORMALIZED_NAME,Fósforo:44.51566666666667!=45
+4635,4632,"Manga, Haden, crua",TACO,3491756f-1472-40c8-9d35-dbc50e2f921b,"Manga, Haden, crua",TACO,SOURCE_NORMALIZED_NAME,Cálcio:11.659666666666666!=12|Magnésio:7.815333333333334!=8|Fósforo:9.296!=9|Sódio:0.5513333333333333!=1|Vitamina A (RE):162!=81
+4637,4634,"Manga, Palmer, crua",TACO,cc4ffedb-9918-483c-94d2-759ffe781490,"Manga, Palmer, crua",TACO,SOURCE_NORMALIZED_NAME,Cálcio:11.638333333333334!=12|Magnésio:8.725!=9|Sódio:1.8636666666666668!=2|Vitamina A (RE):786.9166666666666!=393
+4639,4636,"Manga, polpa, congelada",TACO,5aac0b88-e556-4db8-918b-da94232cbebd,"Manga, polpa, congelada",TACO,SOURCE_NORMALIZED_NAME,Cálcio:7.1209999999999996!=7|Magnésio:9.494000000000002!=9|Fósforo:9.111333333333334!=9|Sódio:6.733333333333333!=7
+4643,4640,"Manga, Tommy Atkins, crua",TACO,6b99a483-1b38-4f01-a44a-f5631c14c43b,"Manga, Tommy Atkins, crua",TACO,SOURCE_NORMALIZED_NAME,Cálcio:7.636666666666667!=8|Magnésio:7.396666666666667!=7|Fósforo:13.776666666666666!=14|Vitamina A (RE):118!=59
+4649,4646,Manicoba,IBGE,6bda7fbc-7a1b-47c3-ac0d-b27e3fdc47c5,Maniçoba,TACO,NAME_DIFFERENT_SOURCE_ANALYSIS_ONLY,NOME_SEMELHANTE_MAS_FONTE_DIFERENTE
+4650,4647,Maniçoba,TACO,6bda7fbc-7a1b-47c3-ac0d-b27e3fdc47c5,Maniçoba,TACO,SOURCE_NORMALIZED_NAME,Magnésio:23.65233333333333!=24|Vitamina A (RE):221.87500000000003!=111
+4651,4648,Maniçoba,Tucunduva,6bda7fbc-7a1b-47c3-ac0d-b27e3fdc47c5,Maniçoba,TACO,NAME_DIFFERENT_SOURCE_ANALYSIS_ONLY,NOME_SEMELHANTE_MAS_FONTE_DIFERENTE
+4659,4656,"Manjericão, cru",TACO,05acd396-ef5d-4cf6-ad87-0fb2afc495ef,"Manjericão, cru",TACO,SOURCE_NORMALIZED_NAME,Sódio:3.8866666666666667!=4|Vitamina A (RE):1034.8333333333335!=517
+4664,4661,"Manjuba, com farinha de trigo, frita",TACO,0610417f-e8e6-4530-916c-b6b13cf6cc14,"Manjuba, com farinha de trigo, frita",TACO,SOURCE_NORMALIZED_NAME,Sódio:36.52!=37
+4665,4662,"Manjuba, frita",TACO,a2b871a0-3da0-4523-83c0-edf831610aba,"Manjuba, frita",TACO,SOURCE_NORMALIZED_NAME,Magnésio:31.657999999999998!=32
+4691,4688,"Manteiga, com sal",TACO,1d827459-4b47-435b-ba40-793afff89c6c,"Manteiga, com sal",TACO,SOURCE_NORMALIZED_NAME,Cálcio:9.423!=9|Magnésio:1.4673333333333334!=1|Fósforo:27.700333333333333!=28|Potássio:14.783!=15
+4694,4691,"Manteiga, sem sal",TACO,da5d1eb2-a043-46c5-8464-1e1b27f6b11c,"Manteiga, sem sal",TACO,SOURCE_NORMALIZED_NAME,Cálcio:3.608!=4|Magnésio:1.429!=1|Sódio:3.848666666666667!=4|Potássio:5.198333333333333!=5
+4702,4699,"Maracujá, cru",TACO,515af3fe-fcd5-47fe-9ae6-a64c1179e604,"Maracujá, cru",TACO,SOURCE_NORMALIZED_NAME,Cálcio:5.3933333333333335!=5|Sódio:1.58!=2|Vitamina A (RE):114!=57
+4703,4700,"Maracujá, polpa, congelada",TACO,2fa96f02-d547-42d6-a653-3fa9a61fa95b,"Maracujá, polpa, congelada",TACO,SOURCE_NORMALIZED_NAME,Cálcio:4.609666666666667!=5|Magnésio:9.701!=10|Fósforo:15.257333333333333!=15
+4704,4701,"Maracujá, polpa, congelada",TBCA,2fa96f02-d547-42d6-a653-3fa9a61fa95b,"Maracujá, polpa, congelada",TACO,NAME_DIFFERENT_SOURCE_ANALYSIS_ONLY,NOME_SEMELHANTE_MAS_FONTE_DIFERENTE
+4709,4706,"Maracujá, suco concentrado, envasado",TACO,1f31f28c-ad2d-472a-8399-a9ed709c6646,"Maracujá, suco concentrado, envasado",TACO,SOURCE_NORMALIZED_NAME,Cálcio:4.158333333333334!=4|Magnésio:4.158333333333334!=4|Sódio:21.692333333333334!=22
+4750,4747,"Margarina, com óleo hidrogenado, com sal (65% de lipídeos)",TACO,24a2fd5b-76ed-4536-8389-4d62b775b98c,"Margarina, com óleo hidrogenado, com sal (65% de lipídeos)",TACO,SOURCE_NORMALIZED_NAME,Cálcio:5.556!=6|Magnésio:1.1306666666666665!=1|Fósforo:7.258!=7|Potássio:21.419666666666668!=21
+4751,4748,"Margarina, com óleo hidrogenado, sem sal (80% de lipídeos)",TACO,2aefed5a-f3bb-46ac-b1a2-75b7c3cc1af3,"Margarina, com óleo hidrogenado, sem sal (80% de lipídeos)",TACO,SOURCE_NORMALIZED_NAME,Cálcio:2.597!=3|Magnésio:0.543!=1|Fósforo:3.749!=4|Potássio:1.7696666666666667!=2
+4752,4749,"Margarina, com óleo interesterificado, com sal (65%de lipídeos)",TACO,e0a1b3b0-e19a-4f89-b985-79f1fad42f99,"Margarina, com óleo interesterificado, com sal (65%de lipídeos)",TACO,SOURCE_NORMALIZED_NAME,Cálcio:4.543333333333333!=5|Magnésio:1.2336666666666667!=1|Potássio:14.711333333333334!=15
+4753,4750,"Margarina, com óleo interesterificado, sem sal (65% de lipídeos)",TACO,2cff38d6-f330-430d-a4fd-522f3602f0b9,"Margarina, com óleo interesterificado, sem sal (65% de lipídeos)",TACO,SOURCE_NORMALIZED_NAME,Magnésio:1.1493333333333335!=1|Fósforo:7.161333333333334!=7|Potássio:4.73!=5
+4757,4754,Maria mole,IBGE,9999bedc-4028-4e12-8d05-491cbf2d995c,Maria mole,TACO,NAME_GROUP_ANALYSIS_ONLY,CORRESPONDENCIA_ANALITICA_SEM_FONTE_COMPATIVEL
+4758,4755,Maria mole,TACO,9999bedc-4028-4e12-8d05-491cbf2d995c,Maria mole,TACO,SOURCE_NORMALIZED_NAME,Cálcio:13.357666666666667!=13|Magnésio:6.886666666666667!=7|Fósforo:4.347666666666666!=4|Sódio:15.309333333333333!=15|Potássio:23.55933333333333!=24
+4759,4756,Maria mole,TBCA,9999bedc-4028-4e12-8d05-491cbf2d995c,Maria mole,TACO,NAME_GROUP_ANALYSIS_ONLY,CORRESPONDENCIA_ANALITICA_SEM_FONTE_COMPATIVEL
+4763,4760,"Maria mole, coco queimado",TACO,750baf5e-e76c-4051-9cee-c6e6de9379f5,"Maria mole, coco queimado",TACO,SOURCE_NORMALIZED_NAME,Cálcio:19.456333333333333!=19|Fósforo:5.416666666666667!=5|Sódio:14.287333333333335!=14
+4764,4761,"Maria mole, coco queimado",TBCA,750baf5e-e76c-4051-9cee-c6e6de9379f5,"Maria mole, coco queimado",TACO,NAME_GROUP_ANALYSIS_ONLY,CORRESPONDENCIA_ANALITICA_SEM_FONTE_COMPATIVEL
+4778,4775,Marmelada,IBGE,2c124a0a-a490-43b9-bf43-2c75f0c4c15d,Marmelada,TACO,NAME_GROUP_ANALYSIS_ONLY,CORRESPONDENCIA_ANALITICA_SEM_FONTE_COMPATIVEL
+4779,4776,Marmelada,TACO,2c124a0a-a490-43b9-bf43-2c75f0c4c15d,Marmelada,TACO,SOURCE_NORMALIZED_NAME,Cálcio:11.324666666666667!=11|Magnésio:5.803333333333332!=6|Fósforo:19.62066666666667!=20|Sódio:10.883666666666668!=11
+4780,4777,Marmelada,TBCA,2c124a0a-a490-43b9-bf43-2c75f0c4c15d,Marmelada,TACO,NAME_GROUP_ANALYSIS_ONLY,CORRESPONDENCIA_ANALITICA_SEM_FONTE_COMPATIVEL
+4781,4778,Marmelada,Tucunduva,2c124a0a-a490-43b9-bf43-2c75f0c4c15d,Marmelada,TACO,NAME_GROUP_ANALYSIS_ONLY,CORRESPONDENCIA_ANALITICA_SEM_FONTE_COMPATIVEL
+4782,4779,Marmelada,INSA,2c124a0a-a490-43b9-bf43-2c75f0c4c15d,Marmelada,TACO,NAME_GROUP_ANALYSIS_ONLY,CORRESPONDENCIA_ANALITICA_SEM_FONTE_COMPATIVEL
+4825,4822,"Maxixe, cru",TACO,3b2868cd-c36b-49d3-b545-f6b1cc921ab2,"Maxixe, cru",TACO,SOURCE_NORMALIZED_NAME,Energia:13.747236086956516!=14|Magnésio:9.613!=10|Vitamina A (RE):5.5!=3
+4842,4839,"Mel, de abelha",TACO,1e7a9789-cde0-4592-82f7-08c2a3408d2c,"Mel, de abelha",TACO,SOURCE_NORMALIZED_NAME,Cálcio:10.204333333333333!=10|Magnésio:5.511333333333333!=6|Fósforo:3.886333333333333!=4
+4853,4850,"Melancia, crua",TACO,b3cedcb8-4c5e-4451-bc6b-2fc8af101319,"Melancia, crua",TACO,SOURCE_NORMALIZED_NAME,Energia:32.60662608695646!=33|Cálcio:7.72!=8|Magnésio:9.63!=10|Fósforo:12.176666666666668!=12|Vitamina A (RE):61!=31
+4860,4857,"Melão, cru",TACO,9946980b-d3d5-4019-99fc-749f67421c43,"Melão, cru",TACO,SOURCE_NORMALIZED_NAME,Energia:29.369391304347808!=29|Cálcio:2.856666666666667!=3|Fósforo:10.14!=10|Sódio:11.166666666666666!=11|Vitamina A (RE):2!=1
+4873,4870,"Merluza, filé, assado",TACO,cf11f297-6e68-40f2-9ac3-92f63043e175,"Merluza, filé, assado",TACO,SOURCE_NORMALIZED_NAME,Magnésio:20.268333333333334!=20
+4874,4871,"Merluza, filé, cru",TACO,4f0874b3-d5ee-4b4e-86c2-a2d3834f173b,"Merluza, filé, cru",TACO,SOURCE_NORMALIZED_NAME,Cálcio:20.4!=20
+4875,4872,"Merluza, filé, frito",TACO,46347846-2945-4cc6-a73d-4bb2ac27e75e,"Merluza, filé, frito",TACO,SOURCE_NORMALIZED_NAME,Cálcio:35.62766666666666!=36
+4879,4876,"Mexerica, Murcote, crua",TACO,4c0460ab-249b-4258-89bc-ee003aacb5fe,"Mexerica, Murcote, crua",TACO,SOURCE_NORMALIZED_NAME,Magnésio:12.303666666666667!=12|Fósforo:19.498!=19|Sódio:1.1673333333333333!=1
+4881,4878,"Mexerica, Rio, crua",TACO,e1704fdd-5234-4961-87e0-af941b006e10,"Mexerica, Rio, crua",TACO,SOURCE_NORMALIZED_NAME,Cálcio:17.183666666666667!=17|Magnésio:8.212!=8|Fósforo:13.702!=14|Sódio:1.8239999999999998!=2
+4915,4912,"Milho, amido, cru",TACO,372d424e-072c-4919-a11a-d774d9adddbb,"Milho, amido, cru",TACO,SOURCE_NORMALIZED_NAME,Fósforo:12.603!=13|Potássio:8.535!=9
+4916,4913,"Milho, amido, cru",TBCA,372d424e-072c-4919-a11a-d774d9adddbb,"Milho, amido, cru",TACO,NAME_DIFFERENT_SOURCE_ANALYSIS_ONLY,NOME_SEMELHANTE_MAS_FONTE_DIFERENTE
+4920,4917,"Milho, fubá, cru",TACO,49acc8ba-841e-4771-a4fb-fb1c1c0d9818,"Milho, fubá, cru",TACO,SOURCE_NORMALIZED_NAME,Cálcio:2.6666666666666665!=3|Vitamina A (RE):26!=13
+4938,4935,"Milho, verde, cru",TACO,31d14f2c-5b5d-4f1c-b13e-700a8a8349a7,"Milho, verde, cru",TACO,SOURCE_NORMALIZED_NAME,Cálcio:1.6123333333333332!=2|Magnésio:32.575!=33|Sódio:1.1156666666666666!=1|Vitamina A (RE):32!=16
+4939,4936,"Milho, verde, enlatado, drenado",TACO,55e358bf-34db-4767-8a3d-e97769b89d78,"Milho, verde, enlatado, drenado",TACO,SOURCE_NORMALIZED_NAME,Cálcio:2.1673333333333336!=2|Magnésio:20.37633333333333!=20|Vitamina A (RE):48!=24
+4963,4960,"Mingau tradicional, pó",TACO,acf855d7-a134-4f2e-aae1-af87879aad5f,"Mingau tradicional, pó",TACO,SOURCE_NORMALIZED_NAME,Magnésio:4.280666666666666!=4
+5123,5120,"Morango, cru",TACO,f686cb23-1989-4927-8125-0a713254f6d5,"Morango, cru",TACO,SOURCE_NORMALIZED_NAME,Magnésio:9.673333333333334!=10|Fósforo:22.433333333333334!=22
+5133,5130,Mortadela,IBGE,fb84a679-46f0-4cc3-97e6-b1d962788466,Mortadela,TACO,NAME_GROUP_ANALYSIS_ONLY,CORRESPONDENCIA_ANALITICA_SEM_FONTE_COMPATIVEL
+5135,5132,Mortadela,TBCA,fb84a679-46f0-4cc3-97e6-b1d962788466,Mortadela,TACO,NAME_GROUP_ANALYSIS_ONLY,CORRESPONDENCIA_ANALITICA_SEM_FONTE_COMPATIVEL
+5136,5133,Mortadela,Tucunduva,fb84a679-46f0-4cc3-97e6-b1d962788466,Mortadela,TACO,NAME_GROUP_ANALYSIS_ONLY,CORRESPONDENCIA_ANALITICA_SEM_FONTE_COMPATIVEL
+5137,5134,Mortadela,INSA,fb84a679-46f0-4cc3-97e6-b1d962788466,Mortadela,TACO,NAME_GROUP_ANALYSIS_ONLY,CORRESPONDENCIA_ANALITICA_SEM_FONTE_COMPATIVEL
+5151,5148,"Mostarda, folha, crua",TACO,0a015ea6-15c5-4ba2-b1f7-07c823147ec0,"Mostarda, folha, crua",TACO,SOURCE_NORMALIZED_NAME,Magnésio:15.618333333333332!=16|Sódio:2.8793333333333337!=3
+5201,5198,"Nabo, cru",TACO,5970b577-9eff-4522-9c10-97deb4a8ff48,"Nabo, cru",TACO,SOURCE_NORMALIZED_NAME,Energia:18.18662463768122!=18|Magnésio:14.6!=15|Fósforo:16.566666666666666!=17|Sódio:2.46!=2
+5236,5233,"Nêspera, crua",TACO,1ca62508-2826-427c-b807-45dfce73f3bf,"Nêspera, crua",TACO,SOURCE_NORMALIZED_NAME,Energia:42.539198868195214!=43|Cálcio:19.686666666666667!=20|Magnésio:9.720666666666666!=10|Vitamina A (RE):170!=85
+5254,5251,"Nhoque, batata, cozido",TACO,a1a47316-c83e-4a92-a63c-e9f5c9a68c22,"Nhoque, batata, cozido",TACO,SOURCE_NORMALIZED_NAME,Cálcio:11.421333333333331!=11
+5265,5262,"Noz, crua",TACO,f90fcbca-dc36-4a84-8ab7-1d78bf0eabf3,"Noz, crua",TACO,SOURCE_NORMALIZED_NAME,Sódio:4.570666666666667!=5
+5266,5263,"Noz, crua",TBCA,f90fcbca-dc36-4a84-8ab7-1d78bf0eabf3,"Noz, crua",TACO,NAME_DIFFERENT_SOURCE_ANALYSIS_ONLY,NOME_SEMELHANTE_MAS_FONTE_DIFERENTE
+5372,5369,"Omelete, de queijo",TACO,d21832c8-6c47-41c4-b812-a5f16f179fe9,"Omelete, de queijo",TACO,SOURCE_NORMALIZED_NAME,Magnésio:14.267666666666669!=14
+5445,5442,"Ovo, de galinha, inteiro, cru",TACO,31bed5cc-204a-4dcf-b157-7cda66590264,"Ovo, de galinha, inteiro, cru",TACO,SOURCE_NORMALIZED_NAME,Magnésio:12.66!=13
+5446,5443,"Ovo, de galinha, inteiro, frito",TACO,6b862215-9871-47e9-9d20-fd2d11ea35a2,"Ovo, de galinha, inteiro, frito",TACO,SOURCE_NORMALIZED_NAME,Magnésio:16.250333333333334!=16
+5488,5485,"Paçoca, amendoim",TACO,2db9ad03-93b3-4541-9d79-917b46a5474f,"Paçoca, amendoim",TACO,SOURCE_NORMALIZED_NAME,Cálcio:22.481333333333335!=22
+5489,5486,"Paçoca, amendoim",TBCA,2db9ad03-93b3-4541-9d79-917b46a5474f,"Paçoca, amendoim",TACO,NAME_DIFFERENT_SOURCE_ANALYSIS_ONLY,NOME_SEMELHANTE_MAS_FONTE_DIFERENTE
+5515,5512,"Palmito, pupunha, em conserva",TACO,ae984ac3-349a-42e8-9f06-35604c6f1500,"Palmito, pupunha, em conserva",TACO,SOURCE_NORMALIZED_NAME,Energia:29.43196333333332!=29|Cálcio:32.43899999999999!=32|Magnésio:25.492333333333335!=25
+5518,5515,"Pamonha, barra para cozimento, pré-cozida",TACO,b7255aa7-a0a1-4b57-be69-7b64f6dbd03b,"Pamonha, barra para cozimento, pré-cozida",TACO,SOURCE_NORMALIZED_NAME,Cálcio:4.164333333333333!=4|Magnésio:15.347!=15
+5655,5652,"Pão, de queijo, assado",TACO,a3192c32-c55d-4acb-9c84-6690dd5d375e,"Pão, de queijo, assado",TACO,SOURCE_NORMALIZED_NAME,Magnésio:8.238999999999999!=8
+5656,5653,"Pão, de queijo, cru",TACO,fc8a61c5-28fb-4e69-a1dd-b5fd0f876086,"Pão, de queijo, cru",TACO,SOURCE_NORMALIZED_NAME,Magnésio:6.825666666666667!=7
+5658,5655,"Pão, glúten, forma",TACO,6599cdfe-13a6-491a-bc71-d03f45cc9f1a,"Pão, glúten, forma",TACO,SOURCE_NORMALIZED_NAME,Magnésio:24.243666666666666!=24
+5659,5656,"Pão, milho, forma",TACO,931c2726-2ada-4cbd-a402-d5c5d9e46ba7,"Pão, milho, forma",TACO,SOURCE_NORMALIZED_NAME,Magnésio:29.415666666666667!=29|Colesterol:5.685!=6
+5660,5657,"Pão, milho, forma",TBCA,931c2726-2ada-4cbd-a402-d5c5d9e46ba7,"Pão, milho, forma",TACO,NAME_DIFFERENT_SOURCE_ANALYSIS_ONLY,NOME_SEMELHANTE_MAS_FONTE_DIFERENTE
+5675,5672,"Pão, trigo, francês",TACO,27fa5a2a-c42c-4b14-b0bb-1d9d4f1dcce0,"Pão, trigo, francês",TACO,SOURCE_NORMALIZED_NAME,Cálcio:15.753333333333336!=16|Magnésio:25.463333333333335!=25
+5684,5681,"Pão, trigo, sovado",TACO,a2275138-c02c-4cd6-a44e-c71fdd39950d,"Pão, trigo, sovado",TACO,SOURCE_NORMALIZED_NAME,Colesterol:16.562!=17
+5685,5682,"Pão, trigo, sovado",TBCA,a2275138-c02c-4cd6-a44e-c71fdd39950d,"Pão, trigo, sovado",TACO,NAME_DIFFERENT_SOURCE_ANALYSIS_ONLY,NOME_SEMELHANTE_MAS_FONTE_DIFERENTE
+5752,5749,"Pastel, de carne, cru",TACO,54921cf9-be12-4d9c-89cc-1bf7c8b11ed6,"Pastel, de carne, cru",TACO,SOURCE_NORMALIZED_NAME,Cálcio:16.691666666666666!=17|Magnésio:17.705!=18|Colesterol:18.200666666666667!=18
+5753,5750,"Pastel, de carne, frito",TACO,95f8aedd-e39b-4730-9503-ad8273e3880b,"Pastel, de carne, frito",TACO,SOURCE_NORMALIZED_NAME,Cálcio:12.554666666666668!=13|Magnésio:14.444666666666665!=14|Colesterol:25.336!=25
+5754,5751,"Pastel, de queijo, cru",TACO,38accc6f-1b3b-4e97-8bf9-39f8cf7312ff,"Pastel, de queijo, cru",TACO,SOURCE_NORMALIZED_NAME,Magnésio:15.805333333333332!=16|Colesterol:14.349000000000002!=14
+5755,5752,"Pastel, de queijo, frito",TACO,7239ae18-72ca-43f5-ab10-e90970934c53,"Pastel, de queijo, frito",TACO,SOURCE_NORMALIZED_NAME,Magnésio:14.738333333333335!=15|Colesterol:15.376333333333333!=15
+5764,5761,"Pastel, massa, crua",TACO,483786e5-bdf5-4a73-a8bd-e1a32a71d1e8,"Pastel, massa, crua",TACO,SOURCE_NORMALIZED_NAME,Cálcio:12.613999999999999!=13|Magnésio:14.430666666666667!=14
+5765,5762,"Pastel, massa, frita",TACO,d47b5bb4-38c1-43b1-9ad3-8c92420c4c28,"Pastel, massa, frita",TACO,SOURCE_NORMALIZED_NAME,Cálcio:11.265666666666666!=11|Magnésio:12.740333333333334!=13
+5818,5815,"Pé-de-moleque, amendoim",TACO,9a65310a-3419-4905-8e47-d27a7687f50a,"Pé-de-moleque, amendoim",TACO,SOURCE_NORMALIZED_NAME,Sódio:16.345333333333333!=16
+5819,5816,"Pé-de-moleque, amendoim",TBCA,9a65310a-3419-4905-8e47-d27a7687f50a,"Pé-de-moleque, amendoim",TACO,NAME_DIFFERENT_SOURCE_ANALYSIS_ONLY,NOME_SEMELHANTE_MAS_FONTE_DIFERENTE
+6028,6025,"Pepino, cru",TACO,6261601b-7666-4d25-8453-0f38fff1ce38,"Pepino, cru",TACO,SOURCE_NORMALIZED_NAME,Energia:9.533691304347819!=10|Cálcio:9.616666666666667!=10|Magnésio:9.34!=9|Fósforo:12.323333333333332!=12|Vitamina A (RE):3.583333333333333!=2
+6037,6034,"Pequi, cru",TACO,f5ee5acc-7063-4e3e-bcb9-977d089da987,"Pequi, cru",TACO,SOURCE_NORMALIZED_NAME,Cálcio:32.441!=32|Vitamina A (RE):60!=30
+6050,6047,"Pera, Park, crua",TACO,57eaf987-c3a5-4b14-ab17-d0985fe0eea3,"Pêra, Park, crua",TACO,SOURCE_NORMALIZED_NAME,Cálcio:8.711999999999998!=9|Magnésio:6.124!=6|Fósforo:11.706999999999999!=12
+6052,6049,"Pera, Williams, crua",TACO,d9d24f66-c749-4bbf-9e88-59fcb51afb57,"Pêra, Williams, crua",TACO,SOURCE_NORMALIZED_NAME,Cálcio:8.276666666666666!=8|Magnésio:5.78!=6|Fósforo:11.766666666666667!=12
+6115,6112,"Peru, congelado, assado",TACO,86e30e31-d22c-423c-94b0-f8be5d96a51a,"Peru, congelado, assado",TACO,SOURCE_NORMALIZED_NAME,Cálcio:13.841!=14|Magnésio:11.543333333333335!=12
+6116,6113,"Peru, congelado, assado",TBCA,86e30e31-d22c-423c-94b0-f8be5d96a51a,"Peru, congelado, assado",TACO,NAME_GROUP_ANALYSIS_ONLY,CORRESPONDENCIA_ANALITICA_SEM_FONTE_COMPATIVEL
+6117,6114,"Peru, congelado, cru",TACO,128df3b6-e39a-4a2d-b841-21a07765d772,"Peru, congelado, cru",TACO,SOURCE_NORMALIZED_NAME,Cálcio:9.881333333333334!=10
+6118,6115,"Peru, congelado, cru",TBCA,128df3b6-e39a-4a2d-b841-21a07765d772,"Peru, congelado, cru",TACO,NAME_GROUP_ANALYSIS_ONLY,CORRESPONDENCIA_ANALITICA_SEM_FONTE_COMPATIVEL
+6135,6132,"Pescada, branca, crua",TACO,d437af19-aad4-4008-9023-8f73fcedb8ea,"Pescada, branca, crua",TACO,SOURCE_NORMALIZED_NAME,Cálcio:15.74!=16|Magnésio:19.203333333333333!=19|Vitamina A (RE):2.77!=3
+6137,6134,"Pescada, filé, com farinha de trigo, frito",TACO,91421d02-1499-4782-933b-de93bd3fea28,"Pescada, filé, com farinha de trigo, frito",TACO,SOURCE_NORMALIZED_NAME,Cálcio:26.43433333333333!=26|Magnésio:28.397000000000002!=28|Vitamina A (RE):17.5!=18
+6138,6135,"Pescada, filé, cru",TACO,e887aa47-44cd-483a-8ca9-3ffaefe7c0ac,"Pescada, filé, cru",TACO,SOURCE_NORMALIZED_NAME,Cálcio:13.546666666666667!=14
+6139,6136,"Pescada, filé, frito",TACO,72667fcf-0389-4ca9-a11f-e527c09364f2,"Pescada, filé, frito",TACO,SOURCE_NORMALIZED_NAME,Cálcio:10.324666666666667!=10|Vitamina A (RE):4.216666666666667!=4
+6152,6149,"Pêssego, Aurora, cru",TACO,d706572c-de80-4ac1-8b04-86149f1a8c5b,"Pêssego, Aurora, cru",TACO,SOURCE_NORMALIZED_NAME,Cálcio:3.232333333333333!=3|Magnésio:4.437666666666666!=4|Fósforo:15.442!=15
+6154,6151,"Pêssego, enlatado, em calda",TACO,fe40a4de-89a1-480f-aefe-a9b1151e2c3c,"Pêssego, enlatado, em calda",TACO,SOURCE_NORMALIZED_NAME,Fósforo:8.810333333333334!=9|Sódio:3.201!=3|Vitamina A (RE):47.54166666666667!=24
+6203,6200,"Pimentão, amarelo, cru",TACO,21f83b3f-e1b3-4738-8c09-947002d551ed,"Pimentão, amarelo, cru",TACO,SOURCE_NORMALIZED_NAME,Cálcio:9.61!=10|Fósforo:22.38333333333333!=22|Vitamina A (RE):40!=20
+6204,6201,"Pimentão, verde, cru",TACO,41b0aead-5e3f-4479-8969-6e06348ea983,"Pimentão, verde, cru",TACO,SOURCE_NORMALIZED_NAME,Energia:21.285881159420292!=21|Cálcio:8.763333333333334!=9|Magnésio:7.79!=8|Fósforo:16.513333333333332!=17|Vitamina A (RE):46!=23
+6205,6202,"Pimentão, vermelho, cru",TACO,bcbb7e3b-de40-4ee4-9cef-f08131ec6f1b,"Pimentão, vermelho, cru",TACO,SOURCE_NORMALIZED_NAME,Energia:23.28136376811601!=23|Cálcio:6.37!=6|Magnésio:11.13!=11|Vitamina A (RE):86!=43
+6213,6210,"Pinha, crua",TACO,fff5eac8-d3c9-4663-9db7-438da1a8148d,"Pinha, crua",TACO,SOURCE_NORMALIZED_NAME,Magnésio:30.538666666666668!=31|Fósforo:34.39533333333333!=34|Sódio:1.3373333333333335!=1
+6218,6215,"Pinhão, cozido",TACO,c6301ca5-42e8-4f63-aac4-b656013fcf77,"Pinhão, cozido",TACO,SOURCE_NORMALIZED_NAME,Cálcio:15.767333333333333!=16|Sódio:0.8626666666666667!=1
+6225,6222,"Pintado, assado",TACO,351a6435-2017-4674-b1c4-c0b50c404e31,"Pintado, assado",TACO,SOURCE_NORMALIZED_NAME,Vitamina A (RE):6.566666666666666!=7
+6226,6223,"Pintado, cru",TACO,93a83b1a-57fe-4ecc-ba64-b687efbceb0b,"Pintado, cru",TACO,SOURCE_NORMALIZED_NAME,Magnésio:23.69666666666667!=24
+6227,6224,"Pintado, grelhado",TACO,3b487d7d-762f-4edc-aaa6-83482f5d7399,"Pintado, grelhado",TACO,SOURCE_NORMALIZED_NAME,Vitamina A (RE):5.1333333!=5
+6250,6247,"Pitanga, crua",TACO,0a869d06-5628-4e78-970b-83c764470926,"Pitanga, crua",TACO,SOURCE_NORMALIZED_NAME,Energia:41.41552999999997!=41|Magnésio:12.225333333333333!=12|Fósforo:13.143!=13|Sódio:1.704!=2|Vitamina A (RE):154!=77
+6252,6249,"Pitanga, polpa, congelada",TACO,42f9f0e0-93cf-4250-a7fc-b5fb994b41c4,"Pitanga, polpa, congelada",TACO,SOURCE_NORMALIZED_NAME,Cálcio:7.795!=8|Magnésio:6.203!=6|Fósforo:12.218333333333334!=12|Vitamina A (RE):145.54166666666666!=73
+6253,6250,"Pitanga, polpa, congelada",TBCA,42f9f0e0-93cf-4250-a7fc-b5fb994b41c4,"Pitanga, polpa, congelada",TACO,NAME_DIFFERENT_SOURCE_ANALYSIS_ONLY,NOME_SEMELHANTE_MAS_FONTE_DIFERENTE
+6298,6295,"Polenta, pré-cozida",TACO,114fa673-2843-4a29-832f-fb06b048fecc,"Polenta, pré-cozida",TACO,SOURCE_NORMALIZED_NAME,Magnésio:4.428999999999999!=4|Fósforo:16.786!=17
+6318,6315,"Polvilho, doce",TACO,1a211e47-6deb-4292-83de-365a4a3949f9,"Polvilho, doce",TACO,SOURCE_NORMALIZED_NAME,Cálcio:27.413333333333338!=27|Fósforo:8.38!=8|Sódio:1.5766666666666669!=2
+6331,6328,"Porco, bisteca, crua",TACO,358f77a5-9c58-4959-9617-822826b7188c,"Porco, bisteca, crua",TACO,SOURCE_NORMALIZED_NAME,Cálcio:6.11!=6
+6332,6329,"Porco, bisteca, frita",TACO,159c76e4-f5ea-4d32-be2d-2d3061197a74,"Porco, bisteca, frita",TACO,SOURCE_NORMALIZED_NAME,Vitamina A (RE):9.74!=10
+6333,6330,"Porco, bisteca, grelhada",TACO,9b7a847a-3309-4736-8d77-f73e0b4fd55f,"Porco, bisteca, grelhada",TACO,SOURCE_NORMALIZED_NAME,Magnésio:24.741!=25
+6334,6331,"Porco, costela, assada",TACO,14cc8c33-37d5-4f18-8d47-04e6e1559a99,"Porco, costela, assada",TACO,SOURCE_NORMALIZED_NAME,Cálcio:16.771833333333333!=17
+6335,6332,"Porco, costela, crua",TACO,c414ca44-9132-49f8-bd5f-a6b62e94a715,"Porco, costela, crua",TACO,SOURCE_NORMALIZED_NAME,Cálcio:14.527333333333333!=15
+6336,6333,"Porco, lombo, assado",TACO,5ee2ad15-d51c-4178-b403-f82ea3c9f949,"Porco, lombo, assado",TACO,SOURCE_NORMALIZED_NAME,Cálcio:19.511333333333337!=20
+6337,6334,"Porco, lombo, cru",TACO,e3002405-2d2b-4089-9e38-628aa18c0af0,"Porco, lombo, cru",TACO,SOURCE_NORMALIZED_NAME,Cálcio:4.155!=4
+6338,6335,"Porco, orelha, salgada, crua",TACO,2d2e85aa-8029-4402-a46c-acb71393a46e,"Porco, orelha, salgada, crua",TACO,SOURCE_NORMALIZED_NAME,Cálcio:5.442666666666667!=5
+6339,6336,"Porco, pernil, assado",TACO,2f90b8e8-5768-4cf5-91e4-81908e1d5128,"Porco, pernil, assado",TACO,SOURCE_NORMALIZED_NAME,Cálcio:17.589!=18|Magnésio:27.346999999999998!=27
+6341,6338,"Porco, rabo, salgado, cru",TACO,a7d8df63-fb1f-448d-9dd1-e82a5eef7067,"Porco, rabo, salgado, cru",TACO,SOURCE_NORMALIZED_NAME,Cálcio:21.629!=22|Magnésio:3.595333333333333!=4
+6343,6340,"Porquinho, cru",TACO,2ef09ff1-d695-4134-996c-8b24f2d0520b,"Porquinho, cru",TACO,SOURCE_NORMALIZED_NAME,Magnésio:24.35!=24|Vitamina A (RE):4.653333333333333!=5
+6369,6366,"Presunto, com capa de gordura",TACO,eefa9273-7a06-48c8-b5fb-3f82e4f812a2,"Presunto, com capa de gordura",TACO,SOURCE_NORMALIZED_NAME,Cálcio:12.482333333333335!=12|Colesterol:39.51233333333334!=40
+6377,6374,"Presunto, sem capa de gordura",TACO,31f95511-7561-4ba4-b7a0-cd017d51f0b0,"Presunto, sem capa de gordura",TACO,SOURCE_NORMALIZED_NAME,Cálcio:23.27433333333333!=23|Magnésio:17.513333333333332!=18
+6437,6434,"Pupunha, cozida",TACO,6e483371-999e-47a1-bf4f-2f2104914253,"Pupunha, cozida",TACO,SOURCE_NORMALIZED_NAME,Cálcio:27.58633333333333!=28|Magnésio:25.28933333333333!=25|Vitamina A (RE):875.4444444444443!=438
+6562,6559,"Queijo, minas, frescal",TACO,565c8df0-d0e7-44ed-9788-f4b25331028e,"Queijo, minas, frescal",TACO,SOURCE_NORMALIZED_NAME,Magnésio:6.883666666666667!=7
+6563,6560,"Queijo, minas, frescal",TBCA,565c8df0-d0e7-44ed-9788-f4b25331028e,"Queijo, minas, frescal",TACO,NAME_GROUP_ANALYSIS_ONLY,CORRESPONDENCIA_ANALITICA_SEM_FONTE_COMPATIVEL
+6574,6571,"Queijo, parmesão",TACO,a4322fd9-57c2-4e52-a506-520362799022,"Queijo, parmesão",TACO,SOURCE_NORMALIZED_NAME,Magnésio:33.367333333333335!=33
+6580,6577,"Queijo, petit suisse, morango",TACO,4bb2514e-4bf3-4be1-80a7-389ab735b944,"Queijo, petit suisse, morango",TACO,SOURCE_NORMALIZED_NAME,Magnésio:26.508666666666667!=27
+6582,6579,"Queijo, prato",TBCA,e41aa448-ac2e-4506-99d9-a580764f556a,"Queijo, prato",TACO,NAME_GROUP_ANALYSIS_ONLY,CORRESPONDENCIA_ANALITICA_SEM_FONTE_COMPATIVEL
+6588,6585,"Queijo, requeijão, cremoso",TACO,f007a290-1262-43e8-8880-1a9f7c8d1496,"Queijo, requeijão, cremoso",TACO,SOURCE_NORMALIZED_NAME,Magnésio:11.628333333333332!=12
+6591,6588,"Queijo, ricota",TACO,7ce4f635-4bd0-4f40-ae06-3e04ca89c8c1,"Queijo, ricota",TACO,SOURCE_NORMALIZED_NAME,Magnésio:11.808666666666667!=12
+6592,6589,"Queijo, ricota",TBCA,7ce4f635-4bd0-4f40-ae06-3e04ca89c8c1,"Queijo, ricota",TACO,NAME_GROUP_ANALYSIS_ONLY,CORRESPONDENCIA_ANALITICA_SEM_FONTE_COMPATIVEL
+6605,6602,"Quiabo, cru",TACO,d9b02ebd-dbb0-4f5e-9a67-827edf0bd84e,"Quiabo, cru",TACO,SOURCE_NORMALIZED_NAME,Sódio:0.891!=1|Vitamina A (RE):49.30555555555556!=25
+6609,6606,"Quibe, assado",TACO,b616d590-57ac-4835-a892-304a1ef1c6be,"Quibe, assado",TACO,SOURCE_NORMALIZED_NAME,Cálcio:15.618!=16
+6610,6607,"Quibe, cru",TACO,f1e0eafc-0316-4da3-878f-388cfc8d626e,"Quibe, cru",TACO,SOURCE_NORMALIZED_NAME,Magnésio:25.694333333333333!=26
+6612,6609,"Quibe, frito",TACO,1e308b0c-10fb-42f3-947f-208d044ed9a8,"Quibe, frito",TACO,SOURCE_NORMALIZED_NAME,Cálcio:21.725666666666665!=22
+6616,6613,Quibebe,IBGE,15bf6ff9-143d-4298-a88d-65fdd492edaa,Quibebe,TACO,NAME_DIFFERENT_SOURCE_ANALYSIS_ONLY,NOME_SEMELHANTE_MAS_FONTE_DIFERENTE
+6617,6614,Quibebe,TACO,15bf6ff9-143d-4298-a88d-65fdd492edaa,Quibebe,TACO,SOURCE_NORMALIZED_NAME,Cálcio:7.684666666666668!=8|Magnésio:10.395!=10|Fósforo:42.525!=43|Vitamina A (RE):104.9166667!=52
+6628,6625,Quindim,IBGE,8de9b7a2-36e7-4dc0-8c2b-3f43fe072427,Quindim,TACO,NAME_GROUP_ANALYSIS_ONLY,CORRESPONDENCIA_ANALITICA_SEM_FONTE_COMPATIVEL
+6629,6626,Quindim,TACO,8de9b7a2-36e7-4dc0-8c2b-3f43fe072427,Quindim,TACO,SOURCE_NORMALIZED_NAME,Sódio:27.366!=27
+6630,6627,Quindim,TBCA,8de9b7a2-36e7-4dc0-8c2b-3f43fe072427,Quindim,TACO,NAME_GROUP_ANALYSIS_ONLY,CORRESPONDENCIA_ANALITICA_SEM_FONTE_COMPATIVEL
+6631,6628,Quindim,Tucunduva,8de9b7a2-36e7-4dc0-8c2b-3f43fe072427,Quindim,TACO,NAME_GROUP_ANALYSIS_ONLY,CORRESPONDENCIA_ANALITICA_SEM_FONTE_COMPATIVEL
+6649,6646,"Rabanete, cru",TACO,fbcb5353-85ae-437a-ad59-aaa4e9f413b6,"Rabanete, cru",TACO,SOURCE_NORMALIZED_NAME,Energia:13.738126086956488!=14|Magnésio:9.613333333333332!=10
+6658,6655,Rapadura,IBGE,147f54fd-5d1b-4445-bad5-dedb09b395c5,Rapadura,TACO,NAME_GROUP_ANALYSIS_ONLY,CORRESPONDENCIA_ANALITICA_SEM_FONTE_COMPATIVEL
+6659,6656,Rapadura,TACO,147f54fd-5d1b-4445-bad5-dedb09b395c5,Rapadura,TACO,SOURCE_NORMALIZED_NAME,Cálcio:30.486333333333334!=30|Fósforo:21.300666666666668!=21|Sódio:21.71066666666667!=22
+6660,6657,Rapadura,TBCA,147f54fd-5d1b-4445-bad5-dedb09b395c5,Rapadura,TACO,NAME_GROUP_ANALYSIS_ONLY,CORRESPONDENCIA_ANALITICA_SEM_FONTE_COMPATIVEL
+6692,6689,"Refrigerante, tipo água tônica",TACO,706cbc97-9f37-4273-ae2e-37de8de761a9,"Refrigerante, tipo água tônica",TACO,SOURCE_NORMALIZED_NAME,Fósforo:0.15166666666666664!=0|Sódio:8.290333333333333!=8|Potássio:1.5056666666666667!=2
+6695,6692,"Refrigerante, tipo cola",TACO,fc606eae-6481-45b0-a200-f850b8e66e94,"Refrigerante, tipo cola",TACO,SOURCE_NORMALIZED_NAME,Energia:33.514200000000045!=34|Cálcio:1.3723333333333334!=1|Fósforo:16.677333333333333!=17|Sódio:7.119333333333333!=7
+6698,6695,"Refrigerante, tipo guaraná",TACO,17830123-13fc-4319-8551-9c86e5172046,"Refrigerante, tipo guaraná",TACO,SOURCE_NORMALIZED_NAME,Cálcio:1.4076666666666666!=1|Potássio:1.3813333333333333!=1
+6701,6698,"Refrigerante, tipo laranja",TACO,c93ea254-93d9-477f-b232-73a4fe891dc2,"Refrigerante, tipo laranja",TACO,SOURCE_NORMALIZED_NAME,Cálcio:2.344333333333333!=2|Magnésio:1.2076666666666667!=1|Fósforo:1.4669999999999999!=1|Sódio:9.271666666666667!=9|Potássio:15.504333333333335!=16
+6704,6701,"Refrigerante, tipo limão",TACO,cc8e1220-b8a7-4319-b7d2-a28c564dad99,"Refrigerante, tipo limão",TACO,SOURCE_NORMALIZED_NAME,Cálcio:1.7506666666666666!=2|Magnésio:0.531!=1|Sódio:8.803333333333335!=9|Potássio:4.269!=4
+6718,6715,"Repolho, branco, cru",TACO,f7744052-a0a8-4eba-a13a-82f74c39553a,"Repolho, branco, cru",TACO,SOURCE_NORMALIZED_NAME,Cálcio:34.546666666666674!=35|Magnésio:8.513333333333334!=9|Fósforo:14.2!=14|Sódio:3.643333333333333!=4|Vitamina A (RE):6!=3
+6719,6716,"Repolho, roxo, cru",TACO,07c7b7f7-1ce9-4820-88a6-e98faf5668e4,"Repolho, roxo, cru",TACO,SOURCE_NORMALIZED_NAME,Sódio:2.337666666666667!=2
+6720,6717,"Repolho, roxo, refogado",TACO,03d1837f-7e6c-44c7-8252-37b21f85d525,"Repolho, roxo, refogado",TACO,SOURCE_NORMALIZED_NAME,Magnésio:17.248!=17|Sódio:3.4166666666666665!=3
+6781,6778,"Romã, crua",TACO,1b7d5ec6-fa08-4eb9-914d-fe985c597517,"Romã, crua",TACO,SOURCE_NORMALIZED_NAME,Cálcio:4.7540000000000004!=5|Magnésio:12.701999999999998!=13|Sódio:0.5913333333333333!=1
+6795,6792,"Rúcula, crua",TACO,8dc4b54e-8849-4344-90de-9c95b181e7e8,"Rúcula, crua",TACO,SOURCE_NORMALIZED_NAME,Energia:13.133256607294062!=13|Magnésio:17.790666666666667!=18|Sódio:9.418!=9|Vitamina A (RE):532.75!=266
+6825,6822,"Sal, dietético",TBCA,aff4eba3-bf2e-4fe2-9f6c-63a519cdf6d7,"Sal, dietético",TACO,NAME_DIFFERENT_SOURCE_ANALYSIS_ONLY,NOME_SEMELHANTE_MAS_FONTE_DIFERENTE
+6827,6824,"Sal, grosso",TBCA,44cba3e4-11a5-4654-ac69-632812e74c1b,"Sal, grosso",TACO,NAME_DIFFERENT_SOURCE_ANALYSIS_ONLY,NOME_SEMELHANTE_MAS_FONTE_DIFERENTE
+6847,6844,"Salada, de legumes, com maionese",TACO,a37c2d50-03d7-4721-8c85-b30ab43adbef,"Salada, de legumes, com maionese",TACO,SOURCE_NORMALIZED_NAME,Cálcio:12.128333333333332!=12|Magnésio:8.714333333333334!=9|Fósforo:22.265!=22|Vitamina A (RE):282.75!=141|Colesterol:7.201333333333333!=7
+6848,6845,"Salada, de legumes, cozida no vapor",TACO,f6bee930-5e95-4d66-a4a5-536728b43401,"Salada, de legumes, cozida no vapor",TACO,SOURCE_NORMALIZED_NAME,Energia:35.40810429847241!=35|Magnésio:18.578333333333337!=19|Sódio:2.5096666666666665!=3|Vitamina A (RE):510!=255
+6849,6846,Salame,IBGE,69c5f8e8-d539-4cad-a948-43edaf0d1250,Salame,TACO,NAME_GROUP_ANALYSIS_ONLY,CORRESPONDENCIA_ANALITICA_SEM_FONTE_COMPATIVEL
+6851,6848,Salame,Tucunduva,69c5f8e8-d539-4cad-a948-43edaf0d1250,Salame,TACO,NAME_GROUP_ANALYSIS_ONLY,CORRESPONDENCIA_ANALITICA_SEM_FONTE_COMPATIVEL
+6852,6849,Salame,INSA,69c5f8e8-d539-4cad-a948-43edaf0d1250,Salame,TACO,NAME_GROUP_ANALYSIS_ONLY,CORRESPONDENCIA_ANALITICA_SEM_FONTE_COMPATIVEL
+6873,6870,"Salmão, sem pele, fresco, cru",TACO,fc746eb2-f61e-4a86-81df-4b33791a1db2,"Salmão, sem pele, fresco, cru",TACO,SOURCE_NORMALIZED_NAME,Cálcio:8.748!=9|Magnésio:27.421666666666667!=27
+6877,6874,"Salpicão, de frango",TACO,a21a1ded-5c92-43e9-89f7-2bfcacb2b7c9,"Salpicão, de frango",TACO,SOURCE_NORMALIZED_NAME,Cálcio:9.408999999999999!=9|Magnésio:13.254!=13|Vitamina A (RE):14.5!=7
+6880,6877,"Salsa, crua",TACO,21d54485-7b86-44b2-a79f-da806a86ec78,"Salsa, crua",TACO,SOURCE_NORMALIZED_NAME,Energia:33.424111594202884!=33|Sódio:2.3!=2|Vitamina A (RE):1743.25!=872
+7093,7090,Sarapatel,TACO,63877ec5-26a6-4f75-b9ca-a173ef86bfb8,Sarapatel,TACO,SOURCE_NORMALIZED_NAME,Cálcio:12.234333333333334!=12|Magnésio:12.796999999999999!=13
+7094,7091,Sarapatel,Tucunduva,63877ec5-26a6-4f75-b9ca-a173ef86bfb8,Sarapatel,TACO,NAME_DIFFERENT_SOURCE_ANALYSIS_ONLY,NOME_SEMELHANTE_MAS_FONTE_DIFERENTE
+7122,7119,"Sardinha, inteira, crua",TACO,eefd89c0-a421-4b91-bd0e-ba4aeef3a092,"Sardinha, inteira, crua",TACO,SOURCE_NORMALIZED_NAME,Magnésio:28.526666666666667!=29
+7132,7129,"Seleta de legumes, enlatada",TACO,f5e3dd3b-cff6-425a-a6c3-9e09918b4057,"Seleta de legumes, enlatada",TACO,SOURCE_NORMALIZED_NAME,Magnésio:15.613333333333335!=16|Vitamina A (RE):244.16666666666666!=122
+7159,7156,"Serralha, crua",TACO,a0e10a30-28f8-4caf-8e7d-555030cc96ab,"Serralha, crua",TACO,SOURCE_NORMALIZED_NAME,Energia:30.397934166666644!=30|Magnésio:29.551666666666666!=30|Sódio:19.346999999999998!=19|Vitamina A (RE):1134!=567
+7165,7162,Shoyu,TACO,84a50c42-c578-4d11-8b8d-09f9c85ea0cc,Shoyu,TACO,SOURCE_NORMALIZED_NAME,Cálcio:14.527999999999999!=15|Magnésio:23.627!=24
+7192,7189,"Soja, extrato solúvel, natural, fluido",TACO,608165a5-591d-4ce8-8ba6-922418f07842,"Soja, extrato solúvel, natural, fluido",TACO,SOURCE_NORMALIZED_NAME,Cálcio:16.517!=17|Magnésio:15.454!=15
+7201,7198,"Soja, farinha",TACO,cdd9fff1-10ee-44fb-be80-9984d2e01c9b,"Soja, farinha",TACO,SOURCE_NORMALIZED_NAME,Sódio:5.753666666666667!=6
+7504,7501,Tabule,TACO,9454f098-6a31-4a88-9984-abced4921490,Tabule,TACO,SOURCE_NORMALIZED_NAME,Fósforo:35.470333333333336!=35|Sódio:1.192!=1
+7505,7502,Tacacá,IBGE,75936016-cc80-40ca-aaee-69ad1481de54,Tacacá,TACO,NAME_DIFFERENT_SOURCE_ANALYSIS_ONLY,NOME_SEMELHANTE_MAS_FONTE_DIFERENTE
+7506,7503,Tacacá,TACO,75936016-cc80-40ca-aaee-69ad1481de54,Tacacá,TACO,SOURCE_NORMALIZED_NAME,Vitamina A (RE):35.361111111111114!=18
+7512,7509,"Taioba, crua",TACO,6d2669e8-b8d1-4018-bfeb-f0a34e1f85a1,"Taioba, crua",TACO,SOURCE_NORMALIZED_NAME,Sódio:1.1606666666666667!=1|Vitamina A (RE):1160!=580
+7519,7516,"Tamarindo, cru",TACO,5b2a86fa-7c9c-4458-a404-130f5ffe1ddd,"Tamarindo, cru",TACO,SOURCE_NORMALIZED_NAME,Sódio:0.3553333333333333!=0
+7528,7525,"Tangerina, Poncã, crua",TACO,a9d53cfc-468a-49fb-b793-3fa0c21386d8,"Tangerina, Poncã, crua",TACO,SOURCE_NORMALIZED_NAME,Magnésio:7.733333333333333!=8|Fósforo:12.453333333333333!=12|Vitamina A (RE):47.375!=24
+7529,7526,"Tangerina, Poncã, suco",TACO,ca9512a9-5afe-42bd-a7ed-0096af9b72af,"Tangerina, Poncã, suco",TACO,SOURCE_NORMALIZED_NAME,Cálcio:4.283333333333334!=4|Magnésio:6.46!=6|Vitamina A (RE):51.166666666666664!=26
+7539,7536,"Tapioca, com manteiga",TACO,5fe3dae7-3123-4fd6-b840-cb6bcf8c40a1,"Tapioca, com manteiga",TACO,SOURCE_NORMALIZED_NAME,Magnésio:3.218!=3|Fósforo:8.427!=8|Potássio:19.305!=19
+7549,7546,Tempero a base de sal,TACO,f7619cf1-3bda-44d4-beec-dfd1d396f663,Tempero a base de sal,TACO,SOURCE_NORMALIZED_NAME,Energia:21.33!=21
+7581,7578,"Tomate, com semente, cru",TACO,3444f2e3-2246-4df0-83a5-b51f095ef2ed,"Tomate, com semente, cru",TACO,SOURCE_NORMALIZED_NAME,Energia:15.335156521739158!=15|Magnésio:10.54!=11|Vitamina A (RE):54!=27
+7582,7579,"Tomate, extrato",TACO,268ac45c-5185-4c66-8348-9f0434da0d34,"Tomate, extrato",TACO,SOURCE_NORMALIZED_NAME,Magnésio:29.3266!=29|Vitamina A (RE):166!=83
+7583,7580,"Tomate, molho industrializado",TACO,d20c1c6d-70f7-4d10-85cf-30c8c0099a1e,"Tomate, molho industrializado",TACO,SOURCE_NORMALIZED_NAME,Energia:38.446549460490566!=38|Cálcio:11.729333333333335!=12|Magnésio:16.789333333333335!=17|Vitamina A (RE):76!=38
+7584,7581,"Tomate, purê",TACO,b9d66d3e-f59a-42b7-9dd4-929addfc318c,"Tomate, purê",TACO,SOURCE_NORMALIZED_NAME,Cálcio:13.243333333333334!=13|Magnésio:15.436666666666667!=15|Vitamina A (RE):90!=45
+7585,7582,"Tomate, salada",TACO,efd45376-9a11-41e3-ab14-b62fa791bc1c,"Tomate, salada",TACO,SOURCE_NORMALIZED_NAME,Energia:20.546909166666637!=21|Magnésio:9.503666666666668!=10|Fósforo:23.37766666666667!=23|Sódio:5.243!=5
+7610,7607,"Torrada, pão francês",TACO,65fdc443-0b79-4b65-96df-c767170a4c01,"Torrada, pão francês",TACO,SOURCE_NORMALIZED_NAME,Cálcio:18.744666666666664!=19|Magnésio:31.597333333333335!=32
+7611,7608,"Torrada, pão francês",TBCA,65fdc443-0b79-4b65-96df-c767170a4c01,"Torrada, pão francês",TACO,NAME_DIFFERENT_SOURCE_ANALYSIS_ONLY,NOME_SEMELHANTE_MAS_FONTE_DIFERENTE
+7665,7662,"Toucinho, cru",TACO,4643e3f7-7e1f-49ed-a4b1-334a3d64916e,"Toucinho, cru",TACO,SOURCE_NORMALIZED_NAME,Cálcio:2.3860000000000006!=2|Magnésio:3.568!=4|Fósforo:35.358666666666664!=35
+7666,7663,"Toucinho, frito",TACO,4c21c6b7-d961-4fb3-b2df-3861927258f3,"Toucinho, frito",TACO,SOURCE_NORMALIZED_NAME,Cálcio:9.443333333333333!=9|Magnésio:9.460333333333333!=9
+7671,7668,"Tremoço, cru",TACO,a5f62631-c301-4b66-9c91-273e539c7f90,"Tremoço, cru",TACO,SOURCE_NORMALIZED_NAME,Sódio:3.2906666666666666!=3
+7672,7669,"Tremoço, cru",TBCA,a5f62631-c301-4b66-9c91-273e539c7f90,"Tremoço, cru",TACO,NAME_GROUP_ANALYSIS_ONLY,CORRESPONDENCIA_ANALITICA_SEM_FONTE_COMPATIVEL
+7673,7670,"Tremoço, em conserva",TACO,0964c75e-51c4-4df5-83c7-b5e878d3320a,"Tremoço, em conserva",TACO,SOURCE_NORMALIZED_NAME,Cálcio:15.537333333333331!=16|Magnésio:3.517!=4|Potássio:5.204666666666667!=5
+7703,7700,"Tucumã, cru",TACO,a806825f-abf2-436c-ae8b-95e2c6b460f6,"Tucumã, cru",TACO,SOURCE_NORMALIZED_NAME,Sódio:3.8930000000000002!=4|Vitamina A (RE):2362.6388888888887!=1181
+7709,7706,"Tucupi, com pimenta-de-cheiro",TACO,896eb9bb-2309-4707-81bb-35f9eeb0c701,"Tucupi, com pimenta-de-cheiro",TACO,SOURCE_NORMALIZED_NAME,Magnésio:42.48566666666667!=42|Sódio:5.131!=5|Vitamina A (RE):50.583334!=25
+7718,7715,"Umbu, cru",TACO,bb21a73b-48d5-423f-9ece-ad62a06463ce,"Umbu, cru",TACO,SOURCE_NORMALIZED_NAME,Cálcio:11.561!=12|Magnésio:11.348999999999998!=11|Fósforo:13.375!=13
+7720,7717,"Umbu, polpa, congelada",TACO,473c7051-0d80-4102-8455-f30f93a630f0,"Umbu, polpa, congelada",TACO,SOURCE_NORMALIZED_NAME,Cálcio:10.710333333333333!=11|Magnésio:8.121!=8|Fósforo:12.677!=13|Sódio:5.771!=6
+7721,7718,"Umbu, polpa, congelada",TBCA,473c7051-0d80-4102-8455-f30f93a630f0,"Umbu, polpa, congelada",TACO,NAME_DIFFERENT_SOURCE_ANALYSIS_ONLY,NOME_SEMELHANTE_MAS_FONTE_DIFERENTE
+7733,7730,"Uva, Itália, crua",TACO,7d50af7b-9673-480c-9b9d-00952cee304b,"Uva, Itália, crua",TACO,SOURCE_NORMALIZED_NAME,Cálcio:6.66!=7|Vitamina A (RE):5.333333333333333!=3
+7734,7731,"Uva, Rubi, crua",TACO,b156c083-dcff-4bbe-aaa0-9166465124cc,"Uva, Rubi, crua",TACO,SOURCE_NORMALIZED_NAME,Cálcio:7.615666666666667!=8|Magnésio:5.827333333333333!=6
+7735,7732,"Uva, suco concentrado, envasado",TACO,bf11dc30-e9dd-4391-b554-d80899da8915,"Uva, suco concentrado, envasado",TACO,SOURCE_NORMALIZED_NAME,Cálcio:9.317!=9|Sódio:9.583333333333334!=10
+7743,7740,Vaca atolada,IBGE,e5967df1-eb16-468b-8478-ae7f4313aa92,Vaca atolada,TACO,NAME_DIFFERENT_SOURCE_ANALYSIS_ONLY,NOME_SEMELHANTE_MAS_FONTE_DIFERENTE
+7744,7741,Vaca atolada,TACO,e5967df1-eb16-468b-8478-ae7f4313aa92,Vaca atolada,TACO,SOURCE_NORMALIZED_NAME,Magnésio:15.754333333333333!=16|Sódio:25.633666666666667!=26|Colesterol:18.586333333333332!=19
+7777,7774,"Vagem, crua",TACO,427108d1-05b2-494a-a69b-104988405397,"Vagem, crua",TACO,SOURCE_NORMALIZED_NAME,Vitamina A (RE):32.08333333333333!=16
+7778,7775,"Vagem, crua",TBCA,427108d1-05b2-494a-a69b-104988405397,"Vagem, crua",TACO,NAME_DIFFERENT_SOURCE_ANALYSIS_ONLY,NOME_SEMELHANTE_MAS_FONTE_DIFERENTE
+7785,7782,Vatapá,IBGE,6791de20-ad7c-47f5-ad26-609d69b57a57,Vatapá,TACO,NAME_DIFFERENT_SOURCE_ANALYSIS_ONLY,NOME_SEMELHANTE_MAS_FONTE_DIFERENTE
+7786,7783,Vatapá,TACO,6791de20-ad7c-47f5-ad26-609d69b57a57,Vatapá,TACO,SOURCE_NORMALIZED_NAME,Colesterol:44.44966666666667!=44
+7787,7784,Vatapá,TBCA,6791de20-ad7c-47f5-ad26-609d69b57a57,Vatapá,TACO,NAME_DIFFERENT_SOURCE_ANALYSIS_ONLY,NOME_SEMELHANTE_MAS_FONTE_DIFERENTE
+7788,7785,Vatapá,Tucunduva,6791de20-ad7c-47f5-ad26-609d69b57a57,Vatapá,TACO,NAME_DIFFERENT_SOURCE_ANALYSIS_ONLY,NOME_SEMELHANTE_MAS_FONTE_DIFERENTE
+7823,7820,Virado à paulista,Tucunduva,915f9197-4cec-4c8a-8230-0189dfd3b654,Virado à paulista,TACO,NAME_DIFFERENT_SOURCE_ANALYSIS_ONLY,NOME_SEMELHANTE_MAS_FONTE_DIFERENTE
+7825,7822,Virado à Paulista,TBCA,915f9197-4cec-4c8a-8230-0189dfd3b654,Virado à paulista,TACO,NAME_DIFFERENT_SOURCE_ANALYSIS_ONLY,NOME_SEMELHANTE_MAS_FONTE_DIFERENTE
+7869,7866,Yakisoba,TACO,193acb4a-a73a-4c1f-bd1b-c8ccba34ae75,Yakisoba,TACO,SOURCE_NORMALIZED_NAME,Magnésio:13.335!=13|Vitamina A (RE):62!=31

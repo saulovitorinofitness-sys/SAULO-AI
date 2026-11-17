@@ -11,6 +11,7 @@ export type PosturalAssessmentStatus =
 
 export interface PosturalHistorySource {
   readonly assessmentId: string;
+  readonly versionId?: string;
   readonly masterRecordId: string;
   readonly patientId: string;
   readonly attendanceId?: string;

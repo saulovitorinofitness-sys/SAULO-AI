@@ -1,5 +1,6 @@
 import type { ConsultationType } from "@/modules/attendance";
-import type { EntityId, ISODateTime, ModuleKey } from "@/modules/shared";
+import type { ClinicalAnamnesisData } from "@/features/clinical-anamnesis/contracts";
+import type { EntityId, ISODate, ISODateTime, ModuleKey } from "@/modules/shared";
 
 export type ClinicalCollectionStepKey = "ANTHROPOMETRY" | "BIOIMPEDANCE" | "PERIMETRY" | "POSTURAL_ASSESSMENT" | "SUMMARY";
 export type EditableClinicalStepKey = Exclude<ClinicalCollectionStepKey, "SUMMARY">;
@@ -32,6 +33,15 @@ export interface ClinicalStepRecord<T> {
   readonly missingRequiredFields: readonly string[];
   readonly origin?: RecordOrigin;
   readonly audit?: ProfessionalAudit;
+}
+
+export interface ClinicalAssessmentRecord<T> extends ClinicalStepRecord<T> {
+  /**
+   * Data clínica em que a avaliação foi realizada, no formato YYYY-MM-DD.
+   * É distinta das datas de criação e atualização mantidas para auditoria.
+   * Opcional durante a migração progressiva dos leitores atuais.
+   */
+  readonly assessmentDate?: ISODate;
 }
 
 export interface AnthropometryData {
@@ -167,6 +177,177 @@ export interface PosturalFollowUp {
   readonly reassessmentObservation?: string;
 }
 
+export interface PosturalCorrectiveObjective {
+  readonly id: string;
+  readonly title: string;
+  readonly description?: string;
+  readonly priority?: "LOW" | "MODERATE" | "HIGH";
+  readonly expectedTimeframe?: string;
+}
+
+export interface PosturalStretchingExercise {
+  readonly id: string;
+  readonly exerciseName: string;
+  readonly region?: string;
+  readonly sets?: number;
+  readonly durationSeconds?: number;
+  readonly frequency?: string;
+  readonly observation?: string;
+}
+
+export interface PosturalMobilityExercise {
+  readonly id: string;
+  readonly exerciseName: string;
+  readonly objective?: string;
+  readonly sets?: number;
+  readonly repetitions?: number;
+  readonly frequency?: string;
+  readonly observation?: string;
+}
+
+export interface PosturalActivationExercise {
+  readonly id: string;
+  readonly muscleOrRegion?: string;
+  readonly exerciseName: string;
+  readonly sets?: number;
+  readonly repetitions?: number;
+  readonly durationSeconds?: number;
+  readonly frequency?: string;
+  readonly observation?: string;
+}
+
+export interface PosturalStabilityExercise {
+  readonly id: string;
+  readonly exerciseName: string;
+  readonly objective?: string;
+  readonly sets?: number;
+  readonly repetitions?: number;
+  readonly durationSeconds?: number;
+  readonly frequency?: string;
+  readonly observation?: string;
+}
+
+export interface PosturalMotorControlExercise {
+  readonly id: string;
+  readonly exerciseName: string;
+  readonly objective?: string;
+  readonly progression?: string;
+  readonly sets?: number;
+  readonly repetitions?: number;
+  readonly durationSeconds?: number;
+  readonly observation?: string;
+}
+
+export interface PosturalCorrectiveExercise {
+  readonly id: string;
+  readonly exerciseName: string;
+  readonly objective?: string;
+  readonly load?: string;
+  readonly sets?: number;
+  readonly repetitions?: number;
+  readonly durationSeconds?: number;
+  readonly intervalSeconds?: number;
+  readonly frequency?: string;
+  readonly observation?: string;
+}
+
+export interface PosturalPrecaution {
+  readonly id: string;
+  readonly type?:
+    | "AVOID"
+    | "RESTRICTION"
+    | "COMPENSATION"
+    | "ATTENTION"
+    | "OTHER";
+  readonly description: string;
+  readonly observation?: string;
+}
+
+export interface PosturalEvolutionCriterion {
+  readonly id: string;
+  readonly criterion: string;
+  readonly indicator?: string;
+  readonly expectedResult?: string;
+  readonly targetDate?: string;
+  readonly observation?: string;
+}
+
+export interface PosturalCorrectivePlan {
+  readonly objectives?: readonly PosturalCorrectiveObjective[];
+  readonly stretching?: readonly PosturalStretchingExercise[];
+  readonly mobility?: readonly PosturalMobilityExercise[];
+  readonly activation?: readonly PosturalActivationExercise[];
+  readonly stability?: readonly PosturalStabilityExercise[];
+  readonly motorControl?: readonly PosturalMotorControlExercise[];
+  readonly correctiveExercises?: readonly PosturalCorrectiveExercise[];
+  readonly precautions?: readonly PosturalPrecaution[];
+  readonly evolutionCriteria?: readonly PosturalEvolutionCriterion[];
+  readonly generalNotes?: string;
+  readonly approvedAt?: ISODateTime;
+  readonly approvedBy?: ProfessionalAudit;
+}
+
+export interface PosturalReferenceLine {
+  readonly id: string;
+  readonly orientation: "HORIZONTAL" | "VERTICAL";
+  /** Posição normalizada entre 0 e 1 dentro da área útil da imagem. */
+  readonly position: number;
+  readonly color: string;
+  readonly thicknessPx?: number;
+  readonly opacity?: number;
+  readonly visible?: boolean;
+}
+
+export interface PosturalReferenceLines {
+  readonly enabled?: boolean;
+  readonly horizontal: readonly [
+    PosturalReferenceLine,
+    PosturalReferenceLine,
+  ];
+  readonly vertical: readonly [
+    PosturalReferenceLine,
+    PosturalReferenceLine,
+  ];
+}
+
+export type PosturalAnnotationType =
+  | "ARROW"
+  | "TEXT"
+  | "CIRCLE"
+  | "FREEHAND";
+
+export interface PosturalAnnotationPoint {
+  /** Coordenada normalizada entre 0 e 1 dentro da área útil da imagem. */
+  readonly x: number;
+  /** Coordenada normalizada entre 0 e 1 dentro da área útil da imagem. */
+  readonly y: number;
+}
+
+export interface PosturalAnnotationLayer {
+  readonly id: string;
+  readonly type: PosturalAnnotationType;
+  readonly visible?: boolean;
+  readonly color: string;
+  readonly opacity?: number;
+  readonly thicknessPx?: number;
+  readonly rotationDeg?: number;
+  readonly scale?: number;
+  readonly start?: PosturalAnnotationPoint;
+  readonly end?: PosturalAnnotationPoint;
+  readonly center?: PosturalAnnotationPoint;
+  readonly radius?: number;
+  readonly text?: string;
+  readonly points?: readonly PosturalAnnotationPoint[];
+}
+
+export interface PosturalComparisonMetadata {
+  readonly comparisonAssessmentId?: EntityId;
+  readonly comparisonAttendanceId?: EntityId;
+  readonly selectedView?: PosturalViewKey;
+  readonly observation?: string;
+  readonly synchronizedViewport?: boolean;
+}
+
 export interface PosturalAssessmentData {
   readonly views: Readonly<Record<PosturalViewKey, PosturalViewData>>;
   readonly identifiedChanges: StructuredFindingState;
@@ -174,7 +355,19 @@ export interface PosturalAssessmentData {
   readonly functionalLimitations: StructuredFindingState;
   readonly functionalLimitationsNotes?: string;
   readonly notes?: string;
+  /**
+   * Campo legado preservado temporariamente para compatibilidade com
+   * implementações anteriores do plano corretivo.
+   */
   readonly futureCorrectiveExercisesNote?: string;
+  readonly correctivePlan?: PosturalCorrectivePlan;
+  readonly referenceLines?: Readonly<
+    Partial<Record<PosturalViewKey, PosturalReferenceLines>>
+  >;
+  readonly annotationLayers?: Readonly<
+    Partial<Record<PosturalViewKey, readonly PosturalAnnotationLayer[]>>
+  >;
+  readonly comparisonMetadata?: PosturalComparisonMetadata;
   readonly technicalSummary?: PosturalTechnicalSummary;
   readonly evaluatorConclusion?: string;
   readonly overallRelevance?: PosturalOverallRelevance;
@@ -183,9 +376,9 @@ export interface PosturalAssessmentData {
 }
 
 export interface ClinicalCollectionRecords {
-  readonly anthropometry: ClinicalStepRecord<AnthropometryData>;
-  readonly bioimpedance: ClinicalStepRecord<BioimpedanceAvanutriData>;
-  readonly perimetry: ClinicalStepRecord<PerimetryData>;
+  readonly anthropometry: ClinicalAssessmentRecord<AnthropometryData>;
+  readonly bioimpedance: ClinicalAssessmentRecord<BioimpedanceAvanutriData>;
+  readonly perimetry: ClinicalAssessmentRecord<PerimetryData>;
   readonly posturalAssessment: ClinicalStepRecord<PosturalAssessmentData>;
 }
 
@@ -195,18 +388,36 @@ export interface PreviousPerimetryReference {
   readonly audit: ProfessionalAudit;
 }
 
+export interface CurrentAttendanceAnamnesis {
+  readonly entryId: EntityId;
+  readonly masterRecordId: EntityId;
+  readonly attendanceId: EntityId;
+  readonly occurredAt: ISODateTime;
+  readonly data: ClinicalAnamnesisData;
+  readonly audit: ProfessionalAudit;
+}
+
 export interface ClinicalCollectionView {
   readonly patientId: EntityId;
   readonly patientName: string;
   readonly patientCode: string;
   readonly patientAge?: number;
   readonly patientSex?: "FEMALE" | "MALE" | "INTERSEX" | "NOT_INFORMED";
+  readonly patientProfession?: string;
   readonly patientPhone?: string;
   readonly attendanceId: EntityId;
+  readonly attendanceStartedAt?: ISODateTime;
   readonly masterRecordId: EntityId;
   readonly consultationType: ConsultationType;
   readonly connectedProfessional: ProfessionalAudit;
   readonly records: ClinicalCollectionRecords;
+  readonly anamnesis?: CurrentAttendanceAnamnesis;
+  readonly summaryLoadIssue?: string;
+  readonly anthropometryMeasuredAt?: ISODateTime;
+  readonly bioimpedanceHeightCm?: number;
+  readonly bioimpedanceMeasuredAt?: ISODateTime;
+  readonly perimetryMeasuredAt?: ISODateTime;
+  readonly posturalAssessedAt?: ISODateTime;
   readonly previousPerimetry?: PreviousPerimetryReference;
   readonly progressPercent: number;
   readonly nutritionFlowReady: boolean;
@@ -278,6 +489,13 @@ export interface ClinicalPanelView {
 }
 
 export type EditableClinicalData = AnthropometryData | BioimpedanceAvanutriData | PerimetryData | PosturalAssessmentData;
+export type ClinicalStepSaveMode = "MANUAL" | "AUTOSAVE";
+
+export function shouldCreateClinicalStepVersion(
+  saveMode: ClinicalStepSaveMode = "MANUAL",
+) {
+  return saveMode === "MANUAL";
+}
 
 export interface GetClinicalCollectionInput {
   readonly patientId: EntityId;
@@ -291,6 +509,52 @@ export interface SaveClinicalStepInput {
   readonly scenario: ClinicalCollectionScenarioKey;
   readonly step: EditableClinicalStepKey;
   readonly data: EditableClinicalData;
+  readonly saveMode?: ClinicalStepSaveMode;
+}
+
+export type HistoricalClinicalAssessmentRecords =
+  | {
+      readonly anthropometry: AnthropometryData;
+      readonly perimetry?: PerimetryData;
+      readonly bioimpedance?: BioimpedanceAvanutriData;
+    }
+  | {
+      readonly anthropometry?: AnthropometryData;
+      readonly perimetry: PerimetryData;
+      readonly bioimpedance?: BioimpedanceAvanutriData;
+    }
+  | {
+      readonly anthropometry?: AnthropometryData;
+      readonly perimetry?: PerimetryData;
+      readonly bioimpedance: BioimpedanceAvanutriData;
+    };
+
+/**
+ * Comando de criação de uma nova avaliação histórica independente.
+ * Não identifica nem reutiliza a avaliação atual de um atendimento.
+ */
+export interface CreateHistoricalClinicalAssessmentInput {
+  readonly patientId: EntityId;
+  readonly assessmentDate: ISODate;
+  readonly records: HistoricalClinicalAssessmentRecords;
+}
+
+export interface HistoricalClinicalAssessment {
+  readonly id: EntityId;
+  readonly patientId: EntityId;
+  readonly masterRecordId: EntityId;
+  readonly assessmentDate: ISODate;
+  readonly records: HistoricalClinicalAssessmentRecords;
+  /** Data de digitação, preservada para auditoria. */
+  readonly createdAt: ISODateTime;
+  /** Data da última atualização, preservada para auditoria. */
+  readonly updatedAt: ISODateTime;
+  readonly version: number;
+}
+
+export interface CreateHistoricalClinicalAssessmentResult {
+  readonly assessment: HistoricalClinicalAssessment;
+  readonly persisted: boolean;
 }
 
 export interface SaveClinicalStepResult {
@@ -302,7 +566,7 @@ export interface SaveClinicalStepResult {
 export interface CompleteClinicalCollectionResult {
   readonly collection: ClinicalCollectionView;
   readonly persisted: boolean;
-  readonly nextAttendanceStep: "Painel Clínico Integrado";
+  readonly nextAttendanceStep: "Estratégia Nutricional";
 }
 
 export interface UpdateClinicalPanelInput extends GetClinicalCollectionInput {

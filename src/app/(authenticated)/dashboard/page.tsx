@@ -1,584 +1,510 @@
+import {
+  ArrowRight,
+  CalendarDays,
+  ClipboardList,
+  Clock3,
+  ListChecks,
+  Plus,
+  UserRound,
+  Users,
+} from "lucide-react";
+import type { Metadata } from "next";
 import Link from "next/link";
 
-const systemAreas = [
-  {
-    title: "Nutrição",
-    description:
-      "Atendimentos nutricionais, estratégia clínica, plano alimentar e evolução.",
-    href: "/pacientes",
-    icon: "🥗",
-    accent:
-      "border-emerald-200 bg-emerald-50 text-emerald-800 hover:border-emerald-400",
-  },
-  {
-    title: "Treinamento Físico",
-    description:
-      "Avaliação física, prescrição, periodização e acompanhamento dos treinos.",
-    href: "/pacientes",
-    icon: "🏋️",
-    accent:
-      "border-orange-200 bg-orange-50 text-orange-800 hover:border-orange-400",
-  },
-  {
-    title: "Performance",
-    description:
-      "Corrida, ciclismo, testes, zonas de treinamento e monitoramento esportivo.",
-    href: "/pacientes",
-    icon: "🏃",
-    accent:
-      "border-violet-200 bg-violet-50 text-violet-800 hover:border-violet-400",
-  },
-  {
-    title: "Avaliação Postural",
-    description:
-      "Avaliação postural, análise funcional e exercícios corretivos.",
-    href: "/pacientes",
-    icon: "🧍",
-    accent:
-      "border-cyan-200 bg-cyan-50 text-cyan-800 hover:border-cyan-400",
-  },
-  {
-    title: "Academia Saulo Fitness",
-    description:
-      "Operação da academia, alunos, retenção, serviços e indicadores.",
-    href: "/dashboard",
-    icon: "🏢",
-    accent:
-      "border-red-200 bg-red-50 text-red-800 hover:border-red-400",
-  },
-  {
-    title: "Marketing",
-    description:
-      "Planejamento editorial, campanhas, conteúdos e acompanhamento de resultados.",
-    href: "/dashboard",
-    icon: "📢",
-    accent:
-      "border-pink-200 bg-pink-50 text-pink-800 hover:border-pink-400",
-  },
-  {
-    title: "Painel CEO",
-    description:
-      "Visão estratégica da clínica, academia, financeiro e produtividade.",
-    href: "/dashboard",
-    icon: "📊",
-    accent:
-      "border-slate-300 bg-slate-100 text-slate-800 hover:border-slate-500",
-  },
-  {
-    title: "Biblioteca Científica",
-    description:
-      "Diretrizes, consensos, artigos, protocolos e bases profissionais.",
-    href: "/dashboard",
-    icon: "📚",
-    accent:
-      "border-sky-200 bg-sky-50 text-sky-800 hover:border-sky-400",
-  },
-] as const;
+import type { Prisma } from "@/generated/prisma/client";
+import { APPOINTMENT_STATUS_LABELS } from "@/features/scheduling/contracts";
+import { schedulingRepository } from "@/features/scheduling/repository";
+import { canAccess, mvpService } from "@/features/mvp";
+import { prisma } from "@/lib/database/prisma";
+import type { ConsultationType } from "@/modules/attendance";
 
-const secondaryActions = [
-  {
-    title: "Buscar paciente",
-    description: "Localize um paciente cadastrado.",
-    href: "/pacientes",
-    icon: "🔎",
-  },
-  {
-    title: "Novo paciente",
-    description: "Inicie um cadastro no Prontuário Mestre.",
-    href: "/pacientes",
-    icon: "👤",
-  },
-  {
-    title: "Abrir agenda",
-    description: "Consulte atendimentos e compromissos.",
-    href: "/agenda",
-    icon: "📅",
-  },
-] as const;
+export const metadata: Metadata = { title: "Visão Geral" };
 
-const dailyIndicators = [
-  {
-    label: "Consultas hoje",
-    value: "8",
-    detail: "Agenda clínica",
-  },
-  {
-    label: "Em atendimento",
-    value: "2",
-    detail: "Fluxos em andamento",
-  },
-  {
-    label: "Retornos",
-    value: "3",
-    detail: "Acompanhamentos",
-  },
-  {
-    label: "Planos pendentes",
-    value: "4",
-    detail: "Aguardando revisão",
-  },
-  {
-    label: "Alertas",
-    value: "2",
-    detail: "Precisam de atenção",
-  },
-] as const;
+const TIME_ZONE = "America/Sao_Paulo";
 
-const pendingItems = [
-  {
-    title: "Plano alimentar aguardando aprovação",
-    description:
-      "Existe uma proposta assistida por IA pendente de validação profissional.",
-    area: "Nutrição",
-    icon: "🥗",
-  },
-  {
-    title: "Avaliação física incompleta",
-    description:
-      "O atendimento possui dados pendentes antes da prescrição do treinamento.",
-    area: "Treinamento",
-    icon: "🏋️",
-  },
-  {
-    title: "Paciente sem retorno há mais de 30 dias",
-    description:
-      "Verifique a necessidade de contato e continuidade do acompanhamento.",
-    area: "Acompanhamento",
-    icon: "⚠️",
-  },
-] as const;
+const consultationTypeLabels: Readonly<Record<ConsultationType, string>> = {
+  INITIAL: "Consulta inicial",
+  FOLLOW_UP: "Retorno",
+  PHYSICAL_ASSESSMENT: "Avaliação física",
+  POSTURAL_ASSESSMENT: "Avaliação postural",
+  TRAINING: "Treinamento",
+  NUTRITION: "Nutrição",
+};
 
-const appointments = [
-  {
-    time: "08:00",
-    patient: "João da Silva",
-    type: "Consulta inicial",
-    area: "Nutrição",
-  },
-  {
-    time: "10:00",
-    patient: "Anna Tazia Rodrigues",
-    type: "Retorno nutricional",
-    area: "Nutrição",
-  },
-  {
-    time: "14:30",
-    patient: "Maria Oliveira",
-    type: "Avaliação física",
-    area: "Treinamento",
-  },
-] as const;
+const patientStatusLabels = {
+  ACTIVE: "Ativo",
+  INACTIVE: "Inativo",
+  ARCHIVED: "Arquivado",
+} as const;
 
-export default function DashboardPage() {
+const pendingStatusLabels = {
+  PENDING: "Pendente",
+  IN_PROGRESS: "Em andamento",
+  COMPLETED: "Concluída",
+  SKIPPED: "Ignorada",
+  BLOCKED: "Bloqueada",
+} as const;
+
+function dateInput(date: Date) {
+  return new Intl.DateTimeFormat("en-CA", {
+    day: "2-digit",
+    month: "2-digit",
+    timeZone: TIME_ZONE,
+    year: "numeric",
+  }).format(date);
+}
+
+function dayRange(date: Date) {
+  const day = dateInput(date);
+  const startsAt = new Date(`${day}T00:00:00-03:00`);
+  const endsAt = new Date(startsAt);
+  endsAt.setUTCDate(endsAt.getUTCDate() + 1);
+  return { startsAt, endsAt };
+}
+
+function greetingFor(date: Date) {
+  const hour = Number(
+    new Intl.DateTimeFormat("pt-BR", {
+      hour: "2-digit",
+      hourCycle: "h23",
+      timeZone: TIME_ZONE,
+    }).format(date),
+  );
+
+  if (hour < 12) return "Bom dia";
+  if (hour < 18) return "Boa tarde";
+  return "Boa noite";
+}
+
+function longDate(date: Date) {
+  const formatted = new Intl.DateTimeFormat("pt-BR", {
+    day: "numeric",
+    month: "long",
+    timeZone: TIME_ZONE,
+    weekday: "long",
+    year: "numeric",
+  }).format(date);
+
+  return formatted.charAt(0).toUpperCase() + formatted.slice(1);
+}
+
+function formatTime(value: string | Date) {
+  return new Intl.DateTimeFormat("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: TIME_ZONE,
+  }).format(new Date(value));
+}
+
+function formatDateTime(value: Date | null | undefined) {
+  if (!value) return "Nenhum atendimento";
+
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    month: "short",
+    timeZone: TIME_ZONE,
+  }).format(value);
+}
+
+export default async function DashboardPage() {
+  const access = await mvpService.getSession();
+  const now = new Date();
+  const range = dayRange(now);
+  const canReadScheduling = canAccess(access, "SCHEDULING", "READ");
+  const canReadPatients = canAccess(access, "PATIENTS", "READ");
+  const canCreatePatients = canAccess(access, "PATIENTS", "CREATE");
+  const canReadAttendances = canAccess(access, "ATTENDANCE", "READ");
+
+  const pendingWhere = {
+    status: { in: ["PENDING", "IN_PROGRESS", "BLOCKED"] },
+    OR: [{ responsibleUserId: access.user.id }, { responsibleUserId: null }],
+    continuity: {
+      status: "ACTIVE",
+      masterRecord: {
+        status: "ACTIVE",
+        patient: { status: "ACTIVE", deletedAt: null },
+      },
+    },
+  } satisfies Prisma.ContinuityStepWhereInput;
+
+  const [
+    appointments,
+    activePatientCount,
+    recentPatients,
+    openAttendanceCount,
+    pendingCount,
+    pendingSteps,
+  ] = await Promise.all([
+    canReadScheduling
+      ? schedulingRepository.listForDay(range.startsAt, range.endsAt)
+      : Promise.resolve([]),
+    canReadPatients
+      ? prisma.patient.count({
+          where: { status: "ACTIVE", deletedAt: null },
+        })
+      : Promise.resolve(0),
+    canReadPatients
+      ? prisma.patient.findMany({
+          where: { deletedAt: null },
+          orderBy: [{ createdAt: "desc" }, { id: "asc" }],
+          take: 5,
+          select: {
+            id: true,
+            fullName: true,
+            status: true,
+            masterRecord: {
+              select: {
+                status: true,
+                continuity: {
+                  select: {
+                    steps: {
+                      where: {
+                        status: { in: ["PENDING", "IN_PROGRESS", "BLOCKED"] },
+                      },
+                      orderBy: { sortOrder: "asc" },
+                      take: 1,
+                      select: { status: true, title: true },
+                    },
+                  },
+                },
+                attendances: {
+                  where: { deletedAt: null },
+                  orderBy: { createdAt: "desc" },
+                  take: 1,
+                  select: {
+                    createdAt: true,
+                    receivedAt: true,
+                    startedAt: true,
+                    status: true,
+                  },
+                },
+              },
+            },
+          },
+        })
+      : Promise.resolve([]),
+    canReadAttendances
+      ? prisma.attendance.count({
+          where: {
+            deletedAt: null,
+            status: { in: ["DRAFT", "IN_PROGRESS"] },
+          },
+        })
+      : Promise.resolve(0),
+    canReadPatients && canReadAttendances
+      ? prisma.continuityStep.count({ where: pendingWhere })
+      : Promise.resolve(0),
+    canReadPatients && canReadAttendances
+      ? prisma.continuityStep.findMany({
+          where: pendingWhere,
+          orderBy: [{ updatedAt: "desc" }, { id: "asc" }],
+          take: 4,
+          select: {
+            id: true,
+            status: true,
+            title: true,
+            continuity: {
+              select: {
+                masterRecord: {
+                  select: {
+                    patient: { select: { fullName: true, id: true } },
+                  },
+                },
+              },
+            },
+          },
+        })
+      : Promise.resolve([]),
+  ]);
+
+  const visibleAppointments = appointments.filter(
+    (appointment) => appointment.status !== "CANCELLED",
+  );
+  const upcomingAppointments = visibleAppointments
+    .filter(
+      (appointment) =>
+        new Date(appointment.startsAt) >= now &&
+        (appointment.status === "SCHEDULED" ||
+          appointment.status === "CONFIRMED"),
+    )
+    .slice(0, 5);
+  const attendanceTypes = upcomingAppointments.length
+    ? await prisma.attendance.findMany({
+        where: {
+          appointmentId: { in: upcomingAppointments.map(({ id }) => id) },
+          deletedAt: null,
+        },
+        select: { appointmentId: true, consultationType: true },
+      })
+    : [];
+  const attendanceTypeByAppointment = new Map(
+    attendanceTypes.flatMap((attendance) =>
+      attendance.appointmentId
+        ? [[attendance.appointmentId, attendance.consultationType] as const]
+        : [],
+    ),
+  );
+
+  const metrics = [
+    ...(canReadScheduling
+      ? [
+          {
+            label: "Agenda de hoje",
+            value: visibleAppointments.length,
+            detail: visibleAppointments.length === 1 ? "agendamento" : "agendamentos",
+            icon: CalendarDays,
+          },
+        ]
+      : []),
+    ...(canReadAttendances
+      ? [
+          {
+            label: "Em andamento",
+            value: openAttendanceCount,
+            detail: openAttendanceCount === 1 ? "atendimento" : "atendimentos",
+            icon: Clock3,
+          },
+        ]
+      : []),
+    ...(canReadPatients && canReadAttendances
+      ? [
+          {
+            label: "Pendências",
+            value: pendingCount,
+            detail: pendingCount === 1 ? "ação disponível" : "ações disponíveis",
+            icon: ListChecks,
+          },
+        ]
+      : []),
+    ...(canReadPatients
+      ? [
+          {
+            label: "Pacientes ativos",
+            value: activePatientCount,
+            detail: activePatientCount === 1 ? "cadastro ativo" : "cadastros ativos",
+            icon: Users,
+          },
+        ]
+      : []),
+  ];
+
+  const shortcuts = [
+    ...(canCreatePatients
+      ? [{ label: "Novo paciente", href: "/pacientes/novo", icon: Plus }]
+      : []),
+    ...(canReadScheduling
+      ? [{ label: "Agenda clínica", href: "/agenda", icon: CalendarDays }]
+      : []),
+    ...(canReadPatients
+      ? [{ label: "Pacientes", href: "/pacientes", icon: Users }]
+      : []),
+    ...(canReadAttendances
+      ? [{ label: "Atendimentos", href: "/atendimentos", icon: ClipboardList }]
+      : []),
+  ];
+
+  const firstName = access.user.fullName.trim().split(/\s+/u)[0] || "profissional";
+
   return (
-    <main className="mx-auto flex w-full max-w-7xl flex-col gap-6">
-      <section className="overflow-hidden rounded-3xl border border-slate-800 bg-gradient-to-br from-slate-950 via-emerald-950 to-emerald-900 px-6 py-7 text-white shadow-xl sm:px-8 sm:py-8">
-        <div className="grid gap-7 xl:grid-cols-[1fr_auto] xl:items-center">
-          <div>
-            <div className="flex flex-wrap items-center gap-3">
-              <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-300">
-                SAULO AI
-              </p>
-
-              <span className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-emerald-200">
-                Centro de Operações
-              </span>
-            </div>
-
-            <h1 className="mt-4 text-3xl font-black tracking-tight sm:text-4xl">
-              Bom dia, Saulo.
-            </h1>
-
-            <p className="mt-3 max-w-2xl text-sm font-medium leading-6 text-slate-200 sm:text-base">
-              Visualize a operação, identifique prioridades e acesse todas as
-              áreas profissionais do SAULO AI a partir de um único ambiente.
-            </p>
-
-            <div className="mt-6 flex flex-wrap gap-3">
-              <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">
-                  Unidade
-                </p>
-
-                <p className="mt-1 text-sm font-black text-white">
-                  Clínica SV
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">
-                  Operação
-                </p>
-
-                <p className="mt-1 text-sm font-black text-emerald-300">
-                  Pronta para atendimento
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="min-w-72 rounded-2xl border border-white/15 bg-white/10 p-5 backdrop-blur-sm">
-            <p className="text-[10px] font-black uppercase tracking-[0.16em] text-emerald-300">
-              Usuário
-            </p>
-
-            <p className="mt-2 text-lg font-black text-white">
-              Saulo Xavier Vitorino
-            </p>
-
-            <div className="mt-4 space-y-2">
-              <p className="rounded-xl bg-black/15 px-3 py-2 text-xs font-bold text-slate-100">
-                Nutricionista
-              </p>
-
-              <p className="rounded-xl bg-black/15 px-3 py-2 text-xs font-bold text-slate-100">
-                Profissional de Educação Física
-              </p>
-            </div>
-
-            <div className="mt-4 flex items-center gap-2 border-t border-white/10 pt-4">
-              <span
-                aria-hidden="true"
-                className="h-2.5 w-2.5 rounded-full bg-emerald-400"
-              />
-
-              <p className="text-xs font-bold text-emerald-200">
-                SAULO AI pronto para operar
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section aria-labelledby="system-areas-title">
-        <div className="mb-4">
-          <p className="text-xs font-black uppercase tracking-[0.16em] text-emerald-700">
-            Ecossistema integrado
+    <div className="space-y-6 sm:space-y-8">
+      <header className="relative overflow-hidden rounded-[1.75rem] border border-[#244b40] bg-[linear-gradient(135deg,#0a4938_0%,#12664f_72%,#1b765d_100%)] px-5 py-7 text-white shadow-[0_18px_45px_rgba(10,73,56,0.16)] sm:px-8 sm:py-9">
+        <div aria-hidden="true" className="absolute -right-20 -top-28 size-80 rounded-full border border-white/10" />
+        <div aria-hidden="true" className="absolute -right-8 -top-10 size-48 rounded-full border border-[#d6bc70]/20" />
+        <div className="relative max-w-3xl">
+          <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[#d6bc70]">
+            Clínica SV · Visão Geral
           </p>
-
-          <h2
-            id="system-areas-title"
-            className="mt-1 text-2xl font-black text-slate-950"
-          >
-            Áreas do SAULO AI
-          </h2>
-
-          <p className="mt-2 text-sm font-medium text-slate-600">
-            Selecione o centro de operação que deseja acessar.
+          <h1 className="mt-3 text-3xl font-black tracking-[-0.035em] sm:text-4xl">
+            {greetingFor(now)}, {firstName}.
+          </h1>
+          <p className="mt-3 text-sm font-semibold capitalize text-emerald-50/75">
+            {longDate(now)}
+          </p>
+          <p className="mt-4 max-w-2xl text-sm leading-6 text-emerald-50/80 sm:text-base">
+            Acompanhe a operação do dia e retome as próximas ações sem perder o contexto do cuidado.
           </p>
         </div>
+      </header>
 
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {systemAreas.map((area) => (
-            <Link
-              key={area.title}
-              href={area.href}
-              className={`group rounded-2xl border p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-lg ${area.accent}`}
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white text-2xl shadow-sm">
-                  {area.icon}
-                </div>
-
-                <span
-                  aria-hidden="true"
-                  className="text-lg font-black opacity-50 transition group-hover:translate-x-1 group-hover:opacity-100"
-                >
-                  →
-                </span>
-              </div>
-
-              <h3 className="mt-5 text-lg font-black">{area.title}</h3>
-
-              <p className="mt-2 text-sm font-semibold leading-6 opacity-75">
-                {area.description}
-              </p>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      <section aria-labelledby="main-action-title">
-        <div className="mb-4">
-          <p className="text-xs font-black uppercase tracking-[0.16em] text-emerald-700">
-            Operação
-          </p>
-
-          <h2
-            id="main-action-title"
-            className="mt-1 text-2xl font-black text-slate-950"
-          >
-            O que precisa ser feito agora?
-          </h2>
-        </div>
-
-        <div className="grid gap-4 xl:grid-cols-[1.35fr_0.65fr]">
-          <Link
-            href="/pacientes"
-            className="group overflow-hidden rounded-3xl border border-emerald-800 bg-gradient-to-br from-emerald-800 to-emerald-950 p-6 text-white shadow-lg transition hover:-translate-y-1 hover:shadow-xl sm:p-8"
-          >
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 text-3xl">
-              🩺
+      {metrics.length ? (
+        <section aria-labelledby="daily-summary-title">
+          <div className="mb-3 flex items-end justify-between gap-4">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[var(--primary)]">Hoje</p>
+              <h2 className="mt-1 text-xl font-black tracking-tight text-[var(--text-primary)]" id="daily-summary-title">Resumo do dia</h2>
             </div>
-
-            <p className="mt-7 text-xs font-black uppercase tracking-[0.18em] text-emerald-200">
-              Ação principal
-            </p>
-
-            <h3 className="mt-2 text-2xl font-black sm:text-3xl">
-              Iniciar atendimento
-            </h3>
-
-            <p className="mt-3 max-w-2xl text-sm font-medium leading-6 text-emerald-100 sm:text-base">
-              Selecione o paciente e inicie um atendimento de Nutrição,
-              Treinamento Físico, Performance ou Avaliação Postural.
-            </p>
-
-            <div className="mt-7 inline-flex min-h-12 items-center justify-center rounded-xl bg-white px-5 text-sm font-black text-emerald-900 transition group-hover:bg-emerald-50">
-              Iniciar novo atendimento
-              <span
-                aria-hidden="true"
-                className="ml-2 transition group-hover:translate-x-1"
-              >
-                →
-              </span>
-            </div>
-          </Link>
-
-          <div className="grid gap-3">
-            {secondaryActions.map((action) => (
-              <Link
-                key={action.title}
-                href={action.href}
-                className="group flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-emerald-300 hover:shadow-md"
-              >
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-xl">
-                  {action.icon}
-                </div>
-
-                <div className="min-w-0 flex-1">
-                  <h3 className="font-black text-slate-950">
-                    {action.title}
-                  </h3>
-
-                  <p className="mt-1 text-xs font-semibold leading-5 text-slate-500">
-                    {action.description}
-                  </p>
-                </div>
-
-                <span
-                  aria-hidden="true"
-                  className="font-black text-emerald-700 transition group-hover:translate-x-1"
-                >
-                  →
-                </span>
-              </Link>
-            ))}
           </div>
-        </div>
-      </section>
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {metrics.map((metric) => {
+              const Icon = metric.icon;
+              return (
+                <article className="rounded-2xl border border-[var(--line)] bg-white p-4 shadow-[var(--shadow-subtle)] sm:p-5" key={metric.label}>
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="text-xs font-bold text-[var(--muted)]">{metric.label}</p>
+                      <p className="mt-2 text-3xl font-black tabular-nums tracking-tight text-[var(--text-primary)]">{metric.value}</p>
+                      <p className="mt-1 text-[11px] font-semibold text-slate-400">{metric.detail}</p>
+                    </div>
+                    <span className="grid size-10 place-items-center rounded-xl bg-[var(--brand-soft)] text-[var(--primary)]"><Icon aria-hidden="true" className="size-5" /></span>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </section>
+      ) : null}
 
-      <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(19rem,0.65fr)]">
         <div className="space-y-6">
-          <article className="overflow-hidden rounded-3xl border border-emerald-200 bg-white shadow-sm">
-            <div className="border-b border-emerald-100 bg-emerald-50 px-5 py-4 sm:px-6">
-              <p className="text-xs font-black uppercase tracking-[0.16em] text-emerald-700">
-                SAULO AI recomenda
-              </p>
-
-              <h2 className="mt-1 text-2xl font-black text-slate-950">
-                Continue de onde parou
-              </h2>
-            </div>
-
-            <div className="p-5 sm:p-6">
-              <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+          {canReadScheduling ? (
+            <section aria-labelledby="next-appointments-title" className="overflow-hidden rounded-2xl border border-[var(--line)] bg-white shadow-[var(--shadow-subtle)]">
+              <div className="flex items-end justify-between gap-4 border-b border-[var(--line)] px-5 py-4 sm:px-6">
                 <div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-black text-emerald-800">
-                      Nutrição
-                    </span>
-
-                    <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">
-                      Tempo estimado: 6 minutos
-                    </span>
-                  </div>
-
-                  <p className="mt-5 text-xs font-black uppercase tracking-[0.12em] text-slate-500">
-                    Paciente
-                  </p>
-
-                  <h3 className="mt-1 text-xl font-black text-slate-950">
-                    Anna Tazia Rodrigues
-                  </h3>
-
-                  <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                      <p className="text-xs font-semibold text-slate-500">
-                        Etapa atual
-                      </p>
-
-                      <p className="mt-1 text-sm font-black text-slate-900">
-                        Estratégia Nutricional
-                      </p>
-                    </div>
-
-                    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                      <p className="text-xs font-semibold text-slate-500">
-                        Próxima etapa
-                      </p>
-
-                      <p className="mt-1 text-sm font-black text-slate-900">
-                        Plano Alimentar
-                      </p>
-                    </div>
-                  </div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[var(--primary)]">Agenda clínica</p>
+                  <h2 className="mt-1 text-xl font-black text-[var(--text-primary)]" id="next-appointments-title">Próximos atendimentos</h2>
                 </div>
-
-                <Link
-                  href="/pacientes"
-                  className="inline-flex min-h-12 shrink-0 items-center justify-center rounded-xl bg-emerald-700 px-6 text-sm font-black text-white transition hover:bg-emerald-800"
-                >
-                  Continuar atendimento
-                </Link>
+                <Link className="text-xs font-black text-[var(--primary)] hover:underline" href="/agenda">Ver agenda</Link>
               </div>
-            </div>
-          </article>
-
-          <article className="rounded-3xl border border-amber-200 bg-white p-5 shadow-sm sm:p-6">
-            <p className="text-xs font-black uppercase tracking-[0.16em] text-amber-700">
-              Prioridades
-            </p>
-
-            <h2 className="mt-1 text-2xl font-black text-slate-950">
-              Sua atenção agora
-            </h2>
-
-            <p className="mt-2 text-sm font-medium text-slate-600">
-              Pendências organizadas por impacto na continuidade dos
-              atendimentos.
-            </p>
-
-            <div className="mt-5 space-y-3">
-              {pendingItems.map((item) => (
-                <div
-                  key={item.title}
-                  className="flex items-start gap-4 rounded-2xl border border-amber-100 bg-amber-50 p-4"
-                >
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-lg shadow-sm">
-                    {item.icon}
-                  </div>
-
-                  <div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="font-black text-slate-950">{item.title}</p>
-
-                      <span className="rounded-full bg-white px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.08em] text-amber-700">
-                        {item.area}
-                      </span>
-                    </div>
-
-                    <p className="mt-1 text-sm font-semibold leading-6 text-slate-600">
-                      {item.description}
-                    </p>
-                  </div>
+              {upcomingAppointments.length ? (
+                <div className="divide-y divide-[var(--line)]">
+                  {upcomingAppointments.map((appointment) => {
+                    const patientName =
+                      "patient" in appointment && appointment.patient
+                        ? appointment.patient.fullName
+                        : appointment.contactName;
+                    const consultationType = attendanceTypeByAppointment.get(appointment.id);
+                    return (
+                      <article className="grid gap-3 px-5 py-4 sm:grid-cols-[4.5rem_minmax(0,1fr)_minmax(9rem,auto)] sm:items-center sm:px-6" key={appointment.id}>
+                        <p className="text-lg font-black tabular-nums text-[var(--primary)]">{formatTime(appointment.startsAt)}</p>
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-black text-[var(--text-primary)]">{patientName}</p>
+                          <p className="mt-1 text-xs text-[var(--muted)]">{consultationType ? consultationTypeLabels[consultationType] : "Tipo não informado"}</p>
+                        </div>
+                        <div className="sm:text-right">
+                          <p className="truncate text-xs font-bold text-[var(--text-secondary)]">{appointment.professional.fullName}</p>
+                          <p className="mt-1 text-[10px] font-black uppercase tracking-wide text-slate-400">{APPOINTMENT_STATUS_LABELS[appointment.status]}</p>
+                        </div>
+                      </article>
+                    );
+                  })}
                 </div>
-              ))}
-            </div>
-          </article>
+              ) : (
+                <div className="px-6 py-10 text-center">
+                  <span className="mx-auto grid size-11 place-items-center rounded-full bg-[var(--brand-soft)] text-[var(--primary)]"><CalendarDays aria-hidden="true" className="size-5" /></span>
+                  <p className="mt-4 text-sm font-black text-[var(--text-primary)]">Nenhum próximo atendimento hoje</p>
+                  <p className="mt-1 text-xs leading-5 text-[var(--muted)]">A agenda não possui horários futuros confirmados ou agendados para este dia.</p>
+                </div>
+              )}
+            </section>
+          ) : null}
+
+          {canReadPatients ? (
+            <section aria-labelledby="recent-patients-title" className="overflow-hidden rounded-2xl border border-[var(--line)] bg-white shadow-[var(--shadow-subtle)]">
+              <div className="flex items-end justify-between gap-4 border-b border-[var(--line)] px-5 py-4 sm:px-6">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[var(--primary)]">Cadastros</p>
+                  <h2 className="mt-1 text-xl font-black text-[var(--text-primary)]" id="recent-patients-title">Pacientes recentes</h2>
+                </div>
+                <Link className="text-xs font-black text-[var(--primary)] hover:underline" href="/pacientes">Ver todos os pacientes</Link>
+              </div>
+              {recentPatients.length ? (
+                <div className="divide-y divide-[var(--line)]">
+                  {recentPatients.map((patient) => {
+                    const currentStep = patient.masterRecord?.continuity?.steps[0];
+                    const lastAttendance = patient.masterRecord?.attendances[0];
+                    const hasOpenAttendance = lastAttendance?.status === "DRAFT" || lastAttendance?.status === "IN_PROGRESS";
+                    const canContinue = Boolean(lastAttendance && (hasOpenAttendance || currentStep));
+                    const situation = hasOpenAttendance
+                      ? "Em atendimento"
+                      : currentStep?.status === "BLOCKED"
+                        ? "Bloqueado"
+                        : currentStep
+                          ? "Em acompanhamento"
+                          : patientStatusLabels[patient.status];
+                    const href = canContinue
+                      ? `/pacientes/${patient.id}/continuar`
+                      : `/pacientes/${patient.id}`;
+                    return (
+                      <article className="grid gap-3 px-5 py-4 sm:grid-cols-[minmax(0,1.1fr)_minmax(9rem,0.9fr)_auto] sm:items-center sm:px-6" key={patient.id}>
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-black text-[var(--text-primary)]">{patient.fullName}</p>
+                          <p className="mt-1 truncate text-xs text-[var(--muted)]">{currentStep?.title ?? "Nenhuma etapa pendente"}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-[var(--text-secondary)]">{situation}</p>
+                          <p className="mt-1 text-[11px] text-slate-400">Último: {formatDateTime(lastAttendance?.startedAt ?? lastAttendance?.receivedAt ?? lastAttendance?.createdAt)}</p>
+                        </div>
+                        <Link className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg border border-[#b8cec5] px-3 text-xs font-black text-[var(--primary)] transition hover:bg-[var(--brand-soft)]" href={href}>
+                          {canContinue ? "Continuar" : "Abrir prontuário"}
+                          <ArrowRight aria-hidden="true" className="size-3.5" />
+                        </Link>
+                      </article>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="px-6 py-10 text-center">
+                  <UserRound aria-hidden="true" className="mx-auto size-6 text-[var(--primary)]" />
+                  <p className="mt-3 text-sm font-black text-[var(--text-primary)]">Nenhum paciente cadastrado</p>
+                </div>
+              )}
+            </section>
+          ) : null}
         </div>
 
-        <aside className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-          <p className="text-xs font-black uppercase tracking-[0.16em] text-emerald-700">
-            Compromissos
-          </p>
-
-          <h2 className="mt-1 text-2xl font-black text-slate-950">
-            Agenda de hoje
-          </h2>
-
-          <p className="mt-2 text-sm font-medium text-slate-600">
-            Próximos atendimentos programados.
-          </p>
-
-          <div className="mt-5 space-y-3">
-            {appointments.map((appointment) => (
-              <div
-                key={`${appointment.time}-${appointment.patient}`}
-                className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <p className="text-sm font-black text-emerald-700">
-                    {appointment.time}
-                  </p>
-
-                  <span className="rounded-full bg-white px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.08em] text-slate-600">
-                    {appointment.area}
-                  </span>
+        <aside className="space-y-6">
+          {canReadPatients && canReadAttendances ? (
+            <section aria-labelledby="pending-title" className="rounded-2xl border border-[var(--line)] bg-white p-5 shadow-[var(--shadow-subtle)] sm:p-6">
+              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-amber-700">Ações</p>
+              <h2 className="mt-1 text-xl font-black text-[var(--text-primary)]" id="pending-title">Pendências</h2>
+              {pendingSteps.length ? (
+                <div className="mt-4 space-y-2.5">
+                  {pendingSteps.map((pending) => {
+                    const patient = pending.continuity.masterRecord.patient;
+                    return (
+                      <Link className="group block rounded-xl border border-amber-100 bg-amber-50/70 px-3.5 py-3 transition hover:border-amber-300 hover:bg-amber-50" href={`/pacientes/${patient.id}/continuar`} key={pending.id}>
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="truncate text-xs font-black text-amber-950">{pending.title}</p>
+                            <p className="mt-1 truncate text-[11px] text-amber-800/75">{patient.fullName} · {pendingStatusLabels[pending.status]}</p>
+                          </div>
+                          <ArrowRight aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-amber-700 transition group-hover:translate-x-0.5" />
+                        </div>
+                      </Link>
+                    );
+                  })}
                 </div>
+              ) : (
+                <div className="mt-5 rounded-xl bg-[var(--surface-elevated)] px-4 py-6 text-center">
+                  <p className="text-sm font-black text-[var(--text-primary)]">Nenhuma pendência acionável</p>
+                  <p className="mt-1 text-xs leading-5 text-[var(--muted)]">Não há etapas pendentes atribuídas ou disponíveis.</p>
+                </div>
+              )}
+            </section>
+          ) : null}
 
-                <p className="mt-3 font-black text-slate-950">
-                  {appointment.patient}
-                </p>
-
-                <p className="mt-1 text-xs font-semibold text-slate-500">
-                  {appointment.type}
-                </p>
+          {shortcuts.length ? (
+            <section aria-labelledby="shortcuts-title" className="rounded-2xl border border-[var(--line)] bg-white p-5 shadow-[var(--shadow-subtle)] sm:p-6">
+              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[var(--primary)]">Navegação</p>
+              <h2 className="mt-1 text-xl font-black text-[var(--text-primary)]" id="shortcuts-title">Atalhos</h2>
+              <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
+                {shortcuts.map((shortcut) => {
+                  const Icon = shortcut.icon;
+                  return (
+                    <Link className="group flex min-h-12 items-center gap-3 rounded-xl border border-[var(--line)] px-3.5 text-sm font-black text-[var(--text-primary)] transition hover:border-[#91b7a8] hover:bg-[var(--brand-soft)]" href={shortcut.href} key={shortcut.href}>
+                      <span className="grid size-8 place-items-center rounded-lg bg-[var(--brand-soft)] text-[var(--primary)] group-hover:bg-white"><Icon aria-hidden="true" className="size-4" /></span>
+                      <span className="flex-1">{shortcut.label}</span>
+                      <ArrowRight aria-hidden="true" className="size-4 text-[var(--primary)] transition group-hover:translate-x-0.5" />
+                    </Link>
+                  );
+                })}
               </div>
-            ))}
-          </div>
-
-          <Link
-            href="/agenda"
-            className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-emerald-700 px-4 text-sm font-black text-emerald-700 transition hover:bg-emerald-50"
-          >
-            Abrir agenda completa
-          </Link>
+            </section>
+          ) : null}
         </aside>
-      </section>
-
-      <section
-        aria-labelledby="daily-summary-title"
-        className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"
-      >
-        <div>
-          <p className="text-xs font-black uppercase tracking-[0.16em] text-emerald-700">
-            Indicadores
-          </p>
-
-          <h2
-            id="daily-summary-title"
-            className="mt-1 text-2xl font-black text-slate-950"
-          >
-            Resumo da operação
-          </h2>
-
-          <p className="mt-2 text-sm font-medium text-slate-600">
-            Visão consolidada das atividades registradas no dia.
-          </p>
-        </div>
-
-        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-          {dailyIndicators.map((indicator) => (
-            <div
-              key={indicator.label}
-              className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
-            >
-              <p className="text-xs font-bold text-slate-500">
-                {indicator.label}
-              </p>
-
-              <p className="mt-2 text-3xl font-black text-slate-950">
-                {indicator.value}
-              </p>
-
-              <p className="mt-2 text-[11px] font-semibold text-slate-500">
-                {indicator.detail}
-              </p>
-            </div>
-          ))}
-        </div>
-      </section>
-    </main>
+      </div>
+    </div>
   );
 }

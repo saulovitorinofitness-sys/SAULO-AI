@@ -2,8 +2,10 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Badge, Button, ButtonLink, Card, CardContent, CardDescription, CardHeader, CardTitle, Checkbox, Divider, FormField, Input, NumberInput, Select, StatusBadge, Textarea } from "@/components/ui";
-import type { NutritionStrategyView } from "@/features/nutrition-strategy";
-import { calculateMacroTarget, energyTargetModeOptions, MACRONUTRIENT_KCAL_PER_GRAM, mockNutritionStrategySelectionAdapter, nutritionMethodOptions, nutritionStrategyComplementaryOptions, nutritionStrategyMainObjectiveOptions, nutritionStrategySecondaryObjectiveOptions, nutritionStrategyTypeOptions } from "@/features/nutrition-strategy";
+import { calculateMacroTarget, MACRONUTRIENT_KCAL_PER_GRAM } from "@/features/nutrition-strategy/calculations";
+import type { NutritionStrategyView } from "@/features/nutrition-strategy/contracts";
+import { energyTargetModeOptions, nutritionMethodOptions, nutritionStrategyComplementaryOptions, nutritionStrategyMainObjectiveOptions, nutritionStrategySecondaryObjectiveOptions, nutritionStrategyTypeOptions } from "@/features/nutrition-strategy/mock-data";
+import { mockNutritionStrategySelectionAdapter } from "@/features/nutrition-strategy/mock-selection-adapter";
 import { NutritionGoalsPanel, type NutritionGoalsDraft } from "./nutrition-goals-panel";
 
 type StrategyDraft = {

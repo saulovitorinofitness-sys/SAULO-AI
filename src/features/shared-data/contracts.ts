@@ -38,7 +38,36 @@ export interface FoodAttributes { readonly foodGroup: string; readonly defaultUn
 export interface ExerciseAttributes { readonly muscleGroup: string; readonly equipment: string; readonly level: string; readonly objective: string; readonly instructions: string; readonly variations: readonly string[]; readonly professionalContraindications: string; readonly futureMedia?: string; }
 export interface LaboratoryExamAttributes { readonly unit: string; readonly examCategory: string; readonly observations: string; readonly mockInformativeReference: string; readonly sourceRecordId?: string; }
 export interface SupplementAttributes { readonly supplementCategory: string; readonly presentation: string; readonly observations: string; readonly professionalUse: string; }
-export interface ProtocolAttributes { readonly area: string; readonly version: string; readonly steps: readonly string[]; readonly responsibleProfessional: string; }
+export interface ProtocolMesocyclePhase {
+  readonly name: string;
+  readonly objective: string;
+  readonly progressionCriteria: readonly string[];
+}
+
+export interface ProtocolAttributes {
+  readonly area: string;
+  readonly version: string;
+  readonly steps: readonly string[];
+  readonly responsibleProfessional: string;
+  readonly objective?: string;
+  readonly targetAudience?: readonly string[];
+  readonly entryRequirements?: readonly string[];
+  readonly requiredAssessments?: readonly string[];
+  readonly safetyCriteria?: readonly string[];
+  readonly periodizationModel?: string;
+  readonly macrocycleGuidance?: string;
+  readonly mesocyclePhases?: readonly ProtocolMesocyclePhase[];
+  readonly microcycleOrganization?: string;
+  readonly weeklyFrequencyGuidance?: string;
+  readonly intensityGuidance?: string;
+  readonly volumeGuidance?: string;
+  readonly progressionCriteria?: readonly string[];
+  readonly regressionCriteria?: readonly string[];
+  readonly recoveryAndDeload?: string;
+  readonly monitoringIndicators?: readonly string[];
+  readonly reassessmentCriteria?: readonly string[];
+  readonly assistedPlanApplication?: string;
+}
 export type GenericSharedDataAttributes = Readonly<Record<string, string | readonly string[]>>;
 
 export type SharedDataItem =

@@ -97,6 +97,7 @@ export async function GET(request: Request) {
   }
 
   const source = url.searchParams.get("source");
+  const sourceName = url.searchParams.get("sourceName")?.trim();
   const input = {
     query: url.searchParams.get("query") ?? undefined,
     category: url.searchParams.get("category") ?? undefined,
@@ -104,18 +105,23 @@ export async function GET(request: Request) {
       source === "TACO" ||
       source === "TBCA" ||
       source === "IBGE" ||
+      source === "PHILIPPI" ||
       source === "PHILIPS" ||
       source === "USDA" ||
-      source === "CLINIC_SV"
+      source === "CLINIC_SV" ||
+      source === "EVONUT"
         ? (source as NutritionSourceKind)
         : "ALL",
+    sourceName:
+      sourceName && sourceName.length <= 180 ? sourceName : undefined,
     page: Number(url.searchParams.get("page") ?? 1),
     pageSize: Number(url.searchParams.get("pageSize") ?? 20),
   } as const;
 
   try {
     const result = await foodRepository.search(input);
-    return NextResponse.json(result);
+    const sourceOptions = await foodRepository.listActiveSourceOptions();
+    return NextResponse.json({ ...result, sourceOptions });
   } catch {
     return NextResponse.json(
       { message: "Não foi possível consultar o banco de alimentos." },

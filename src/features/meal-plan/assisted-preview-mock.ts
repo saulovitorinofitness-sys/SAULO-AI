@@ -144,17 +144,13 @@ export function findAssistedFoodProfile(name: string) {
   return assistedFoodProfiles.find((profile) => profile.name === name);
 }
 
-function methodFactor(strategy: NutritionStrategySelection, profile: DemonstrativeFoodProfile, mealIndex: number) {
-  if (strategy.method === "LOW_CARB") return profile.role === "CARBOHYDRATE" ? 0.72 : profile.role === "PROTEIN" || profile.role === "FAT" ? 1.16 : 1;
-  if (strategy.method === "CARB_CYCLING" && profile.role === "CARBOHYDRATE") return mealIndex % 2 === 0 ? 1.18 : 0.82;
-  return 1;
-}
-
-function baseFood(name: string, mealIndex: number, itemIndex: number, strategy: NutritionStrategySelection, library: readonly ScientificLibraryItem[]): AssistedPreviewFood | null {
+function baseFood(name: string, mealIndex: number, itemIndex: number, library: readonly ScientificLibraryItem[]): AssistedPreviewFood | null {
   const profile = findAssistedFoodProfile(name);
   const libraryItem = library.find((item) => item.name === name);
   if (!profile || !libraryItem) return null;
-  const quantity = round(profile.defaultQuantity * methodFactor(strategy, profile, mealIndex), 2);
+  // O método orienta a decisão profissional, mas nunca altera ou gera
+  // automaticamente porções do Plano Alimentar.
+  const quantity = round(profile.defaultQuantity, 2);
   const grams = round(quantity * profile.gramsPerMeasure);
   return {
     id: `assisted-${mealIndex + 1}-${itemIndex + 1}-${libraryItem.id}`,
@@ -202,7 +198,7 @@ export function createAssistedMealPreview(strategy: NutritionStrategySelection, 
   const template = previewTemplates[(revision - 1) % previewTemplates.length];
   const unscaledMeals = mealNames.map((meal, mealIndex) => ({
     ...meal,
-    foods: (template[mealIndex % template.length] ?? template[0]).map((name, itemIndex) => baseFood(name, mealIndex, itemIndex, strategy, library)).filter((food): food is AssistedPreviewFood => Boolean(food)),
+    foods: (template[mealIndex % template.length] ?? template[0]).map((name, itemIndex) => baseFood(name, mealIndex, itemIndex, library)).filter((food): food is AssistedPreviewFood => Boolean(food)),
   }));
   const unscaledCalories = sumNutrition(unscaledMeals.flatMap((meal) => meal.foods.map((food) => food.nutrition))).calories;
   const scale = unscaledCalories > 0 ? strategy.targetCalories / unscaledCalories : 1;

@@ -7,14 +7,21 @@ import type {
   FoodNutrientsPer100g,
   FoodSearchInput,
   FoodSearchResult,
+  FoodSearchSourceOption,
   ProfessionalFood,
 } from "./contracts";
 import { normalizeFoodSearchText } from "./normalization";
+import { resolveFoodNutrientForms } from "./nutrient-forms";
+import {
+  buildFoodSearchWhere,
+  resolveFoodSearchPagination,
+} from "./search-filter";
 
 const foodInclude = {
   category: true,
   source: true,
   nutrients: true,
+  nutrientObservations: true,
   householdMeasures: {
     where: { active: true },
     orderBy: [{ isDefault: "desc" }, { name: "asc" }],
@@ -28,43 +35,60 @@ function numberValue(value: { toString(): string } | null) {
   return value === null ? null : Number(value.toString());
 }
 
+function transFatsValue(row: FoodRow) {
+  const observation = row.nutrientObservations.find((item) =>
+    item.nutrientKey === "transFatsGrams" || item.nutrientKey === "additional:transFatsGrams",
+  );
+  if (observation) {
+    return observation.valueStatus === "NUMERIC"
+      ? numberValue(observation.numericValue)
+      : null;
+  }
+  const additional = row.nutrients?.additionalNutrients;
+  if (!additional || typeof additional !== "object" || Array.isArray(additional)) return null;
+  const value = (additional as Record<string, unknown>)["G. trans total"];
+  return typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : null;
+}
+
 function mapNutrients(
-  row: FoodRow["nutrients"],
+  row: FoodRow,
 ): FoodNutrientsPer100g | null {
-  if (!row) return null;
+  if (!row.nutrients) return null;
+  const nutrients = row.nutrients;
 
   return {
-    energyKcal: numberValue(row.energyKcal),
-    proteinGrams: numberValue(row.proteinGrams),
-    carbohydratesGrams: numberValue(row.carbohydratesGrams),
-    fatsGrams: numberValue(row.fatsGrams),
-    fiberGrams: numberValue(row.fiberGrams),
-    sugarsGrams: numberValue(row.sugarsGrams),
-    cholesterolMg: numberValue(row.cholesterolMg),
-    saturatedFatsGrams: numberValue(row.saturatedFatsGrams),
-    monounsaturatedFatsGrams: numberValue(row.monounsaturatedFatsGrams),
-    polyunsaturatedFatsGrams: numberValue(row.polyunsaturatedFatsGrams),
-    sodiumMg: numberValue(row.sodiumMg),
-    calciumMg: numberValue(row.calciumMg),
-    ironMg: numberValue(row.ironMg),
-    magnesiumMg: numberValue(row.magnesiumMg),
-    phosphorusMg: numberValue(row.phosphorusMg),
-    potassiumMg: numberValue(row.potassiumMg),
-    zincMg: numberValue(row.zincMg),
-    copperMg: numberValue(row.copperMg),
-    manganeseMg: numberValue(row.manganeseMg),
-    seleniumMcg: numberValue(row.seleniumMcg),
-    vitaminAMcg: numberValue(row.vitaminAMcg),
-    vitaminCMg: numberValue(row.vitaminCMg),
-    vitaminDMcg: numberValue(row.vitaminDMcg),
-    vitaminEMg: numberValue(row.vitaminEMg),
-    vitaminKMcg: numberValue(row.vitaminKMcg),
-    thiamineMg: numberValue(row.thiamineMg),
-    riboflavinMg: numberValue(row.riboflavinMg),
-    niacinMg: numberValue(row.niacinMg),
-    vitaminB6Mg: numberValue(row.vitaminB6Mg),
-    folateMcg: numberValue(row.folateMcg),
-    vitaminB12Mcg: numberValue(row.vitaminB12Mcg),
+    energyKcal: numberValue(nutrients.energyKcal),
+    proteinGrams: numberValue(nutrients.proteinGrams),
+    carbohydratesGrams: numberValue(nutrients.carbohydratesGrams),
+    fatsGrams: numberValue(nutrients.fatsGrams),
+    fiberGrams: numberValue(nutrients.fiberGrams),
+    sugarsGrams: numberValue(nutrients.sugarsGrams),
+    cholesterolMg: numberValue(nutrients.cholesterolMg),
+    saturatedFatsGrams: numberValue(nutrients.saturatedFatsGrams),
+    transFatsGrams: transFatsValue(row),
+    monounsaturatedFatsGrams: numberValue(nutrients.monounsaturatedFatsGrams),
+    polyunsaturatedFatsGrams: numberValue(nutrients.polyunsaturatedFatsGrams),
+    sodiumMg: numberValue(nutrients.sodiumMg),
+    calciumMg: numberValue(nutrients.calciumMg),
+    ironMg: numberValue(nutrients.ironMg),
+    magnesiumMg: numberValue(nutrients.magnesiumMg),
+    phosphorusMg: numberValue(nutrients.phosphorusMg),
+    potassiumMg: numberValue(nutrients.potassiumMg),
+    zincMg: numberValue(nutrients.zincMg),
+    copperMg: numberValue(nutrients.copperMg),
+    manganeseMg: numberValue(nutrients.manganeseMg),
+    seleniumMcg: numberValue(nutrients.seleniumMcg),
+    vitaminAMcg: numberValue(nutrients.vitaminAMcg),
+    vitaminCMg: numberValue(nutrients.vitaminCMg),
+    vitaminDMcg: numberValue(nutrients.vitaminDMcg),
+    vitaminEMg: numberValue(nutrients.vitaminEMg),
+    vitaminKMcg: numberValue(nutrients.vitaminKMcg),
+    thiamineMg: numberValue(nutrients.thiamineMg),
+    riboflavinMg: numberValue(nutrients.riboflavinMg),
+    niacinMg: numberValue(nutrients.niacinMg),
+    vitaminB6Mg: numberValue(nutrients.vitaminB6Mg),
+    folateMcg: numberValue(nutrients.folateMcg),
+    vitaminB12Mcg: numberValue(nutrients.vitaminB12Mcg),
   };
 }
 
@@ -72,11 +96,18 @@ function mapFood(row: FoodRow): ProfessionalFood {
   return {
     id: row.id,
     officialName: row.officialName,
+    sourceOriginalName: row.sourceOriginalName ?? undefined,
+    professionalName: row.professionalName ?? undefined,
     normalizedName: row.normalizedName,
     description: row.description ?? undefined,
     category: row.category.name,
     categoryId: row.categoryId,
     foodGroup: row.foodGroup,
+    nutrientForms: resolveFoodNutrientForms({
+      sourceKind: row.source.kind,
+      importedFrom: row.importedFrom,
+      observations: row.nutrientObservations,
+    }),
     source: {
       id: row.source.id,
       kind: row.source.kind,
@@ -88,10 +119,13 @@ function mapFood(row: FoodRow): ProfessionalFood {
     },
     sourceCode: row.sourceCode ?? undefined,
     preparationState: row.preparationState ?? undefined,
+    preparationMethod: row.preparationMethod ?? undefined,
+    foodState: row.foodState ?? undefined,
     presentation: row.presentation ?? undefined,
     referenceServingGrams: Number(row.referenceServingGrams),
+    referenceServingUnit: row.referenceServingUnit ?? undefined,
     status: row.status,
-    nutrients: mapNutrients(row.nutrients),
+    nutrients: mapNutrients(row),
     householdMeasures: row.householdMeasures.map((measure) => ({
       id: measure.id,
       name: measure.name,
@@ -110,84 +144,49 @@ function mapFood(row: FoodRow): ProfessionalFood {
 }
 
 export const foodRepository = {
-  async search(input: FoodSearchInput = {}): Promise<FoodSearchResult> {
-    const page = Math.max(1, input.page ?? 1);
-    const pageSize = Math.min(50, Math.max(1, input.pageSize ?? 20));
-    const query = input.query?.trim();
-    const normalizedQuery = normalizeFoodSearchText(query ?? "");
-    const where: Prisma.FoodWhereInput = {
-      status: input.status ?? "ACTIVE",
-      category: input.category
-        ? { normalizedName: normalizeFoodSearchText(input.category) }
-        : undefined,
-      source:
-        input.source && input.source !== "ALL"
-          ? { kind: input.source }
-          : undefined,
-      OR: query
-        ? [
-            {
-              officialName: {
-                contains: query,
-                mode: "insensitive",
-              },
-            },
-            { normalizedName: { contains: normalizedQuery } },
-            {
-              description: {
-                contains: query,
-                mode: "insensitive",
-              },
-            },
-            {
-              foodGroup: {
-                contains: query,
-                mode: "insensitive",
-              },
-            },
-            {
-              preparationState: {
-                contains: query,
-                mode: "insensitive",
-              },
-            },
-            {
-              presentation: {
-                contains: query,
-                mode: "insensitive",
-              },
-            },
-            {
-              synonyms: {
-                some: {
-                  normalizedName: { contains: normalizedQuery },
-                },
-              },
-            },
-            {
-              category: {
-                name: { contains: query, mode: "insensitive" },
-              },
-            },
-            {
-              source: {
-                name: { contains: query, mode: "insensitive" },
-              },
-            },
-          ]
-        : undefined,
-    };
+  async listActiveSourceOptions(): Promise<readonly FoodSearchSourceOption[]> {
+    const sources = await prisma.nutritionSource.findMany({
+      where: {
+        active: true,
+        foods: { some: { status: "ACTIVE" } },
+      },
+      select: {
+        name: true,
+        _count: {
+          select: { foods: { where: { status: "ACTIVE" } } },
+        },
+      },
+    });
+    const byName = new Map<string, FoodSearchSourceOption>();
+    for (const source of sources) {
+      const value = source.name.trim();
+      if (!value) continue;
+      const key = normalizeFoodSearchText(value);
+      const current = byName.get(key);
+      byName.set(key, {
+        value,
+        label: value,
+        activeFoods:
+          (current?.activeFoods ?? 0) + source._count.foods,
+      });
+    }
+    return [...byName.values()].sort((left, right) =>
+      left.label.localeCompare(right.label, "pt-BR"),
+    );
+  },
 
-    const [rows, total] = await prisma.$transaction([
-      prisma.food.findMany({
-        where,
-        include: foodInclude,
-        orderBy: [{ officialName: "asc" }, { source: { name: "asc" } }],
-        skip: (page - 1) * pageSize,
-        take: pageSize,
-      }),
-      prisma.food.count({ where }),
-    ]);
+  async search(input: FoodSearchInput = {}): Promise<FoodSearchResult> {
+    const { page, pageSize } = resolveFoodSearchPagination(input);
+    const where = buildFoodSearchWhere(input);
+
+    const rows = await prisma.food.findMany({
+      where,
+      include: foodInclude,
+      orderBy: [{ officialName: "asc" }, { source: { name: "asc" } }],
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    });
+    const total = await prisma.food.count({ where });
 
     return {
       items: rows.map(mapFood),
@@ -238,14 +237,44 @@ export const foodRepository = {
     return rows.map(mapFood);
   },
 
+  async searchSubstitutionCandidates(query: string, limit = 50) {
+    const normalizedQuery = normalizeFoodSearchText(query.trim());
+    if (!normalizedQuery) return [];
+    const safeLimit = Math.min(50, Math.max(1, limit));
+    const [priorityRows, broadResult] = await Promise.all([
+      prisma.food.findMany({
+        where: {
+          status: "ACTIVE",
+          normalizedName: { startsWith: normalizedQuery },
+        },
+        include: foodInclude,
+        orderBy: [{ officialName: "asc" }, { source: { name: "asc" } }],
+        take: safeLimit,
+      }),
+      foodRepository.search({
+        query,
+        pageSize: safeLimit,
+        source: "ALL",
+        status: "ACTIVE",
+      }),
+    ]);
+    const unique = new Map<string, ProfessionalFood>();
+    for (const food of [
+      ...priorityRows.map(mapFood),
+      ...broadResult.items,
+    ]) unique.set(food.id, food);
+    return [...unique.values()].slice(0, safeLimit);
+  },
+
   async findDuplicates(
     draft: ClinicFoodDraft,
   ): Promise<readonly FoodDuplicateCandidate[]> {
+    const sourceCode = draft.sourceCode?.trim() || null;
     const rows = await prisma.food.findMany({
       where: {
         normalizedName: normalizeFoodSearchText(draft.officialName),
         preparationState: draft.preparationState ?? null,
-        sourceCode: draft.sourceCode ?? null,
+        sourceCode,
       },
       include: foodInclude,
       take: 10,
@@ -266,6 +295,7 @@ export const foodRepository = {
 
   async createClinicFood(draft: ClinicFoodDraft) {
     return prisma.$transaction(async (transaction) => {
+      const sourceCode = draft.sourceCode?.trim() || undefined;
       const normalizedCategory = normalizeFoodSearchText(draft.category);
       const category = await transaction.foodCategory.upsert({
         where: { normalizedName: normalizedCategory },
@@ -296,10 +326,11 @@ export const foodRepository = {
           categoryId: category.id,
           foodGroup: draft.foodGroup,
           sourceId: source.id,
-          sourceCode: draft.sourceCode,
+          sourceCode,
           preparationState: draft.preparationState,
           presentation: draft.presentation,
           referenceServingGrams: draft.referenceServingGrams,
+          referenceServingUnit: draft.referenceServingUnit,
           status: draft.status,
           nutrients: { create: draft.nutrients },
           householdMeasures: {

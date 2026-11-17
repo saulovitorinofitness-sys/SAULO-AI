@@ -6,9 +6,12 @@ import {
   BUILT_IN_ACCESS_POLICIES,
   BUILT_IN_IDS,
 } from "@/modules/permissions";
-import { canOperatePosturalAssessment } from "./permissions";
+import {
+  canOperatePerformance,
+  canOperatePosturalAssessment,
+} from "./permissions";
 
-test("Saulo não executa operacionalmente Avaliação Postural", () => {
+test("Saulo possui acesso total, inclusive à Avaliação Postural", () => {
   const snapshot = {
     user: {
       id: BUILT_IN_IDS.users.sauloXavierVitorino,
@@ -24,7 +27,7 @@ test("Saulo não executa operacionalmente Avaliação Postural", () => {
 
   assert.equal(
     canAccess(snapshot, "POSTURAL_ASSESSMENT", "UPDATE"),
-    false,
+    true,
   );
   assert.equal(
     canAccess(snapshot, "POSTURAL_ASSESSMENT", "READ"),
@@ -33,8 +36,9 @@ test("Saulo não executa operacionalmente Avaliação Postural", () => {
   assert.equal(canAccess(snapshot, "MEAL_PLAN", "UPDATE"), true);
   assert.equal(
     canOperatePosturalAssessment(snapshot.user.id),
-    false,
+    true,
   );
+  assert.equal(canOperatePerformance(snapshot.user.id), true);
 });
 
 test("Maria executa avaliação postural sem acessar Nutrição", () => {
@@ -63,5 +67,17 @@ test("Maria executa avaliação postural sem acessar Nutrição", () => {
   assert.equal(
     canOperatePosturalAssessment(snapshot.user.id),
     true,
+  );
+  assert.equal(canOperatePerformance(snapshot.user.id), true);
+});
+
+test("usuário sem vínculo aprovado não opera a Avaliação Postural", () => {
+  assert.equal(
+    canOperatePosturalAssessment("00000000-0000-4000-8000-999999999999"),
+    false,
+  );
+  assert.equal(
+    canOperatePerformance("00000000-0000-4000-8000-999999999999"),
+    false,
   );
 });

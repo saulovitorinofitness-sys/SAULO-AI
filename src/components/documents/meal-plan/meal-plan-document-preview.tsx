@@ -21,6 +21,10 @@ import {
 } from "@/features/nutrition-strategy";
 import type { ScientificLibraryItem } from "@/features/scientific-library";
 import type { AttendanceProfessionalParticipant } from "@/features/professional-responsibility";
+import {
+  CLINIC_INSTITUTIONAL_CONFIG,
+  formatInstitutionalAddress,
+} from "@/config/institution";
 
 import {
   MEAL_PLAN_DOCUMENT_ID,
@@ -148,7 +152,7 @@ export function MealPlanDocumentPreview({
         .replace(/^-|-$/g, "")
         .toLocaleLowerCase("pt-BR")}.pdf`;
       const options = {
-        margin: [0, 0, 15, 0] as [number, number, number, number],
+        margin: [0, 0, 20, 0] as [number, number, number, number],
         filename,
         image: { type: "jpeg" as const, quality: 0.98 },
         html2canvas: {
@@ -176,27 +180,37 @@ export function MealPlanDocumentPreview({
         const pageWidth = pdf.internal.pageSize.getWidth();
         const pageHeight = pdf.internal.pageSize.getHeight();
         pdf.setFillColor(255, 255, 255);
-        pdf.rect(0, pageHeight - 15, pageWidth, 15, "F");
+        pdf.rect(0, pageHeight - 20, pageWidth, 20, "F");
         pdf.setDrawColor(217, 227, 222);
-        pdf.line(15, pageHeight - 13, pageWidth - 15, pageHeight - 13);
-        pdf.setFontSize(6.5);
+        pdf.line(15, pageHeight - 18, pageWidth - 15, pageHeight - 18);
+        pdf.setFontSize(6.2);
         pdf.setTextColor(96, 116, 109);
         pdf.text(
-          "Clínica SV · Sistema Integrado SV",
+          `${CLINIC_INSTITUTIONAL_CONFIG.brand.displayName} · ${CLINIC_INSTITUTIONAL_CONFIG.documentSubtitle}`,
           15,
-          pageHeight - 7,
+          pageHeight - 14,
         );
         pdf.text(
-          "Plano individualizado e sujeito a ajustes conforme evolução clínica.",
-          pageWidth / 2,
+          formatInstitutionalAddress(CLINIC_INSTITUTIONAL_CONFIG.address),
+          15,
+          pageHeight - 10.5,
+        );
+        pdf.text(
+          `WhatsApps: ${CLINIC_INSTITUTIONAL_CONFIG.contacts.map((contact) => contact.value).join(" · ")} · ${CLINIC_INSTITUTIONAL_CONFIG.website}`,
+          15,
           pageHeight - 7,
-          { align: "center" },
         );
         pdf.text(
           `Página ${page} de ${pageCount}`,
           pageWidth - 15,
           pageHeight - 7,
           { align: "right" },
+        );
+        pdf.text(
+          "Plano individualizado e sujeito a ajustes conforme evolução clínica.",
+          pageWidth / 2,
+          pageHeight - 3.5,
+          { align: "center" },
         );
       }
 
@@ -215,11 +229,12 @@ export function MealPlanDocumentPreview({
       <div className="sticky top-16 z-10 mb-5 flex flex-col gap-3 rounded-2xl border border-[#dce5e0] bg-white/95 p-3 shadow-sm backdrop-blur sm:flex-row sm:items-center sm:justify-between lg:top-[4.5rem]">
         <div>
           <p className="text-sm font-black text-[#183029]">
-            Prévia do entregável
-          </p>
-          <p className="mt-0.5 text-xs text-slate-500">
-            Revise o conteúdo antes de gerar o arquivo.
-          </p>
+  Prévia do Relatório Nutricional
+</p>
+
+<p className="mt-0.5 text-xs text-slate-500">
+  Revise todas as informações antes da aprovação e impressão do relatório.
+</p>
         </div>
 
         <div className="flex flex-col gap-2 sm:flex-row">

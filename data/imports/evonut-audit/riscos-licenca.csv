@@ -1,0 +1,11 @@
+﻿conteudo,risco,evidencia,recomendacao
+Arquivo Evonut.xlsm,ALTO,autoria Joilson Aguiar; versão 011; nenhuma licença explícita,obter autorização antes de redistribuir ou importar conteúdo proprietário
+"VBA, macros e telas",ALTO,vbaProject.bin e codenames em todas as abas,"não copiar código, fluxo, identidade visual ou layout"
+"Dietas, refeições e receitas Evonut",ALTO,nomes marcados Evonut e composições prontas,usar somente a ideia estrutural; exigir licença para conteúdo
+Orientações clínicas,ALTO,38 textos extensos por condição clínica,não copiar; recriar com fontes clínicas aprovadas
+"Formulações, fitoterápicos e probióticos",CRÍTICO,56 prescrições com dose/posologia,"não importar automaticamente; revisão clínica, regulatória e jurídica"
+Equações nutricionais/antropométricas,MÉDIO,algumas referências/anos incompletos ou suspeitos,"reimplementar a partir da publicação original, com testes"
+DRIs e percentis,MÉDIO/ALTO,edição e fonte completa não identificadas,substituir por fonte oficial versionada
+Catálogo de exames e referências,ALTO,fonte das faixas de referência não indicada,não usar clinicamente sem laboratório/fonte e versionamento
+Dados pessoais e clínicos,CRÍTICO,"cadastros, contatos, antropometria, exames e atendimentos",não extrair nem importar nesta auditoria
+Bases alimentares,VARIÁVEL,"TACO, TBCA, IBGE, INSA, Tucunduva e conteúdo próprio",preservar fonte e verificar licença de cada origem

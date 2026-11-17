@@ -1,4 +1,5 @@
 import { DocumentFooter } from "./document-footer";
+import { InstitutionalDocumentIdentity } from "./institutional-document-identity";
 import { ProfessionalSignature } from "./professional-signature";
 import type { AttendanceProfessionalParticipant } from "@/features/professional-responsibility";
 
@@ -51,12 +52,11 @@ export function DocumentClosingPage({
         </div>
 
         <div className="mt-6 grid grid-cols-[minmax(0,1fr)_36mm] items-end gap-[12mm] border-t border-[#e2e9e5] pt-5">
-          <div className="text-left text-[9px] leading-5 text-[#50665e]">
-            <p className="font-black text-[#23483b]">Clínica SV</p>
-            <p className="font-black text-[#23483b]">
-              www.saulovitorino.com.br
+          <div className="text-left text-[#50665e]">
+            <InstitutionalDocumentIdentity compact />
+            <p className="mt-2 text-[8px] leading-4">
+              Responsáveis identificados pelo registro do atendimento.
             </p>
-            <p>Responsáveis identificados pelo registro do atendimento.</p>
           </div>
 
           <div className="flex flex-col items-center justify-end text-center">

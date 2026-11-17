@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-import { Button } from "@/components/ui/button";
+import { Button, ButtonLink } from "@/components/ui/button";
 import {
   calculatePosturalEvolutionIndicators,
   comparePosturalFindings,
@@ -1246,6 +1246,35 @@ export function PosturalEvolutionSection({
             const photoCount = Object.values(item.data.views).filter(
               (view) => view.image,
             ).length;
+            const officialDocumentAvailable = Boolean(
+              item.attendanceId &&
+              (item.status === "FINALIZED" ||
+                item.data.completionStatus === "COMPLETED"),
+            );
+            const officialParams = officialDocumentAvailable
+              ? new URLSearchParams({
+                  patientId,
+                  attendanceId: item.attendanceId!,
+                  masterRecordId: item.masterRecordId,
+                  entryId: item.assessmentId,
+                })
+              : undefined;
+            if (item.versionId) officialParams?.set("versionId", item.versionId);
+            const viewHref = officialParams
+              ? `/clinica/plano-alimentar/entregavel?${new URLSearchParams({
+                  ...Object.fromEntries(officialParams),
+                  view: "postural",
+                  source: "global-deliverables",
+                }).toString()}`
+              : undefined;
+            const printHref = officialParams
+              ? `/clinica/plano-alimentar/entregavel/imprimir?${new URLSearchParams({
+                  ...Object.fromEntries(officialParams),
+                  documentType: "postural",
+                  intent: "PRINT",
+                }).toString()}`
+              : undefined;
+            const pdfHref = printHref?.replace("intent=PRINT", "intent=SAVE_PDF");
             return (
               <article
                 className="rounded-xl border border-slate-200 p-4"
@@ -1269,7 +1298,7 @@ export function PosturalEvolutionSection({
                     {item.data.notes ||
                       item.data.technicalSummary?.editedSummary ||
                       item.data.technicalSummary?.generatedOriginal ||
-                      "Sem observações gerais ou resumo registrado."}
+                      "Não informado"}
                   </p>
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2">
@@ -1324,15 +1353,17 @@ export function PosturalEvolutionSection({
                   >
                     Comparar
                   </Button>
-                  <Button
-                    disabled
-                    size="small"
-                    title="Estrutura preparada; geração de PDF será implementada em Sprint futura."
-                    type="button"
-                    variant="ghost"
-                  >
-                    PDF · em preparação
-                  </Button>
+                  {viewHref && printHref && pdfHref ? (
+                    <>
+                      <ButtonLink href={viewHref} size="small" variant="outline">Visualizar documento</ButtonLink>
+                      <ButtonLink href={printHref} size="small">Imprimir</ButtonLink>
+                      <ButtonLink href={pdfHref} size="small" variant="outline">Salvar em PDF</ButtonLink>
+                    </>
+                  ) : (
+                    <span className="inline-flex min-h-9 items-center rounded-lg bg-slate-100 px-3 text-xs font-bold text-slate-500">
+                      Documento disponível após concluir a avaliação
+                    </span>
+                  )}
                 </div>
               </article>
             );

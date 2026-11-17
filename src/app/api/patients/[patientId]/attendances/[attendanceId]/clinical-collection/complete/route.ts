@@ -36,6 +36,18 @@ export async function POST(
   } catch (error) {
     if (
       error instanceof Error &&
+      error.message === "SUMMARY_DATA_UNAVAILABLE"
+    ) {
+      return NextResponse.json(
+        {
+          message:
+            "A Anamnese deste atendimento não pôde ser consolidada. Revise o registro antes de confirmar o resumo.",
+        },
+        { status: 409 },
+      );
+    }
+    if (
+      error instanceof Error &&
       error.message === "MANDATORY_STEPS_PENDING"
     ) {
       return NextResponse.json(

@@ -1,0 +1,2 @@
+ALTER TABLE "Food"
+ADD COLUMN IF NOT EXISTS "referenceServingUnit" TEXT;

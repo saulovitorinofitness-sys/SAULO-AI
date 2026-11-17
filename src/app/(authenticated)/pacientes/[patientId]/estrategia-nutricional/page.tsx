@@ -8,10 +8,15 @@ import {
 } from "@/components/nutrition-strategy";
 import { PageState } from "@/components/ui/page-state";
 import { nutritionClinicalFlowRepository } from "@/features/nutrition-clinical-flow/repository";
+import {
+  calculateReturnRecall,
+  nutritionReturnAnamnesisRepository,
+} from "@/features/nutrition-return-anamnesis";
 import { nutritionClinicalPanelRepository } from "@/features/nutrition-strategy/clinical-panel-repository";
 import { nutritionStrategyService } from "@/features/nutrition-strategy";
 import { nutritionStrategyRepository } from "@/features/nutrition-strategy/strategy-repository";
 import { canAccess, mvpService } from "@/features/mvp";
+import { SkipNutritionStrategyAction } from "./skip-nutrition-strategy-action";
 
 export const metadata: Metadata = { title: "Estratégia Nutricional" };
 
@@ -20,7 +25,12 @@ export default async function NutritionStrategyPage({
   searchParams,
 }: {
   params: Promise<{ patientId: string }>;
-  searchParams: Promise<{ scenario?: string }>;
+  searchParams: Promise<{
+    attendanceId?: string;
+    scenario?: string;
+    section?: string;
+    returnTo?: string;
+  }>;
 }) {
   const [{ patientId }, query, access] = await Promise.all([
     params,
@@ -41,17 +51,35 @@ export default async function NutritionStrategyPage({
     );
   }
 
-  const view = await nutritionClinicalPanelRepository.get(patientId);
+  const view = await nutritionClinicalPanelRepository.get(
+    patientId,
+    query.attendanceId,
+  );
   if (!view) notFound();
-  const [flow, strategy] = await Promise.all([
+  const [flow, strategy, returnAnamnesis] = await Promise.all([
     nutritionClinicalFlowRepository.getFlow({
       patientId,
       attendanceId: view.attendanceId,
       scenario: query.scenario,
     }),
-    nutritionStrategyRepository.get(patientId, view.attendanceId),
+    nutritionStrategyRepository.getForClinicalAttendance(
+      patientId,
+      view.attendanceId,
+    ),
+    nutritionReturnAnamnesisRepository.getView(
+      patientId,
+      view.attendanceId,
+    ),
   ]);
   if (!flow) notFound();
+  const nutritionStrategyStep = flow.flow.find(
+    (step) => step.id === "NUTRITION_STRATEGY",
+  );
+  if (!nutritionStrategyStep) notFound();
+  const recall = returnAnamnesis?.data.recall24h;
+  const recallCalculation = recall ? calculateReturnRecall(recall) : undefined;
+  const recallPerformed = Boolean(recall?.meals.length);
+
   return (
     <ClinicalFlowNavigation
       activeStep="NUTRITION_STRATEGY"
@@ -62,14 +90,36 @@ export default async function NutritionStrategyPage({
         code: view.patient.code,
       }}
     >
-      <NutritionClinicalPanel
-        activityFactor={strategy?.activityFactor}
-        view={view}
-      />
-      <NutritionStrategyDecisionEngine
-        initialStrategy={strategy}
-        view={view}
-      />
+      <SkipNutritionStrategyAction
+        attendanceId={view.attendanceId}
+        operationalStatus={nutritionStrategyStep.status}
+        patientId={patientId}
+      >
+        <NutritionStrategyDecisionEngine
+          anamnesisRecall={{
+            performed: recallPerformed,
+            totals: recallCalculation?.totals,
+            confidence: !recallCalculation?.totals
+              ? "NOT_ESTIMATED"
+              : recallCalculation.partial
+                ? "LOW"
+                : "HIGH",
+            reviewHref: `/pacientes/${patientId}/anamnese?attendanceId=${encodeURIComponent(view.attendanceId)}#recordatorio-24h`,
+          }}
+          clinicalSummary={
+            <NutritionClinicalPanel
+              activityFactor={strategy?.activityFactor}
+              view={view}
+            />
+          }
+          initialStrategy={strategy}
+          scheduleCorrection={
+            query.section === "daily-distribution" &&
+            query.returnTo === "meal-plan"
+          }
+          view={view}
+        />
+      </SkipNutritionStrategyAction>
     </ClinicalFlowNavigation>
   );
 }

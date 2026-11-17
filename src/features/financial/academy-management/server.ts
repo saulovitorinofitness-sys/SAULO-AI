@@ -1,0 +1,1 @@
+export { academyManagementService } from "./service";

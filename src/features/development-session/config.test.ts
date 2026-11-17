@@ -3,12 +3,14 @@ import test from "node:test";
 
 import {
   DEVELOPMENT_PROFESSIONALS,
+  DEVELOPMENT_USER_HEADER,
   canDevelopmentUserAccess,
   canDevelopmentUserOpenPath,
   canDevelopmentUserOperatePostural,
+  resolveDevelopmentAccess,
 } from "./config";
 
-test("Saulo acessa módulos gerais e nutricionais, mas não opera avaliação postural", () => {
+test("Saulo possui acesso total, inclusive à avaliação postural", () => {
   const saulo = DEVELOPMENT_PROFESSIONALS.saulo;
 
   assert.equal(
@@ -31,7 +33,7 @@ test("Saulo acessa módulos gerais e nutricionais, mas não opera avaliação po
     canDevelopmentUserAccess(saulo, "MEAL_PLAN", "READ"),
     true,
   );
-  assert.equal(canDevelopmentUserOperatePostural(saulo), false);
+  assert.equal(canDevelopmentUserOperatePostural(saulo), true);
 });
 
 test("Maria opera avaliação postural e acessa avaliações físicas compartilhadas", () => {
@@ -60,6 +62,10 @@ test("Maria opera avaliação postural e acessa avaliações físicas compartilh
   );
   assert.equal(
     canDevelopmentUserAccess(maria, "PERIMETRY", "UPDATE"),
+    true,
+  );
+  assert.equal(
+    canDevelopmentUserAccess(maria, "WORKOUT_PLAN", "UPDATE"),
     true,
   );
 });
@@ -97,4 +103,28 @@ test("Maria não acessa módulos e rotas exclusivos de Nutrição", () => {
     canDevelopmentUserOpenPath(maria, "/pacientes/demo"),
     true,
   );
+});
+
+test("cabeçalho do seletor identifica o executor da requisição", () => {
+  const previousNodeEnv = process.env.NODE_ENV;
+  process.env.NODE_ENV = "development";
+  try {
+    const request = new Request("http://localhost/api/test", {
+      headers: {
+        [DEVELOPMENT_USER_HEADER]:
+          DEVELOPMENT_PROFESSIONALS.maria.user.id,
+      },
+    });
+    const access = resolveDevelopmentAccess(
+      request,
+      DEVELOPMENT_PROFESSIONALS.saulo.access,
+    );
+
+    assert.equal(
+      access.user.id,
+      DEVELOPMENT_PROFESSIONALS.maria.user.id,
+    );
+  } finally {
+    process.env.NODE_ENV = previousNodeEnv;
+  }
 });

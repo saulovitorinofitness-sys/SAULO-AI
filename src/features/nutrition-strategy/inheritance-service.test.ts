@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { toMealPlanStrategyInheritance } from "./inheritance";
+import {
+  mealPlanStrategyInheritanceIssues,
+  toMealPlanStrategyInheritance,
+} from "./inheritance";
 import type { NutritionStrategyRecordView } from "./strategy-record";
 
 function approvedStrategy(): NutritionStrategyRecordView {
@@ -15,12 +18,17 @@ function approvedStrategy(): NutritionStrategyRecordView {
     objective: "WEIGHT_LOSS",
     secondaryObjectives: ["Preservar massa magra"],
     method: "STANDARD",
+    modifications: ["HIGH_PROTEIN", "HIGH_FIBER"],
+    clinicalProtocols: ["OBESITY_WEIGHT_LOSS"],
+    clinicalProtocol: "OBESITY_WEIGHT_LOSS",
+    specificConfigurations: {},
+    energyGoal: "DEFICIT_MODERATE",
     protocol: "MIFFLIN_ST_JEOR",
     calorieAdjustmentPercentage: -20,
     totalEnergyExpenditureKcal: 2_250,
     finalCaloriesKcal: 1_800,
     protein: { mode: "GRAMS", value: 150 },
-    carbohydrates: { mode: "GRAMS", value: 195 },
+    carbohydrates: { mode: "GRAMS", value: 165 },
     fats: { mode: "GRAMS", value: 60 },
     calculatedMacros: {
       protein: {
@@ -31,9 +39,9 @@ function approvedStrategy(): NutritionStrategyRecordView {
       },
       carbohydrates: {
         gramsPerKg: 2.6,
-        grams: 195,
-        kcal: 780,
-        percentage: 43.3333333333,
+        grams: 165,
+        kcal: 660,
+        percentage: 36.6666666667,
       },
       fats: {
         gramsPerKg: 0.8,
@@ -41,6 +49,14 @@ function approvedStrategy(): NutritionStrategyRecordView {
         kcal: 540,
         percentage: 30,
       },
+    },
+    macroValidation: {
+      plannedCalories: 1800,
+      calculatedCalories: 1800,
+      differenceKcal: 0,
+      differencePercent: 0,
+      percentageTotal: 100,
+      status: "ADEQUATE",
     },
     fiberGrams: 30,
     waterMl: 2800,
@@ -85,13 +101,18 @@ test("fornece ao Plano Alimentar somente o contrato da estratégia aprovada", ()
     objective: "WEIGHT_LOSS",
     secondaryObjectives: ["Preservar massa magra"],
     method: "STANDARD",
+    modifications: ["HIGH_PROTEIN", "HIGH_FIBER"],
+    clinicalProtocols: ["OBESITY_WEIGHT_LOSS"],
+    clinicalProtocol: "OBESITY_WEIGHT_LOSS",
+    specificConfigurations: {},
+    energyGoal: "DEFICIT_MODERATE",
     protocol: "MIFFLIN_ST_JEOR",
     totalEnergyExpenditureKcal: 2_250,
     caloriesKcal: 1_800,
     proteinGrams: 150,
     proteinPercentage: 33.3333333333,
-    carbohydratesGrams: 195,
-    carbohydratesPercentage: 43.3333333333,
+    carbohydratesGrams: 165,
+    carbohydratesPercentage: 36.6666666667,
     fatsGrams: 60,
     fatsPercentage: 30,
     fiberGrams: 30,
@@ -139,4 +160,28 @@ test("não fornece rascunho nem estratégia incompleta", () => {
     }),
     null,
   );
+});
+
+test("estratégia concluída com método atual libera diretamente o Plano do mesmo atendimento", () => {
+  const strategy = {
+    ...approvedStrategy(),
+    method: "BALANCED_BRAZILIAN" as const,
+  };
+  const inheritance = toMealPlanStrategyInheritance(strategy);
+
+  assert.ok(inheritance);
+  assert.equal(inheritance.patientId, strategy.patientId);
+  assert.equal(inheritance.masterRecordId, strategy.masterRecordId);
+  assert.equal(inheritance.attendanceId, strategy.attendanceId);
+  assert.equal(inheritance.sourceStrategyId, strategy.id);
+  assert.equal(inheritance.method, "BALANCED_BRAZILIAN");
+});
+
+test("informa nominalmente campo realmente ausente sem inventar valor", () => {
+  const strategy = { ...approvedStrategy(), method: undefined };
+
+  assert.deepEqual(mealPlanStrategyInheritanceIssues(strategy), [
+    "Padrão/método alimentar principal",
+  ]);
+  assert.equal(toMealPlanStrategyInheritance(strategy), null);
 });

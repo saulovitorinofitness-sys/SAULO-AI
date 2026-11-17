@@ -1,0 +1,7 @@
+﻿origem,tipo,estrutura,formulas,dadosPessoais,ideiaReutilizavel,naoCopiar
+BD_Entregaveis,Plano alimentar e orientações,"cabeçalho profissional, totais de macros, refeições, orientações e anexos",195,POSSÍVEL,seções independentes e composição seletiva,"layout, identidade, contatos e textos clínicos"
+BD_Entregaveis2,Avaliação antropométrica,"indicadores, evolução e resultados corporais",22,POSSÍVEL,blocos de indicadores com origem e data,layout e identidade visual
+BD_Entregaveis3,Anexo auxiliar,bloco complementar de impressão,2,POSSÍVEL,anexos modulares,layout
+Entregáveis,Seletor de conteúdo,"dieta, informação nutricional, compras, receitas e orientações",13,POSSÍVEL,seleção explícita de seções,interface e identidade
+BD_Prescrições/Prescrições,Prescrição,"descrição, tipo, categoria, texto e seleção",6,SIM,catálogo separado da prescrição do paciente,"textos, doses e prescrições sem revisão"
+Relatórios,Indicadores,contagens agregadas,0,POSSÍVEL,indicadores agregados sem identificação,layout

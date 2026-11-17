@@ -1,20 +1,24 @@
-import Link from "next/link";
-
 import { CheckIcon } from "@/components/ui/icons";
 import {
+  ASSESSMENT_NOT_INFORMED,
+  assessmentConditionLabels,
+  assessmentObjectiveLabel,
+  assessmentSummaryIntegrityIssues,
+  assessmentSummaryMissingInformation,
+  assessmentSummarySourceDates,
   bilateralDifferenceSentence,
-  bioimpedanceGroups,
   calculateBilateralDifferences,
   calculateRatio,
   classifyAdultBmi,
   clinicalStepLabels,
   formatClinicalNumber,
   perimetryGroups,
+  posturalSegmentsByView,
   type BioimpedanceAvanutriData,
   type ClinicalCollectionStepKey,
   type ClinicalCollectionView,
 } from "@/features/clinical-collection";
-import { nutritionClinicalFlowHref } from "@/features/nutrition-clinical-flow";
+import { safeClinicalTexts } from "@/features/clinical-collection/clinical-text-safety";
 
 import { CompletionBadge } from "./completion-badge";
 import { PendingFieldsAlert } from "./pending-fields-alert";
@@ -89,56 +93,44 @@ function isMeasurement(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value) && value > 0;
 }
 
-function evaluationDate(collection: ClinicalCollectionView) {
-  const dates = steps
-    .map((step) => collection.records[recordKey[step]].audit?.updatedAt)
-    .filter((value): value is string => Boolean(value))
-    .map((value) => new Date(value))
-    .filter((value) => !Number.isNaN(value.getTime()))
-    .sort((left, right) => right.getTime() - left.getTime());
-
-  return dates[0];
+function displayText(value: string | null | undefined) {
+  return value?.trim() || ASSESSMENT_NOT_INFORMED;
 }
 
-function overviewSentence(
-  collection: ClinicalCollectionView,
-  bmiClassification: string | undefined,
-) {
-  const anthropometry = collection.records.anthropometry.data;
-  const identification = [
-    collection.patientAge !== undefined
-      ? `${collection.patientAge} anos`
-      : undefined,
-    collection.patientSex
-      ? `sexo ${sexLabels[collection.patientSex]}`
-      : undefined,
-  ].filter((value): value is string => Boolean(value));
-  const measurements = [
-    isMeasurement(anthropometry.weightKg)
-      ? `${formatClinicalNumber(anthropometry.weightKg)} kg`
-      : undefined,
-    isMeasurement(anthropometry.heightCm)
-      ? `${formatClinicalNumber(anthropometry.heightCm / 100, 2, 2)} m`
-      : undefined,
-    isMeasurement(anthropometry.bmi)
-      ? `IMC de ${formatClinicalNumber(anthropometry.bmi, 2, 2)} kg/m²`
-      : undefined,
-  ].filter((value): value is string => Boolean(value));
-  const parts = [
-    `Paciente ${collection.patientName} (${collection.patientCode})`,
-    ...identification,
-  ];
+function formatDate(value: string | undefined) {
+  if (!value) return ASSESSMENT_NOT_INFORMED;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime())
+    ? ASSESSMENT_NOT_INFORMED
+    : new Intl.DateTimeFormat("pt-BR").format(date);
+}
 
-  let sentence = parts.join(", ");
-  if (measurements.length) {
-    const last = measurements.at(-1);
-    sentence += `, com ${measurements.slice(0, -1).join(", ")}${measurements.length > 1 ? " e " : ""}${last}`;
-  }
-  if (bmiClassification) {
-    sentence += `, em faixa compatível com ${bmiClassification}`;
-  }
+function TextList({ items }: { items: readonly string[] }) {
+  const available = safeClinicalTexts(items);
+  return available.length ? (
+    <ul className="space-y-1.5">
+      {available.map((item, index) => (
+        <li className="text-sm leading-6 text-slate-700" key={`${item}-${index}`}>
+          {item}
+        </li>
+      ))}
+    </ul>
+  ) : (
+    <p className="text-sm text-slate-500">{ASSESSMENT_NOT_INFORMED}</p>
+  );
+}
 
-  return `${sentence}.`;
+function SummaryDatum({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <dt className="text-xs font-bold uppercase tracking-wide text-slate-500">
+        {label}
+      </dt>
+      <dd className="mt-1 text-sm font-semibold leading-6 text-slate-900">
+        {value}
+      </dd>
+    </div>
+  );
 }
 
 function MetricList({
@@ -167,11 +159,15 @@ function MetricList({
 export function CollectionSummary({
   collection,
   completing,
+  canComplete,
+  canContinueToNutrition,
   onComplete,
   onCorrect,
 }: {
   collection: ClinicalCollectionView;
   completing: boolean;
+  canComplete: boolean;
+  canContinueToNutrition: boolean;
   onComplete: () => Promise<void>;
   onCorrect: (step: ClinicalCollectionStepKey) => void;
 }) {
@@ -182,7 +178,7 @@ export function CollectionSummary({
       step !== "POSTURAL_ASSESSMENT" &&
       collection.records[recordKey[step]].status !== "COMPLETED",
   );
-  const missing = pending.flatMap((step) =>
+  const incompleteRequiredFields = pending.flatMap((step) =>
     collection.records[recordKey[step]].missingRequiredFields.map(
       (field) => `${clinicalStepLabels[step]}: ${field}`,
     ),
@@ -191,38 +187,23 @@ export function CollectionSummary({
     anthropometry.data.bmi,
     collection.patientAge,
   );
-  const assessedAt = evaluationDate(collection);
+  const sourceDates = assessmentSummarySourceDates(collection);
+  const missingInformation = assessmentSummaryMissingInformation(collection);
+  const integrityIssues = assessmentSummaryIntegrityIssues(collection);
+  const anamnesis = collection.anamnesis?.data;
   const composition = compositionMetrics.flatMap((metric) => {
     const value = bioimpedance.data[metric.key];
     return isMeasurement(value)
       ? [{ label: metric.label, value, unit: metric.unit }]
       : [];
   });
-  const totalBioimpedanceFields = bioimpedanceGroups
-    .flatMap((group) => group.fields)
-    .filter((field) => field.key !== "weightKg" && field.key !== "bmi").length;
-  const bioimpedanceStatus =
-    composition.length === 0
-      ? "Bioimpedância não realizada."
-      : composition.length < totalBioimpedanceFields
-        ? "Bioimpedância parcialmente preenchida."
-        : "Bioimpedância completa.";
   const perimetryValues = perimetryMetrics.flatMap((metric) => {
     const value = perimetry.data[metric.key] as number | undefined;
     return isMeasurement(value)
       ? [{ label: metric.label, value, unit: "cm" }]
       : [];
   });
-  const perimetryStatus =
-    perimetryValues.length === 0
-      ? "Perimetria não realizada neste atendimento."
-      : perimetryValues.length < perimetryMetrics.length
-        ? "Perimetria parcial."
-        : "Perimetria completa.";
   const bilateralDifferences = calculateBilateralDifferences(perimetry.data);
-  const measuredAsymmetries = bilateralDifferences.filter(
-    (comparison) => comparison.differenceCm > 0,
-  );
   const waistHipRatio = calculateRatio(
     perimetry.data.waistCm,
     perimetry.data.hipCm,
@@ -231,17 +212,6 @@ export function CollectionSummary({
     perimetry.data.waistCm,
     anthropometry.data.heightCm,
   );
-  const mainFindings = [
-    bmiClassification && isMeasurement(anthropometry.data.bmi)
-      ? `IMC de ${formatClinicalNumber(anthropometry.data.bmi, 2, 2)} kg/m² em faixa compatível com ${bmiClassification}.`
-      : undefined,
-    isMeasurement(bioimpedance.data.bodyFatPercent)
-      ? `Percentual de gordura informado pelo equipamento: ${formatClinicalNumber(bioimpedance.data.bodyFatPercent)}%.`
-      : undefined,
-    ...measuredAsymmetries.map(bilateralDifferenceSentence),
-    bioimpedanceStatus,
-    perimetryStatus,
-  ].filter((value): value is string => Boolean(value));
   const posturalViews = [
     ["ANTERIOR", "Vista anterior"],
     ["POSTERIOR", "Vista posterior"],
@@ -250,28 +220,52 @@ export function CollectionSummary({
   ] as const;
   const posturalFindings = posturalViews.flatMap(([key, label]) => {
     const view = posturalAssessment.data.views[key];
-    return view.state === "FINDING_RECORDED" && view.observation?.trim()
-      ? [`${label}: ${view.observation.trim()}`]
-      : [];
+    if (view.state !== "FINDING_RECORDED") return [];
+    const segmentFindings = posturalSegmentsByView[key].flatMap((segment) => {
+      const finding = view.segments?.[segment.key];
+      const detail = [finding?.selectedOption, finding?.observation]
+        .map((value) => value?.trim())
+        .filter((value): value is string => Boolean(value));
+      return detail.length
+        ? [`${label} · ${segment.name}: ${detail.join(" — ")}`]
+        : [];
+    });
+    return [
+      ...segmentFindings,
+      ...(view.observation?.trim()
+        ? [`${label} · observação geral: ${view.observation.trim()}`]
+        : []),
+    ];
   });
-  const missingInformation = [
-    bioimpedanceStatus !== "Bioimpedância completa."
-      ? bioimpedanceStatus
-      : undefined,
-    perimetryStatus !== "Perimetria completa." ? perimetryStatus : undefined,
-    waistHipRatio === undefined
-      ? "Dados insuficientes para cálculo da relação cintura/quadril."
-      : undefined,
-    waistHeightRatio === undefined
-      ? "Dados insuficientes para cálculo da relação cintura/estatura."
-      : undefined,
-    posturalAssessment.data.views &&
-    Object.values(posturalAssessment.data.views).every(
-      (view) => view.state === "NOT_ASSESSED",
-    )
-      ? "Avaliação postural não realizada."
-      : undefined,
-  ].filter((value): value is string => Boolean(value));
+  const medicationItems =
+    anamnesis?.medications.map((item) =>
+      [item.name, item.dose, item.frequency, item.reason]
+        .filter(Boolean)
+        .join(" · "),
+    ) ?? [];
+  const supplementItems =
+    anamnesis?.supplements.map((item) =>
+      [item.name, item.dose, item.frequency]
+        .filter(Boolean)
+        .join(" · "),
+    ) ?? [];
+  const surgeryItems =
+    anamnesis?.surgeries.map((item) =>
+      [item.procedure, item.date, item.notes].filter(Boolean).join(" · "),
+    ) ?? [];
+  const injuryItems =
+    anamnesis?.injuries.map((item) =>
+      [item.region, item.date, item.situation, item.notes]
+        .filter(Boolean)
+        .join(" · "),
+    ) ?? [];
+  const professional = collection.connectedProfessional;
+  const professionalValue = professional
+    ? [professional.professionalName]
+        .map((value) => value?.trim())
+        .filter(Boolean)
+        .join(" · ") || ASSESSMENT_NOT_INFORMED
+    : ASSESSMENT_NOT_INFORMED;
 
   return (
     <div className="space-y-4">
@@ -290,7 +284,7 @@ export function CollectionSummary({
         </div>
       ) : null}
 
-      <PendingFieldsAlert fields={missing} />
+      <PendingFieldsAlert fields={incompleteRequiredFields} />
 
       {posturalAssessment.status !== "COMPLETED" ? (
         <div
@@ -319,21 +313,103 @@ export function CollectionSummary({
                 {collection.patientCode}
               </p>
             </div>
-            {assessedAt ? (
-              <time
-                className="text-xs font-semibold text-emerald-100"
-                dateTime={assessedAt.toISOString()}
-              >
-                Avaliação em{" "}
-                {new Intl.DateTimeFormat("pt-BR").format(assessedAt)}
-              </time>
-            ) : null}
+            <time className="text-xs font-semibold text-emerald-100">
+              Atendimento em {formatDate(collection.attendanceStartedAt)}
+            </time>
           </div>
         </div>
-        <p className="px-5 py-5 text-sm leading-7 text-slate-700 sm:px-6">
-          {overviewSentence(collection, bmiClassification)}
-        </p>
+        <dl className="grid gap-4 px-5 py-5 sm:grid-cols-2 sm:px-6 lg:grid-cols-3">
+          <SummaryDatum
+            label="Idade"
+            value={
+              collection.patientAge !== undefined
+                ? `${collection.patientAge} anos`
+                : ASSESSMENT_NOT_INFORMED
+            }
+          />
+          <SummaryDatum
+            label="Sexo cadastrado"
+            value={
+              collection.patientSex
+                ? sexLabels[collection.patientSex]
+                : ASSESSMENT_NOT_INFORMED
+            }
+          />
+          <SummaryDatum
+            label="Profissão"
+            value={displayText(collection.patientProfession)}
+          />
+          <SummaryDatum
+            label="Telefone"
+            value={displayText(collection.patientPhone)}
+          />
+          <SummaryDatum label="Profissional responsável" value={professionalValue} />
+          {collection.patientCode.trim() ? (
+            <SummaryDatum label="Código clínico" value={collection.patientCode} />
+          ) : null}
+        </dl>
       </section>
+
+      <SectionCard
+        description="Dados do registro de Anamnese vinculado a este atendimento."
+        title="Anamnese clínica"
+      >
+        <dl className="grid gap-5 sm:grid-cols-2">
+          <SummaryDatum
+            label="Objetivo principal"
+            value={
+              anamnesis
+                ? assessmentObjectiveLabel(anamnesis.primaryObjective)
+                : ASSESSMENT_NOT_INFORMED
+            }
+          />
+          <SummaryDatum
+            label="Queixa principal"
+            value={displayText(anamnesis?.chiefComplaint)}
+          />
+          <SummaryDatum
+            label="Objetivos secundários"
+            value={
+              anamnesis?.secondaryObjectives.length
+                ? anamnesis.secondaryObjectives
+                    .map((objective) => assessmentObjectiveLabel(objective))
+                    .join(", ")
+                : ASSESSMENT_NOT_INFORMED
+            }
+          />
+          <SummaryDatum
+            label="Situação atual"
+            value={displayText(anamnesis?.currentIllness.currentSituation)}
+          />
+          <SummaryDatum
+            label="Restrições e intolerâncias"
+            value={displayText(anamnesis?.nutrition.restrictions)}
+          />
+        </dl>
+        <div className="mt-5 grid gap-5 border-t border-slate-100 pt-5 sm:grid-cols-2">
+          <div>
+            <h3 className="text-xs font-bold uppercase tracking-wide text-slate-500">Diagnósticos e patologias</h3>
+            <div className="mt-2"><TextList items={assessmentConditionLabels(collection)} /></div>
+          </div>
+          <div>
+            <h3 className="text-xs font-bold uppercase tracking-wide text-slate-500">Alergias registradas</h3>
+            <div className="mt-2"><TextList items={anamnesis?.allergies ?? []} /></div>
+          </div>
+          <div><h3 className="text-xs font-bold uppercase tracking-wide text-slate-500">Medicamentos</h3><div className="mt-2"><TextList items={medicationItems} /></div></div>
+          <div><h3 className="text-xs font-bold uppercase tracking-wide text-slate-500">Suplementos</h3><div className="mt-2"><TextList items={supplementItems} /></div></div>
+          <div><h3 className="text-xs font-bold uppercase tracking-wide text-slate-500">Cirurgias</h3><div className="mt-2"><TextList items={surgeryItems} /></div></div>
+          <div><h3 className="text-xs font-bold uppercase tracking-wide text-slate-500">Lesões e limitações</h3><div className="mt-2"><TextList items={injuryItems} /></div></div>
+        </div>
+      </SectionCard>
+
+      <SectionCard title="Antropometria">
+        <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <SummaryDatum label="Peso" value={isMeasurement(anthropometry.data.weightKg) ? `${formatClinicalNumber(anthropometry.data.weightKg)} kg` : ASSESSMENT_NOT_INFORMED} />
+          <SummaryDatum label="Altura" value={isMeasurement(anthropometry.data.heightCm) ? `${formatClinicalNumber(anthropometry.data.heightCm / 100, 2, 2)} m` : ASSESSMENT_NOT_INFORMED} />
+          <SummaryDatum label="IMC" value={isMeasurement(anthropometry.data.bmi) ? `${formatClinicalNumber(anthropometry.data.bmi, 2, 2)} kg/m²` : ASSESSMENT_NOT_INFORMED} />
+          <SummaryDatum label="Classificação existente" value={bmiClassification ?? ASSESSMENT_NOT_INFORMED} />
+        </dl>
+      </SectionCard>
 
       <div className="grid gap-4 xl:grid-cols-2">
         <SectionCard
@@ -344,7 +420,7 @@ export function CollectionSummary({
             <MetricList items={composition} />
           ) : (
             <p className="text-sm text-slate-500">
-              Bioimpedância não realizada.
+              {ASSESSMENT_NOT_INFORMED}
             </p>
           )}
         </SectionCard>
@@ -357,7 +433,7 @@ export function CollectionSummary({
             <MetricList items={perimetryValues} />
           ) : (
             <p className="text-sm text-slate-500">
-              Perimetria não realizada neste atendimento.
+              {ASSESSMENT_NOT_INFORMED}
             </p>
           )}
           {bilateralDifferences.length ? (
@@ -387,7 +463,7 @@ export function CollectionSummary({
             <dd className="mt-1 text-sm font-black text-slate-900">
               {waistHipRatio !== undefined
                 ? formatClinicalNumber(waistHipRatio, 2, 2)
-                : "Dados insuficientes"}
+                : ASSESSMENT_NOT_INFORMED}
             </dd>
           </div>
           <div>
@@ -397,50 +473,52 @@ export function CollectionSummary({
             <dd className="mt-1 text-sm font-black text-slate-900">
               {waistHeightRatio !== undefined
                 ? formatClinicalNumber(waistHeightRatio, 2, 2)
-                : "Dados insuficientes"}
+                : ASSESSMENT_NOT_INFORMED}
             </dd>
           </div>
         </dl>
       </SectionCard>
 
-      {posturalFindings.length ? (
-        <SectionCard title="Achados posturais registrados">
-          <ul className="space-y-2">
-            {posturalFindings.map((finding) => (
-              <li className="text-sm leading-6 text-slate-700" key={finding}>
-                {finding}
-              </li>
-            ))}
-          </ul>
+      <SectionCard title="Avaliação Postural">
+        <TextList items={posturalFindings} />
+        <dl className="mt-5 grid gap-4 border-t border-slate-100 pt-5 sm:grid-cols-2">
+          <SummaryDatum label="Resumo técnico registrado" value={displayText(posturalAssessment.data.technicalSummary?.editedSummary ?? posturalAssessment.data.technicalSummary?.generatedOriginal)} />
+          <SummaryDatum label="Conclusão do avaliador" value={displayText(posturalAssessment.data.evaluatorConclusion)} />
+        </dl>
+      </SectionCard>
+
+      <SectionCard title="Observações clínicas registradas">
+        <TextList
+          items={[
+            anamnesis?.generalNotes ?? "",
+            anthropometry.data.notes ?? "",
+            perimetry.data.notes ?? "",
+            posturalAssessment.data.notes ?? "",
+            posturalAssessment.data.identifiedChangesNotes ?? "",
+            posturalAssessment.data.functionalLimitationsNotes ?? "",
+            posturalAssessment.data.futureCorrectiveExercisesNote ?? "",
+            posturalAssessment.data.followUp?.observation ?? "",
+          ]}
+        />
+      </SectionCard>
+
+      <SectionCard title="Datas das fontes consolidadas">
+        <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {sourceDates.map((source) => (
+            <SummaryDatum key={source.label} label={source.label} value={formatDate(source.value)} />
+          ))}
+        </dl>
+      </SectionCard>
+
+      {integrityIssues.length ? (
+        <SectionCard title="Alertas para revisão profissional">
+          <TextList items={integrityIssues} />
         </SectionCard>
       ) : null}
 
-      <SectionCard title="Principais achados da avaliação">
-        <ul className="space-y-2">
-          {mainFindings.map((finding) => (
-            <li
-              className="flex gap-2 text-sm leading-6 text-slate-700"
-              key={finding}
-            >
-              <span
-                aria-hidden="true"
-                className="mt-2 size-1.5 shrink-0 rounded-full bg-[#3b9b7d]"
-              />
-              <span>{finding}</span>
-            </li>
-          ))}
-        </ul>
-      </SectionCard>
-
       {missingInformation.length ? (
         <SectionCard title="Dados não disponíveis">
-          <ul className="space-y-2">
-            {missingInformation.map((information) => (
-              <li className="text-sm leading-6 text-slate-600" key={information}>
-                {information}
-              </li>
-            ))}
-          </ul>
+          <TextList items={missingInformation} />
         </SectionCard>
       ) : null}
 
@@ -475,33 +553,29 @@ export function CollectionSummary({
       </SectionCard>
 
       <ResponsiveActionBar>
-        
-        <Link
+        <button
           className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-200 px-4 text-sm font-black text-slate-700 hover:bg-slate-50"
-          href={`/pacientes/${collection.patientId}?scenario=${collection.scenario}`}
+          onClick={() => onCorrect("POSTURAL_ASSESSMENT")}
+          type="button"
         >
-          Voltar ao prontuário
-        </Link>
-        {collection.completed ? (
-          <Link
-            className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#12664f] px-6 text-sm font-black text-white hover:bg-[#0a4938]"
-            href={nutritionClinicalFlowHref("NUTRITION_STRATEGY", {
-              patientId: collection.patientId,
-              attendanceId: collection.attendanceId,
-              scenario: collection.scenario,
-            })}
-          >
-            Continuar para Estratégia Nutricional
-          </Link>
-        ) : null}
-        {!collection.completed ? (
+          Voltar para Avaliação Postural
+        </button>
+        {canContinueToNutrition || !collection.completed ? (
           <button
             className="min-h-11 rounded-xl bg-[#12664f] px-6 text-sm font-black text-white hover:bg-[#0a4938] disabled:cursor-not-allowed disabled:bg-slate-300"
-            disabled={!collection.nutritionFlowReady || completing}
+            disabled={
+              completing ||
+              (!collection.completed &&
+                (!collection.nutritionFlowReady || !canComplete))
+            }
             onClick={onComplete}
             type="button"
           >
-            {completing ? "Concluindo..." : "Concluir Avaliação e continuar"}
+            {completing
+              ? "Salvando..."
+              : canContinueToNutrition
+                ? "Salvar e continuar"
+                : "Confirmar resumo"}
           </button>
         ) : null}
       </ResponsiveActionBar>

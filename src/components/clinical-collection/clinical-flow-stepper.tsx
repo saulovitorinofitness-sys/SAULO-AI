@@ -5,6 +5,7 @@ import { useEffect, useRef } from "react";
 import { CheckIcon } from "@/components/ui/icons";
 import {
   getNutritionClinicalFlowStepAccess,
+  isVisibleNutritionClinicalFlowStep,
   type NutritionClinicalFlowStep,
   type NutritionClinicalFlowStepId,
 } from "@/features/nutrition-clinical-flow";
@@ -20,6 +21,7 @@ export function ClinicalFlowStepper({
   flow: readonly NutritionClinicalFlowStep[];
   onSelect: (step: NutritionClinicalFlowStepId) => void;
 }) {
+  const visibleFlow = flow.filter(isVisibleNutritionClinicalFlowStep);
   const listRef = useRef<HTMLOListElement>(null);
   const activeStepRef = useRef<HTMLLIElement>(null);
 
@@ -65,7 +67,7 @@ export function ClinicalFlowStepper({
         ref={listRef}
         tabIndex={0}
       >
-        {flow.map((step) => {
+        {visibleFlow.map((step, stepIndex) => {
           const active = step.id === activeStep;
           const resolvedAccess = getNutritionClinicalFlowStepAccess(
             flow,
@@ -78,13 +80,15 @@ export function ClinicalFlowStepper({
                   ...resolvedAccess,
                   canOpen: true,
                   status:
-                    resolvedAccess.status === "COMPLETED"
-                      ? "COMPLETED"
+                    resolvedAccess.status === "COMPLETED" ||
+                    resolvedAccess.status === "SKIPPED"
+                      ? resolvedAccess.status
                       : "NOT_STARTED",
                   blockedReason: undefined,
                 } as const
               : resolvedAccess;
           const completed = access.status === "COMPLETED";
+          const skipped = access.status === "SKIPPED";
           const blockedReasonId = access.blockedReason
             ? `clinical-flow-blocked-${step.id.toLowerCase()}`
             : undefined;
@@ -102,7 +106,9 @@ export function ClinicalFlowStepper({
                 aria-disabled={!access.canOpen}
                 className={`flex min-h-12 w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm font-bold transition ${
                   active
-                    ? "bg-[#e7f2ed] text-[#0a4938]"
+                    ? skipped
+                      ? "bg-amber-50 text-amber-950 ring-1 ring-inset ring-amber-300"
+                      : "bg-[#e7f2ed] text-[#0a4938]"
                     : access.canOpen
                       ? "text-slate-600 hover:bg-slate-50"
                       : "cursor-not-allowed text-slate-400"
@@ -116,6 +122,8 @@ export function ClinicalFlowStepper({
                   className={`grid size-7 shrink-0 place-items-center rounded-full text-xs font-black ${
                     completed
                       ? "bg-emerald-600 text-white"
+                      : skipped
+                        ? "bg-amber-100 text-amber-800 ring-1 ring-inset ring-amber-300"
                       : active
                         ? "bg-[#12664f] text-white"
                         : "bg-slate-100 text-slate-500"
@@ -123,8 +131,10 @@ export function ClinicalFlowStepper({
                 >
                   {completed ? (
                     <CheckIcon className="size-3.5" />
+                  ) : skipped ? (
+                    <span aria-hidden="true">—</span>
                   ) : (
-                    step.order
+                    stepIndex + 1
                   )}
                 </span>
                 <span className="min-w-0">
@@ -132,6 +142,8 @@ export function ClinicalFlowStepper({
                   <span className="mt-0.5 block text-[10px] font-bold uppercase tracking-wide text-slate-400">
                     {access.status === "COMPLETED"
                       ? "Concluída"
+                      : access.status === "SKIPPED"
+                        ? "Não realizada"
                       : access.status === "IN_PROGRESS"
                         ? "Em andamento"
                         : access.status === "NOT_STARTED"

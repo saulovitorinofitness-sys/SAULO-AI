@@ -1,9 +1,10 @@
 import type { ClinicalCollectionScenarioKey } from "@/features/clinical-collection";
 import type { SessionUser } from "@/features/mvp";
 import type { EntityId, ISODateTime } from "@/modules/shared";
+import type { NutritionMethod } from "./prescription";
 
 export type NutritionStrategyStatus = "DRAFT" | "ACTIVE";
-export type NutritionMethod = "STANDARD" | "LOW_CARB" | "CARB_CYCLING";
+export type { NutritionMethod } from "./prescription";
 export type EnergyTargetMode = "CALORIES" | "BMR";
 
 export interface MacronutrientTarget {

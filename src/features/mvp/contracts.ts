@@ -24,6 +24,7 @@ export type SessionUser = Pick<
   "id" | "fullName" | "email" | "status"
 > & {
   readonly roleName: string;
+  readonly profileType?: "SYSTEM_OWNER" | "PROFESSIONAL" | "ADMINISTRATIVE" | "STUDENT";
 };
 
 export interface FrontendAccessSnapshot {
@@ -53,6 +54,15 @@ export interface PatientListItem {
   readonly lastAttendanceAt?: ISODateTime;
   readonly masterRecordId: EntityId;
   readonly openAttendanceId?: EntityId;
+  readonly openAttendanceStatus?: "DRAFT" | "IN_PROGRESS";
+  readonly hasAttendanceHistory?: boolean;
+  readonly nextReturnAt?: ISODateTime;
+  readonly clinicalStatus?:
+    | "NO_ATTENDANCE"
+    | "PREPARED"
+    | "IN_PROGRESS"
+    | "COMPLETED"
+    | "RETURN_SCHEDULED";
   readonly completionPercentage?: number;
 
   /**

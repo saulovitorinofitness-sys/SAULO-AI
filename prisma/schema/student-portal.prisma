@@ -1,0 +1,70 @@
+enum StudentPortalLinkStatus {
+  ACTIVE
+  REVOKED
+}
+
+enum StudentPortalContentType {
+  DIET
+  WORKOUT
+  ASSESSMENTS
+  POSTURAL_MEDIA
+  PAYMENTS
+}
+
+model StudentPortalLink {
+  id             String                  @id @default(uuid()) @db.Uuid
+  userId         String                  @unique @db.Uuid
+  patientId      String                  @unique @db.Uuid
+  masterRecordId String                  @unique @db.Uuid
+  status         StudentPortalLinkStatus @default(ACTIVE)
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
+
+  user         User         @relation("StudentPortalUser", fields: [userId], references: [id], onDelete: Restrict)
+  patient      Patient      @relation("StudentPortalPatient", fields: [patientId], references: [id], onDelete: Restrict)
+  masterRecord MasterRecord @relation("StudentPortalMasterRecord", fields: [masterRecordId], references: [id], onDelete: Restrict)
+
+  @@index([status])
+}
+
+model StudentPortalInvitation {
+  id              String    @id @default(uuid()) @db.Uuid
+  patientId       String    @db.Uuid
+  masterRecordId  String    @db.Uuid
+  tokenHash       String    @unique @db.VarChar(64)
+  expiresAt       DateTime
+  consumedAt      DateTime?
+  revokedAt       DateTime?
+  invitedByUserId String    @db.Uuid
+  consumedByUserId String?  @db.Uuid
+  createdAt       DateTime  @default(now())
+
+  patient       Patient      @relation("StudentPortalInvitationPatient", fields: [patientId], references: [id], onDelete: Restrict)
+  masterRecord  MasterRecord @relation("StudentPortalInvitationMasterRecord", fields: [masterRecordId], references: [id], onDelete: Restrict)
+  invitedBy     User         @relation("StudentPortalInvitationCreator", fields: [invitedByUserId], references: [id], onDelete: Restrict)
+  consumedBy    User?        @relation("StudentPortalInvitationConsumer", fields: [consumedByUserId], references: [id], onDelete: Restrict)
+
+  @@index([patientId, createdAt])
+  @@index([masterRecordId, createdAt])
+  @@index([expiresAt])
+}
+
+model StudentPortalRelease {
+  id               String                   @id @default(uuid()) @db.Uuid
+  patientId        String                   @db.Uuid
+  masterRecordId   String                   @db.Uuid
+  contentType      StudentPortalContentType
+  releasedByUserId String                   @db.Uuid
+  releasedAt       DateTime                 @default(now())
+  revokedAt        DateTime?
+  revokedByUserId  String?                  @db.Uuid
+  updatedAt        DateTime                 @updatedAt
+
+  patient       Patient      @relation("StudentPortalReleasePatient", fields: [patientId], references: [id], onDelete: Restrict)
+  masterRecord  MasterRecord @relation("StudentPortalReleaseMasterRecord", fields: [masterRecordId], references: [id], onDelete: Restrict)
+  releasedBy    User         @relation("StudentPortalReleaseCreator", fields: [releasedByUserId], references: [id], onDelete: Restrict)
+  revokedBy     User?        @relation("StudentPortalReleaseRevoker", fields: [revokedByUserId], references: [id], onDelete: Restrict)
+
+  @@unique([masterRecordId, contentType])
+  @@index([patientId, contentType, revokedAt])
+}

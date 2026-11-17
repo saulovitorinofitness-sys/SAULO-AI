@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import {
@@ -13,7 +13,11 @@ import { SectionGuide } from "@/components/ui/section-guide";
 import {
   clinicalAnamnesisService,
   clinicalHistoryOptions,
+  additionalDiagnoses,
   familyHistoryOptions,
+  filterPathologyOptionsBySex,
+  getPathologySexCompatibility,
+  incompatiblePathologies,
   objectiveOptions,
   type AnamnesisObjective,
   type ClinicalAnamnesisData,
@@ -21,6 +25,12 @@ import {
   type ClinicalHistoryItem,
   type FamilyHistoryItem,
 } from "@/features/clinical-anamnesis";
+import {
+  clinicalAnamnesisDraftStorageKey,
+  parseClinicalAnamnesisDraft,
+  serializeClinicalAnamnesisDraft,
+  type StoredClinicalAnamnesisDraft,
+} from "@/features/clinical-anamnesis/draft-storage";
 
 const dateTime = new Intl.DateTimeFormat("pt-BR", {
   dateStyle: "medium",
@@ -29,7 +39,7 @@ const dateTime = new Intl.DateTimeFormat("pt-BR", {
 
 const areaClass = `${clinicalInputClass} min-h-24 resize-y py-3`;
 
-type SaveState = "IDLE" | "SAVING" | "SAVED" | "ERROR";
+type SaveState = "IDLE" | "UNSAVED" | "SAVING" | "SAVED" | "ERROR";
 type SectionKey =
   | "CONSULTA"
   | "HISTORICO"
@@ -184,10 +194,10 @@ function filledText(value: string) {
 }
 
 export function ClinicalAnamnesis({
-  continueHref,
+  initialSection = "CONSULTA",
   initialView,
 }: {
-  readonly continueHref?: string;
+  readonly initialSection?: SectionKey;
   readonly initialView: ClinicalAnamnesisView;
 }) {
   const router = useRouter();
@@ -195,24 +205,72 @@ export function ClinicalAnamnesis({
   const [data, setData] = useState<ClinicalAnamnesisData>(initialView.data);
   const [editing, setEditing] = useState(false);
   const [saveState, setSaveState] = useState<SaveState>("IDLE");
-  const [activeSection, setActiveSection] = useState<SectionKey>("CONSULTA");
+  const [saveError, setSaveError] = useState<string>();
+  const [recoverableDraft, setRecoverableDraft] =
+    useState<StoredClinicalAnamnesisDraft | null>(null);
+  const [activeSection, setActiveSection] = useState<SectionKey>(initialSection);
   const [diagnosisDraft, setDiagnosisDraft] = useState("");
+  const [diagnosisNotice, setDiagnosisNotice] = useState<{
+    readonly message: string;
+    readonly tone: "ERROR" | "WARNING";
+  }>();
   const [allergyDraft, setAllergyDraft] = useState("");
+  const autoSaveTimer = useRef<number | undefined>(undefined);
+  const autoSaveInFlight = useRef(false);
+  const queuedAutoSave = useRef<
+    { data: ClinicalAnamnesisData; fingerprint: string } | undefined
+  >(undefined);
+  const autoSaveRunner = useRef<
+    | ((dataToSave: ClinicalAnamnesisData, fingerprint: string) => Promise<void>)
+    | undefined
+  >(undefined);
+  const latestData = useRef(data);
+  const latestFingerprint = useRef(JSON.stringify(data));
+  const lastServerFingerprint = useRef(JSON.stringify(initialView.data));
+  const recoveryDecisionPending = useRef(false);
+  const localDraftKey = clinicalAnamnesisDraftStorageKey(
+    initialView.patientId,
+    initialView.attendanceId,
+  );
 
   useEffect(() => {
     let active = true;
     void clinicalAnamnesisService
-      .get({ patientId: initialView.patientId, scenario: initialView.scenario })
+      .get({
+        patientId: initialView.patientId,
+        attendanceId: initialView.attendanceId,
+        scenario: initialView.scenario,
+      })
       .then((stored) => {
-        if (active && stored) {
-          setView(stored);
-          setData(stored.data);
+        if (active) {
+          const currentView = stored ?? initialView;
+          const serverFingerprint = JSON.stringify(currentView.data);
+          lastServerFingerprint.current = serverFingerprint;
+          latestData.current = currentView.data;
+          latestFingerprint.current = serverFingerprint;
+          setView(currentView);
+          setData(currentView.data);
+          try {
+            const raw = window.localStorage.getItem(localDraftKey);
+            const localDraft = raw ? parseClinicalAnamnesisDraft(raw) : null;
+            if (
+              localDraft &&
+              JSON.stringify(localDraft.data) !== serverFingerprint
+            ) {
+              recoveryDecisionPending.current = true;
+              setRecoverableDraft(localDraft);
+            } else if (raw) {
+              window.localStorage.removeItem(localDraftKey);
+            }
+          } catch {
+            // O formulário continua disponível com a cópia do servidor.
+          }
         }
       });
     return () => {
       active = false;
     };
-  }, [initialView]);
+  }, [initialView, localDraftKey]);
 
   const sectionCompletion = useMemo(
     () => ({
@@ -227,7 +285,8 @@ export function ClinicalAnamnesis({
       MEDICAMENTOS:
         data.medications.length > 0 || data.supplements.length > 0,
       RESTRICOES:
-        data.allergies.length > 0 || filledText(data.nutrition.restrictions),
+        data.allergyStatus !== "NOT_INFORMED" ||
+        filledText(data.nutrition.restrictions),
       HABITOS:
         filledText(data.sleep.hours) ||
         filledText(data.sleep.quality) ||
@@ -250,6 +309,32 @@ export function ClinicalAnamnesis({
     return Math.round((values.filter(Boolean).length / values.length) * 100);
   }, [sectionCompletion]);
 
+  const visibleClinicalHistoryOptions = useMemo(() => {
+    const compatible = new Set(
+      filterPathologyOptionsBySex(
+        clinicalHistoryOptions,
+        view.patientSex,
+      ).map(([value]) => value),
+    );
+
+    return clinicalHistoryOptions.filter(
+      ([value]) => compatible.has(value) || data.clinicalHistory.includes(value),
+    );
+  }, [data.clinicalHistory, view.patientSex]);
+
+  const incompatibleSavedDiagnoses = useMemo(() => {
+    const structured = data.clinicalHistory.map(
+      (value) =>
+        clinicalHistoryOptions.find(([option]) => option === value)?.[1] ??
+        value,
+    );
+
+    return incompatiblePathologies(
+      [...structured, ...additionalDiagnoses(data.clinicalHistoryNotes)],
+      view.patientSex,
+    );
+  }, [data.clinicalHistory, data.clinicalHistoryNotes, view.patientSex]);
+
   const sections = useMemo(
     () =>
       [
@@ -268,32 +353,259 @@ export function ClinicalAnamnesis({
   const update = <K extends keyof ClinicalAnamnesisData>(
     key: K,
     value: ClinicalAnamnesisData[K],
-  ) => setData((current) => ({ ...current, [key]: value }));
+  ) => {
+    setData((current) => ({ ...current, [key]: value }));
+    setSaveState((current) =>
+      current === "SAVING" ? current : "UNSAVED",
+    );
+    setSaveError(undefined);
+  };
 
-  async function save() {
+  function addDiagnosis() {
+    const diagnosis = diagnosisDraft.trim();
+    if (!diagnosis) return;
+
+    const compatibility = getPathologySexCompatibility(
+      diagnosis,
+      view.patientSex,
+    );
+    if (compatibility.status === "INCOMPATIBLE") {
+      setDiagnosisNotice({
+        message: compatibility.message!,
+        tone: "ERROR",
+      });
+      return;
+    }
+
+    const diagnoses = additionalDiagnoses(data.clinicalHistoryNotes);
+    if (
+      !diagnoses.some(
+        (item) =>
+          item.toLocaleLowerCase("pt-BR") ===
+          diagnosis.toLocaleLowerCase("pt-BR"),
+      )
+    ) {
+      update(
+        "clinicalHistoryNotes",
+        [...diagnoses, diagnosis].join("\n"),
+      );
+    }
+
+    setDiagnosisNotice(
+      compatibility.status === "SEX_REQUIRED"
+        ? { message: compatibility.message!, tone: "WARNING" }
+        : undefined,
+    );
+    setDiagnosisDraft("");
+  }
+
+  async function save(saveMode: "DRAFT" | "COMPLETE") {
+    if (
+      saveMode === "COMPLETE" &&
+      !window.confirm(
+        "Concluir esta Anamnese? O registro será consolidado como versão clínica deste atendimento.",
+      )
+    ) {
+      return;
+    }
+
+    if (autoSaveTimer.current !== undefined) {
+      window.clearTimeout(autoSaveTimer.current);
+      autoSaveTimer.current = undefined;
+    }
+    queuedAutoSave.current = undefined;
+    const dataToSave = latestData.current;
     setSaveState("SAVING");
+    setSaveError(undefined);
     try {
       const result = await clinicalAnamnesisService.save({
         patientId: view.patientId,
+        attendanceId: view.attendanceId,
         scenario: view.scenario,
-        data,
+        data: dataToSave,
+        saveMode,
       });
+      const serverFingerprint = JSON.stringify(result.view.data);
+      lastServerFingerprint.current = serverFingerprint;
+      latestData.current = result.view.data;
+      latestFingerprint.current = serverFingerprint;
       setView(result.view);
       setData(result.view.data);
+      recoveryDecisionPending.current = false;
+      setRecoverableDraft(null);
+      try {
+        window.localStorage.removeItem(localDraftKey);
+      } catch {
+        // A finalização no servidor permanece válida sem acesso ao storage.
+      }
       setEditing(false);
       setSaveState("SAVED");
-      if (continueHref) {
-        router.push(continueHref);
+      setSaveError(undefined);
+      router.refresh();
+    } catch (error) {
+      if (error instanceof Error) {
+        setSaveError(error.message);
+      } else {
+        setSaveError("Não foi possível salvar a anamnese clínica.");
       }
-    } catch {
       setSaveState("ERROR");
     }
+  }
+
+  async function flushAutoSave(
+    dataToSave: ClinicalAnamnesisData,
+    fingerprint: string,
+  ) {
+    if (autoSaveInFlight.current) {
+      queuedAutoSave.current = { data: dataToSave, fingerprint };
+      return;
+    }
+
+    autoSaveInFlight.current = true;
+    setSaveState("SAVING");
+    setSaveError(undefined);
+    try {
+      const result = await clinicalAnamnesisService.save({
+        patientId: view.patientId,
+        attendanceId: view.attendanceId,
+        scenario: view.scenario,
+        data: dataToSave,
+        saveMode: "AUTOSAVE",
+      });
+      lastServerFingerprint.current = fingerprint;
+      setView(result.view);
+      if (latestFingerprint.current === fingerprint) {
+        try {
+          window.localStorage.removeItem(localDraftKey);
+        } catch {
+          // O rascunho no servidor já está protegido.
+        }
+        setSaveState("SAVED");
+      } else {
+        setSaveState("UNSAVED");
+      }
+    } catch (error) {
+      setSaveError(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível salvar automaticamente a anamnese clínica.",
+      );
+      setSaveState("ERROR");
+    } finally {
+      autoSaveInFlight.current = false;
+      const queued = queuedAutoSave.current;
+      queuedAutoSave.current = undefined;
+      if (queued && queued.fingerprint !== lastServerFingerprint.current) {
+        void flushAutoSave(queued.data, queued.fingerprint);
+      }
+    }
+  }
+
+  useEffect(() => {
+    autoSaveRunner.current = flushAutoSave;
+  });
+
+  useEffect(() => {
+    const fingerprint = JSON.stringify(data);
+    latestData.current = data;
+    latestFingerprint.current = fingerprint;
+
+    if (
+      !editing ||
+      recoveryDecisionPending.current ||
+      fingerprint === lastServerFingerprint.current
+    ) {
+      return;
+    }
+
+    try {
+      window.localStorage.setItem(
+        localDraftKey,
+        serializeClinicalAnamnesisDraft(data),
+      );
+    } catch {
+      // O autosave remoto ainda será tentado mesmo sem storage local.
+    }
+    setSaveState((current) => (current === "SAVING" ? current : "UNSAVED"));
+    if (autoSaveTimer.current !== undefined) {
+      window.clearTimeout(autoSaveTimer.current);
+    }
+    autoSaveTimer.current = window.setTimeout(() => {
+      autoSaveTimer.current = undefined;
+      void autoSaveRunner.current?.(data, fingerprint);
+    }, 1_200);
+
+    return () => {
+      if (autoSaveTimer.current !== undefined) {
+        window.clearTimeout(autoSaveTimer.current);
+        autoSaveTimer.current = undefined;
+      }
+    };
+  }, [data, editing, localDraftKey]);
+
+  function recoverLocalDraft() {
+    if (!recoverableDraft) return;
+    recoveryDecisionPending.current = false;
+    setRecoverableDraft(null);
+    setData(recoverableDraft.data);
+    setEditing(true);
+    setSaveError(undefined);
+    setSaveState("UNSAVED");
+  }
+
+  function discardLocalDraft() {
+    try {
+      window.localStorage.removeItem(localDraftKey);
+    } catch {
+      // O descarte em memória ainda impede a recuperação nesta sessão.
+    }
+    recoveryDecisionPending.current = false;
+    setRecoverableDraft(null);
+    setSaveError(undefined);
+    setSaveState("IDLE");
   }
 
   const disabled = !editing;
 
   return (
     <div className="space-y-4 pb-24">
+      {recoverableDraft ? (
+        <section
+          aria-labelledby="clinical-anamnesis-recovery-title"
+          aria-modal="false"
+          className="rounded-2xl border border-amber-300 bg-amber-50 p-4 shadow-sm"
+          role="alertdialog"
+        >
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2
+                className="text-sm font-black text-amber-950"
+                id="clinical-anamnesis-recovery-title"
+              >
+                Alterações locais recuperáveis
+              </h2>
+              <p className="mt-1 text-xs font-semibold text-amber-900">
+                Encontramos um rascunho protegido antes da interrupção.
+                Escolha recuperá-lo ou descartá-lo com segurança.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                onClick={discardLocalDraft}
+                size="small"
+                type="button"
+                variant="ghost"
+              >
+                Descartar alterações locais
+              </Button>
+              <Button onClick={recoverLocalDraft} size="small" type="button">
+                Recuperar alterações
+              </Button>
+            </div>
+          </div>
+        </section>
+      ) : null}
+
       <section className="rounded-2xl bg-[#103f32] p-5 text-white shadow-[0_16px_38px_rgb(10_73_56/0.14)] sm:p-6">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div>
@@ -334,25 +646,53 @@ export function ClinicalAnamnesis({
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <span
-            aria-live="polite"
-            className={`text-xs font-bold ${
-              saveState === "ERROR" ? "text-rose-700" : "text-emerald-700"
-            }`}
-          >
-            {saveState === "SAVING"
-              ? "Salvando…"
-              : saveState === "SAVED"
-                ? "Anamnese salva."
-                : saveState === "ERROR"
-                  ? "Erro ao salvar."
-                  : ""}
-          </span>
+          <div className="text-xs font-bold" aria-live="polite">
+            <span
+              className={
+                saveState === "ERROR" ? "text-rose-700" : "text-emerald-700"
+              }
+            >
+              {saveState === "SAVING"
+                ? "Salvando rascunho…"
+                : saveState === "SAVED"
+                  ? "Anamnese salva automaticamente."
+                  : saveState === "UNSAVED"
+                    ? "Alterações protegidas localmente. Autosave pendente…"
+                    : saveState === "ERROR"
+                      ? "Erro ao salvar."
+                      : ""}
+            </span>
+            {saveError ? (
+              <p className="mt-1 max-w-xl text-rose-700" role="alert">
+                {saveError}
+              </p>
+            ) : null}
+          </div>
           {editing ? (
             <>
               <Button
+                disabled={saveState === "SAVING"}
                 onClick={() => {
+                  if (autoSaveTimer.current !== undefined) {
+                    window.clearTimeout(autoSaveTimer.current);
+                    autoSaveTimer.current = undefined;
+                  }
+                  queuedAutoSave.current = undefined;
                   setData(view.data);
+                  latestData.current = view.data;
+                  latestFingerprint.current = JSON.stringify(view.data);
+                  lastServerFingerprint.current = JSON.stringify(view.data);
+                  recoveryDecisionPending.current = false;
+                  setRecoverableDraft(null);
+                  try {
+                    window.localStorage.removeItem(localDraftKey);
+                  } catch {
+                    // A edição ainda pode ser cancelada sem acesso ao storage.
+                  }
+                  setDiagnosisDraft("");
+                  setAllergyDraft("");
+                  setDiagnosisNotice(undefined);
+                  setSaveError(undefined);
                   setEditing(false);
                   setSaveState("IDLE");
                 }}
@@ -365,22 +705,49 @@ export function ClinicalAnamnesis({
               <Button
                 disabled={saveState === "SAVING"}
                 loading={saveState === "SAVING"}
-                onClick={save}
+                onClick={() => void save("DRAFT")}
+                size="small"
+                type="button"
+                variant="secondary"
+              >
+                Salvar rascunho
+              </Button>
+              <Button
+                disabled={saveState === "SAVING"}
+                loading={saveState === "SAVING"}
+                onClick={() => void save("COMPLETE")}
                 size="small"
                 type="button"
               >
-                {continueHref ? "Salvar e continuar" : "Salvar anamnese"}
+                Concluir Anamnese
               </Button>
             </>
           ) : (
-            <Button
-              disabled={!view.canEdit}
-              onClick={() => setEditing(true)}
-              size="small"
-              type="button"
-            >
-              Preencher ou editar
-            </Button>
+            <>
+              <Button
+                disabled={!view.canEdit}
+                onClick={() => {
+                  setSaveState("IDLE");
+                  setSaveError(undefined);
+                  setEditing(true);
+                }}
+                size="small"
+                type="button"
+              >
+                Preencher ou editar
+              </Button>
+              {view.status === "DRAFT" ? (
+                <Button
+                  disabled={!view.canEdit || saveState === "SAVING"}
+                  loading={saveState === "SAVING"}
+                  onClick={() => void save("COMPLETE")}
+                  size="small"
+                  type="button"
+                >
+                  Concluir Anamnese
+                </Button>
+              ) : null}
+            </>
           )}
         </div>
       </div>
@@ -571,10 +938,25 @@ export function ClinicalAnamnesis({
                 <SectionGuide>
                   Quais doenças ou condições clínicas o paciente possui?
                 </SectionGuide>
+                {view.patientSex === "NOT_INFORMED" ? (
+                  <p className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm font-semibold text-amber-900" role="status">
+                    Registre o sexo do paciente no cadastro para validar condições específicas. Nenhum sexo será presumido.
+                  </p>
+                ) : null}
+                {incompatibleSavedDiagnoses.length ? (
+                  <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-900" role="alert">
+                    <p className="font-black">Diagnóstico anterior requer revisão profissional.</p>
+                    <p className="mt-1 font-semibold">
+                      {incompatibleSavedDiagnoses
+                        .map(({ condition }) => condition)
+                        .join(", ")} {incompatibleSavedDiagnoses.length === 1 ? "é incompatível" : "são incompatíveis"} com o sexo registrado. {incompatibleSavedDiagnoses.length === 1 ? "O dado foi preservado e não será alterado automaticamente." : "Os dados foram preservados e não serão alterados automaticamente."}
+                    </p>
+                  </div>
+                ) : null}
                 <Checklist<ClinicalHistoryItem>
                   disabled={disabled}
                   onChange={(values) => update("clinicalHistory", values)}
-                  options={clinicalHistoryOptions}
+                  options={visibleClinicalHistoryOptions}
                   values={data.clinicalHistory}
                 />
                 <div className="mt-4">
@@ -587,56 +969,21 @@ export function ClinicalAnamnesis({
                         <input
                           className={clinicalInputClass}
                           id="clinicalHistoryNotes"
-                          onChange={(event) => setDiagnosisDraft(event.target.value)}
+                          onChange={(event) => {
+                            setDiagnosisDraft(event.target.value);
+                            setDiagnosisNotice(undefined);
+                          }}
                           onKeyDown={(event) => {
                             if (event.key !== "Enter") return;
                             event.preventDefault();
-                            const diagnosis = diagnosisDraft.trim();
-                            if (!diagnosis) return;
-                            const diagnoses = data.clinicalHistoryNotes
-                              .split("\n")
-                              .map((item) => item.trim())
-                              .filter(Boolean);
-                            if (
-                              !diagnoses.some(
-                                (item) =>
-                                  item.toLocaleLowerCase("pt-BR") ===
-                                  diagnosis.toLocaleLowerCase("pt-BR"),
-                              )
-                            ) {
-                              update(
-                                "clinicalHistoryNotes",
-                                [...diagnoses, diagnosis].join("\n"),
-                              );
-                            }
-                            setDiagnosisDraft("");
+                            addDiagnosis();
                           }}
                           placeholder="Digite o diagnóstico"
                           value={diagnosisDraft}
                         />
                         <Button
                           disabled={disabled || !diagnosisDraft.trim()}
-                          onClick={() => {
-                            const diagnosis = diagnosisDraft.trim();
-                            if (!diagnosis) return;
-                            const diagnoses = data.clinicalHistoryNotes
-                              .split("\n")
-                              .map((item) => item.trim())
-                              .filter(Boolean);
-                            if (
-                              !diagnoses.some(
-                                (item) =>
-                                  item.toLocaleLowerCase("pt-BR") ===
-                                  diagnosis.toLocaleLowerCase("pt-BR"),
-                              )
-                            ) {
-                              update(
-                                "clinicalHistoryNotes",
-                                [...diagnoses, diagnosis].join("\n"),
-                              );
-                            }
-                            setDiagnosisDraft("");
-                          }}
+                          onClick={addDiagnosis}
                           size="small"
                           type="button"
                           variant="secondary"
@@ -644,6 +991,19 @@ export function ClinicalAnamnesis({
                           Adicionar diagnóstico
                         </Button>
                       </div>
+
+                      {diagnosisNotice ? (
+                        <p
+                          className={`rounded-xl border p-3 text-sm font-semibold ${
+                            diagnosisNotice.tone === "ERROR"
+                              ? "border-rose-200 bg-rose-50 text-rose-900"
+                              : "border-amber-200 bg-amber-50 text-amber-900"
+                          }`}
+                          role={diagnosisNotice.tone === "ERROR" ? "alert" : "status"}
+                        >
+                          {diagnosisNotice.message}
+                        </p>
+                      ) : null}
 
                       {data.clinicalHistoryNotes
                         .split("\n")
@@ -726,7 +1086,7 @@ export function ClinicalAnamnesis({
                         notes: "",
                       })}
                       disabled={disabled}
-                      emptyLabel="Nenhuma cirurgia informada."
+                      emptyLabel="Não informado"
                       onChange={(rows) => update("surgeries", rows)}
                       rows={data.surgeries}
                       title="cirurgia"
@@ -752,7 +1112,7 @@ export function ClinicalAnamnesis({
                         notes: "",
                       })}
                       disabled={disabled}
-                      emptyLabel="Nenhuma lesão informada."
+                      emptyLabel="Não informado"
                       onChange={(rows) => update("injuries", rows)}
                       rows={data.injuries}
                       title="lesão"
@@ -788,7 +1148,7 @@ export function ClinicalAnamnesis({
                       reason: "",
                     })}
                     disabled={disabled}
-                    emptyLabel="Nenhum medicamento informado."
+                    emptyLabel="Não informado"
                     onChange={(rows) => update("medications", rows)}
                     rows={data.medications}
                     title="medicamento"
@@ -814,7 +1174,7 @@ export function ClinicalAnamnesis({
                       frequency: "",
                     })}
                     disabled={disabled}
-                    emptyLabel="Nenhum suplemento informado."
+                    emptyLabel="Não informado"
                     onChange={(rows) => update("supplements", rows)}
                     rows={data.supplements}
                     title="suplemento"
@@ -832,6 +1192,25 @@ export function ClinicalAnamnesis({
               <div className="grid gap-4 lg:grid-cols-2">
                 <ClinicalField id="allergies" label="Alergias conhecidas">
                   <div className="space-y-3">
+                    <label className="flex min-h-11 items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700">
+                      <input
+                        checked={data.allergyStatus === "DENIED"}
+                        disabled={disabled}
+                        onChange={(event) => {
+                          if (event.target.checked) {
+                            setData((current) => ({
+                              ...current,
+                              allergyStatus: "DENIED",
+                              allergies: [],
+                            }));
+                          } else {
+                            update("allergyStatus", "NOT_INFORMED");
+                          }
+                        }}
+                        type="checkbox"
+                      />
+                      Paciente nega alergias alimentares.
+                    </label>
                     {!disabled ? (
                       <div className="flex flex-col gap-2 sm:flex-row">
                         <input
@@ -852,7 +1231,11 @@ export function ClinicalAnamnesis({
                             );
 
                             if (!alreadyExists) {
-                              update("allergies", [...data.allergies, allergy]);
+                              setData((current) => ({
+                                ...current,
+                                allergyStatus: "CONFIRMED",
+                                allergies: [...current.allergies, allergy],
+                              }));
                             }
                             setAllergyDraft("");
                           }}
@@ -871,7 +1254,11 @@ export function ClinicalAnamnesis({
                             );
 
                             if (!alreadyExists) {
-                              update("allergies", [...data.allergies, allergy]);
+                              setData((current) => ({
+                                ...current,
+                                allergyStatus: "CONFIRMED",
+                                allergies: [...current.allergies, allergy],
+                              }));
                             }
                             setAllergyDraft("");
                           }}
@@ -897,12 +1284,18 @@ export function ClinicalAnamnesis({
                                 aria-label={`Remover alergia ${allergy}`}
                                 className="rounded-full px-1 text-slate-400 transition hover:bg-slate-200 hover:text-slate-700"
                                 onClick={() =>
-                                  update(
-                                    "allergies",
-                                    data.allergies.filter(
+                                  setData((current) => {
+                                    const allergies = current.allergies.filter(
                                       (item) => item !== allergy,
-                                    ),
-                                  )
+                                    );
+                                    return {
+                                      ...current,
+                                      allergies,
+                                      allergyStatus: allergies.length
+                                        ? "CONFIRMED"
+                                        : "NOT_INFORMED",
+                                    };
+                                  })
                                 }
                                 type="button"
                               >
@@ -914,7 +1307,9 @@ export function ClinicalAnamnesis({
                       </div>
                     ) : (
                       <p className="rounded-xl border border-dashed border-slate-300 p-3 text-sm text-slate-500">
-                        Nenhuma alergia informada.
+                        {data.allergyStatus === "DENIED"
+                          ? "Paciente nega alergias alimentares."
+                          : "Não informado"}
                       </p>
                     )}
                   </div>

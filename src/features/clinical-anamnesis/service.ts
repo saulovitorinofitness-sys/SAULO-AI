@@ -1,9 +1,10 @@
 import { BUILT_IN_IDS } from "@/modules/permissions";
 
-import type {
-  ClinicalAnamnesisView,
-  GetClinicalAnamnesisInput,
-  SaveClinicalAnamnesisInput,
+import {
+  shouldCreateClinicalAnamnesisHistory,
+  type ClinicalAnamnesisView,
+  type GetClinicalAnamnesisInput,
+  type SaveClinicalAnamnesisInput,
 } from "./contracts";
 import { createAnamnesisSeed } from "./mock-data";
 
@@ -48,8 +49,10 @@ function withViewer(view: ClinicalAnamnesisView, scenario: string) {
 
 async function getPersisted(input: GetClinicalAnamnesisInput) {
   if (typeof window === "undefined") return null;
+  const params = new URLSearchParams({ scenario: input.scenario });
+  if (input.attendanceId) params.set("attendanceId", input.attendanceId);
   const response = await fetch(
-    `/api/patients/${encodeURIComponent(input.patientId)}/clinical-objectives?scenario=${encodeURIComponent(input.scenario)}`,
+    `/api/patients/${encodeURIComponent(input.patientId)}/clinical-objectives?${params.toString()}`,
   );
   if (!response.ok) return null;
   const result = (await response.json()) as {
@@ -68,12 +71,17 @@ export const clinicalAnamnesisService = {
 
   async save(input: SaveClinicalAnamnesisInput) {
     if (input.patientId !== DEMO_PATIENT_ID) {
+      const params = new URLSearchParams({ scenario: input.scenario });
+      if (input.attendanceId) params.set("attendanceId", input.attendanceId);
       const response = await fetch(
-        `/api/patients/${encodeURIComponent(input.patientId)}/clinical-objectives?scenario=${encodeURIComponent(input.scenario)}`,
+        `/api/patients/${encodeURIComponent(input.patientId)}/clinical-objectives?${params.toString()}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ data: input.data }),
+          body: JSON.stringify({
+            data: input.data,
+            saveMode: input.saveMode,
+          }),
         },
       );
       const result = (await response.json().catch(() => null)) as {
@@ -98,11 +106,14 @@ export const clinicalAnamnesisService = {
     const professionalUserId = maria
       ? BUILT_IN_IDS.users.mariaDeLourdesGomes
       : BUILT_IN_IDS.users.sauloXavierVitorino;
+    const nextVersion =
+      input.saveMode === "COMPLETE" ? current.version + 1 : current.version;
+    const createsHistory = shouldCreateClinicalAnamnesisHistory(input.saveMode);
     const next: ClinicalAnamnesisView = {
       ...current,
       scenario: input.scenario,
-      status: "COMPLETED",
-      version: current.version + 1,
+      status: input.saveMode === "COMPLETE" ? "COMPLETED" : "DRAFT",
+      version: nextVersion,
       data: maria
         ? { ...input.data, nutrition: current.data.nutrition }
         : input.data,
@@ -110,9 +121,9 @@ export const clinicalAnamnesisService = {
         professionalUserId,
         professionalName,
         updatedAt,
-        version: current.version + 1,
+        version: nextVersion,
       },
-      history: [
+      history: !createsHistory ? current.history : [
         {
           id: `anamnesis-history-${Date.now()}`,
           version: current.version,
@@ -123,7 +134,7 @@ export const clinicalAnamnesisService = {
         },
         ...current.history,
       ],
-      timeline: [
+      timeline: !createsHistory ? current.timeline : [
         ...current.timeline,
         {
           id: `anamnesis-timeline-${Date.now()}`,

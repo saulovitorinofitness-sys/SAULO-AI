@@ -2,13 +2,23 @@ import { randomUUID } from "node:crypto";
 
 import { prisma } from "@/lib/database/prisma";
 import type { Prisma } from "@/generated/prisma/client";
+import { validateClinicalAnamnesisData } from "@/features/clinical-anamnesis/validation";
 
 import {
   bioimpedanceGroups,
   perimetryGroups,
 } from "./field-definitions";
-import { calculateBmi } from "./anthropometry-calculations";
-import { buildPosturalEvolutionTimeline } from "./postural-history";
+import {
+  calculateBmi,
+  validateAnthropometryMeasurements,
+} from "./anthropometry-calculations";
+import { validateBioimpedanceMeasurements } from "./bioimpedance-measurements";
+import { validatePerimetryMeasurements } from "./perimetry-measurements";
+import { buildPosturalEvolutionTimeline, type PosturalHistorySource } from "./postural-history";
+import { assertValidPosturalAssessmentData, validatePosturalAssessmentData } from "./postural-validation";
+import { safeClinicalText } from "./clinical-text-safety";
+import { shouldCreateClinicalStepVersion } from "./contracts";
+import { persistedProfessionalReference } from "@/features/professional-responsibility/persisted-responsibility";
 import type {
   PosturalEvolutionClassification,
   SavePosturalEvolutionComparisonInput,
@@ -19,6 +29,8 @@ import type {
   ClinicalCollectionRecords,
   ClinicalCollectionView,
   ClinicalStepRecord,
+  CreateHistoricalClinicalAssessmentInput,
+  CreateHistoricalClinicalAssessmentResult,
   EditableClinicalData,
   EditableClinicalStepKey,
   PerimetryData,
@@ -28,6 +40,15 @@ import type {
 } from "./contracts";
 
 const ASSESSMENT_ENTRY_TYPE = "ASSESSMENT";
+export class ClinicalCollectionWriteError extends Error {
+  readonly code = "ATTENDANCE_NOT_WRITABLE" as const;
+
+  constructor() {
+    super("Atendimento não está ativo para edição.");
+    this.name = "ClinicalCollectionWriteError";
+  }
+}
+
 const assessmentModuleByStep = {
   ANTHROPOMETRY: "PHYSICAL_ASSESSMENT",
   BIOIMPEDANCE: "BIOIMPEDANCE",
@@ -62,6 +83,22 @@ function jsonObject<T extends object>(value: unknown, fallback: T): T {
 
 function toJson(value: object): Prisma.InputJsonValue {
   return JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
+}
+
+function historicalAssessmentDate(value: string) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    throw new Error("INVALID_HISTORICAL_ASSESSMENT_DATE");
+  }
+
+  const date = new Date(`${value}T00:00:00.000Z`);
+  if (
+    Number.isNaN(date.getTime()) ||
+    date.toISOString().slice(0, 10) !== value
+  ) {
+    throw new Error("INVALID_HISTORICAL_ASSESSMENT_DATE");
+  }
+
+  return date;
 }
 
 function finiteNumber(value: unknown): number | undefined {
@@ -257,11 +294,11 @@ function record<T extends EditableClinicalData>(
 
 async function loadCollection(
   patientId: string,
-  attendanceId: string,
+  attendanceId?: string,
 ): Promise<ClinicalCollectionView | null> {
   const attendance = await prisma.attendance.findFirst({
     where: {
-      id: attendanceId,
+      ...(attendanceId ? { id: attendanceId } : {}),
       deletedAt: null,
       masterRecord: {
         patientId,
@@ -285,13 +322,14 @@ async function loadCollection(
         },
       },
     },
+    orderBy: { createdAt: "desc" },
   });
 
   if (!attendance) return null;
 
   const entry = await prisma.masterRecordEntry.findFirst({
     where: {
-      attendanceId,
+      attendanceId: attendance.id,
       masterRecordId: attendance.masterRecordId,
       type: ASSESSMENT_ENTRY_TYPE,
       deletedAt: null,
@@ -305,10 +343,32 @@ async function loadCollection(
     },
     orderBy: { createdAt: "asc" },
   });
-  const recentPhysicalAssessments =
-    await prisma.physicalAssessmentRecord.findMany({
+  const [anamnesisEntry, recentPhysicalAssessments, previousPerimetryRecord] =
+    await Promise.all([
+      prisma.masterRecordEntry.findFirst({
+        where: {
+          masterRecordId: attendance.masterRecordId,
+          type: "CLINICAL_ANAMNESIS",
+          status: { in: ["DRAFT", "FINALIZED"] },
+          deletedAt: null,
+        },
+        orderBy: [{ revision: "desc" }, { createdAt: "desc" }],
+        select: {
+          id: true,
+          masterRecordId: true,
+          attendanceId: true,
+          occurredAt: true,
+          payload: true,
+          revision: true,
+          updatedAt: true,
+          updatedBy: { select: { id: true, fullName: true } },
+        },
+      }),
+      prisma.physicalAssessmentRecord.findMany({
       where: {
+        assessedAt: { lt: attendance.createdAt },
         entry: {
+          attendanceId: { not: attendance.id },
           masterRecordId: attendance.masterRecordId,
           deletedAt: null,
         },
@@ -316,7 +376,46 @@ async function loadCollection(
       orderBy: { assessedAt: "desc" },
       select: { observations: true },
       take: 50,
-    });
+      }),
+      prisma.perimetryRecord.findFirst({
+        where: {
+          measuredAt: {
+            lt: entry?.perimetry?.measuredAt ?? attendance.createdAt,
+          },
+          entry: {
+            attendanceId: { not: attendance.id },
+            masterRecordId: attendance.masterRecordId,
+            deletedAt: null,
+          },
+        },
+        orderBy: { measuredAt: "desc" },
+        include: {
+          entry: {
+            select: {
+              id: true,
+              revision: true,
+              updatedAt: true,
+              updatedBy: { select: { id: true, fullName: true } },
+            },
+          },
+        },
+      }),
+    ]);
+  const anamnesisValidation = anamnesisEntry
+    ? validateClinicalAnamnesisData(anamnesisEntry.payload)
+    : undefined;
+  const previousPerimetryVersion = previousPerimetryRecord
+    ? await prisma.recordVersion.findFirst({
+        where: {
+          entityId: previousPerimetryRecord.entryId,
+          entityType: `${ASSESSMENT_ENTRY_TYPE}_PERIMETRY`,
+        },
+        orderBy: { version: "desc" },
+        include: {
+          responsible: { select: { id: true, fullName: true } },
+        },
+      })
+    : null;
   const stepVersions = entry
     ? await prisma.recordVersion.findMany({
         where: {
@@ -374,7 +473,7 @@ async function loadCollection(
       entry?.physicalAssessment?.observations,
       {},
     ),
-    notes: entry?.physicalAssessment?.notes ?? undefined,
+    notes: safeClinicalText(entry?.physicalAssessment?.notes),
   };
   const inheritedWeightKg =
     positiveNumber(anthropometry.weightKg) ??
@@ -392,7 +491,7 @@ async function loadCollection(
   };
   const perimetry = {
     ...readPerimetryData(entry?.perimetry?.measurements),
-    notes: entry?.perimetry?.notes ?? undefined,
+    notes: safeClinicalText(entry?.perimetry?.notes),
   };
   const postural = {
     ...emptyPosturalAssessment,
@@ -400,7 +499,7 @@ async function loadCollection(
       entry?.posturalAssessment?.observations,
       emptyPosturalAssessment,
     ),
-    notes: entry?.posturalAssessment?.notes ?? undefined,
+    notes: safeClinicalText(entry?.posturalAssessment?.notes),
   };
 
   const records: ClinicalCollectionRecords = {
@@ -460,8 +559,10 @@ async function loadCollection(
     patientCode: patient.clinicalCode,
     patientAge: calculateAge(patient.birthDate),
     patientSex: patient.sex,
+    patientProfession: patient.profession ?? undefined,
     patientPhone: phoneLabel(patient.phones[0]),
     attendanceId: attendance.id,
+    attendanceStartedAt: attendance.startedAt?.toISOString(),
     masterRecordId: attendance.masterRecordId,
     consultationType: attendance.consultationType,
     connectedProfessional: {
@@ -471,6 +572,60 @@ async function loadCollection(
       version: attendance.version,
     },
     records,
+    anamnesis:
+      anamnesisEntry?.attendanceId && anamnesisValidation?.success
+        ? {
+            entryId: anamnesisEntry.id,
+            masterRecordId: anamnesisEntry.masterRecordId,
+            attendanceId: anamnesisEntry.attendanceId,
+            occurredAt: anamnesisEntry.occurredAt.toISOString(),
+            data: anamnesisValidation.data,
+            audit: {
+              professionalUserId: anamnesisEntry.updatedBy.id,
+              professionalName: anamnesisEntry.updatedBy.fullName,
+              updatedAt: anamnesisEntry.updatedAt.toISOString(),
+              version: anamnesisEntry.revision,
+            },
+          }
+        : undefined,
+    summaryLoadIssue:
+      anamnesisEntry && anamnesisValidation && !anamnesisValidation.success
+        ? "A Anamnese deste atendimento não pôde ser consolidada. Revise o registro antes de continuar."
+        : undefined,
+    anthropometryMeasuredAt:
+      entry?.physicalAssessment?.assessedAt.toISOString(),
+    bioimpedanceHeightCm: inheritedHeightCm,
+    bioimpedanceMeasuredAt: entry?.bioimpedance?.measuredAt.toISOString(),
+    perimetryMeasuredAt: entry?.perimetry?.measuredAt.toISOString(),
+    posturalAssessedAt:
+      entry?.posturalAssessment?.assessedAt.toISOString(),
+    previousPerimetry: previousPerimetryRecord
+      ? {
+          measuredAt: previousPerimetryRecord.measuredAt.toISOString(),
+          values: {
+            ...readPerimetryData(previousPerimetryRecord.measurements),
+            notes: previousPerimetryRecord.notes ?? undefined,
+          },
+          audit: previousPerimetryVersion
+            ? {
+                professionalUserId:
+                  previousPerimetryVersion.responsible.id,
+                professionalName:
+                  previousPerimetryVersion.responsible.fullName,
+                updatedAt: previousPerimetryVersion.createdAt.toISOString(),
+                version: previousPerimetryVersion.version,
+              }
+            : {
+                professionalUserId:
+                  previousPerimetryRecord.entry.updatedBy.id,
+                professionalName:
+                  previousPerimetryRecord.entry.updatedBy.fullName,
+                updatedAt:
+                  previousPerimetryRecord.entry.updatedAt.toISOString(),
+                version: previousPerimetryRecord.entry.revision,
+              },
+        }
+      : undefined,
     progressPercent: completedCount * 25,
     nutritionFlowReady,
     firstIncompleteStep,
@@ -479,13 +634,19 @@ async function loadCollection(
     canEdit: attendance.status === "IN_PROGRESS",
     completed: entry?.status === "FINALIZED",
     nextAttendanceStep:
-      entry?.status === "FINALIZED" ? "Painel Clínico Integrado" : undefined,
+      entry?.status === "FINALIZED" ? "Estratégia Nutricional" : undefined,
     scenario: "complete",
   };
 }
 
 export const clinicalCollectionRepository = {
-  getCollection: loadCollection,
+  getCollection(patientId: string, attendanceId: string) {
+    return loadCollection(patientId, attendanceId);
+  },
+
+  getLatestCollection(patientId: string) {
+    return loadCollection(patientId);
+  },
 
   async findOpenAttendanceId(patientId: string) {
     const attendance = await prisma.attendance.findFirst({
@@ -503,6 +664,139 @@ export const clinicalCollectionRepository = {
     });
 
     return attendance?.id ?? null;
+  },
+
+  async findOpenAttendance(patientId: string) {
+    return prisma.attendance.findFirst({
+      where: {
+        status: { in: ["DRAFT", "IN_PROGRESS"] },
+        deletedAt: null,
+        masterRecord: {
+          patientId,
+          status: "ACTIVE",
+          patient: { deletedAt: null },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+      select: { id: true, status: true },
+    });
+  },
+
+  async findAttendanceIds(patientId: string) {
+    const attendances = await prisma.attendance.findMany({
+      where: {
+        deletedAt: null,
+        masterRecord: {
+          patientId,
+          status: "ACTIVE",
+          patient: { deletedAt: null },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+      select: { id: true },
+    });
+
+    return attendances.map((attendance) => attendance.id);
+  },
+
+  async getOfficialPosturalAssessment(input: {
+    patientId: string;
+    masterRecordId: string;
+    attendanceId: string;
+    entryId: string;
+    versionId?: string;
+  }): Promise<PosturalHistorySource | null> {
+    const entry = await prisma.masterRecordEntry.findFirst({
+      where: {
+        id: input.entryId,
+        type: ASSESSMENT_ENTRY_TYPE,
+        masterRecordId: input.masterRecordId,
+        attendanceId: input.attendanceId,
+        deletedAt: null,
+        status: { not: "VOIDED" },
+        masterRecord: {
+          patientId: input.patientId,
+          status: "ACTIVE",
+          patient: { deletedAt: null, status: "ACTIVE" },
+        },
+        attendance: {
+          is: {
+            id: input.attendanceId,
+            masterRecordId: input.masterRecordId,
+            deletedAt: null,
+          },
+        },
+        posturalAssessment: { isNot: null },
+      },
+      select: {
+        id: true,
+        masterRecordId: true,
+        attendanceId: true,
+        status: true,
+        revision: true,
+        updatedAt: true,
+        updatedBy: { select: { id: true, fullName: true } },
+        posturalAssessment: {
+          select: { assessedAt: true, observations: true, notes: true, updatedAt: true },
+        },
+      },
+    });
+    if (!entry?.posturalAssessment || !entry.attendanceId) return null;
+
+    const version = await prisma.recordVersion.findFirst({
+      where: {
+        id: input.versionId,
+        entityType: `${ASSESSMENT_ENTRY_TYPE}_POSTURAL_ASSESSMENT`,
+        entityId: entry.id,
+        status: "COMPLETED",
+      },
+      orderBy: input.versionId ? undefined : { version: "desc" },
+      select: {
+        id: true,
+        version: true,
+        snapshot: true,
+        createdAt: true,
+        responsible: { select: { id: true, fullName: true } },
+      },
+    });
+    if (input.versionId ? !version : Boolean(version)) return null;
+
+    const source = version
+      ? version.snapshot
+      : {
+          ...emptyPosturalAssessment,
+          ...jsonObject<PosturalAssessmentData>(
+            entry.posturalAssessment.observations,
+            emptyPosturalAssessment,
+          ),
+          notes: entry.posturalAssessment.notes ?? undefined,
+        };
+    const validated = validatePosturalAssessmentData(source);
+    if (!validated.valid || validated.data.completionStatus !== "COMPLETED") {
+      return null;
+    }
+    return {
+      assessmentId: entry.id,
+      patientId: input.patientId,
+      masterRecordId: entry.masterRecordId,
+      attendanceId: entry.attendanceId,
+      assessedAt: entry.posturalAssessment.assessedAt.toISOString(),
+      status: "FINALIZED",
+      data: validated.data,
+      audit: version
+        ? {
+            professionalUserId: version.responsible.id,
+            professionalName: version.responsible.fullName,
+            updatedAt: version.createdAt.toISOString(),
+            version: version.version,
+          }
+        : {
+            professionalUserId: entry.updatedBy.id,
+            professionalName: entry.updatedBy.fullName,
+            updatedAt: entry.posturalAssessment.updatedAt.toISOString(),
+            version: entry.revision,
+          },
+    };
   },
 
   async getPosturalHistory(patientId: string) {
@@ -540,30 +834,76 @@ export const clinicalCollectionRepository = {
         },
       },
     });
+    const versions = records.length
+      ? await prisma.recordVersion.findMany({
+          where: {
+            entityType: `${ASSESSMENT_ENTRY_TYPE}_POSTURAL_ASSESSMENT`,
+            status: "COMPLETED",
+            entityId: {
+              in: records.map((record) => record.entry.id),
+            },
+          },
+          orderBy: [{ entityId: "asc" }, { version: "desc" }],
+          select: {
+            id: true,
+            entityId: true,
+            version: true,
+            createdAt: true,
+            responsible: {
+              select: { id: true, fullName: true },
+            },
+          },
+        })
+      : [];
+    const latestVersionByEntry = new Map<
+      string,
+      (typeof versions)[number]
+    >();
+    for (const version of versions) {
+      if (!latestVersionByEntry.has(version.entityId)) {
+        latestVersionByEntry.set(version.entityId, version);
+      }
+    }
 
     return buildPosturalEvolutionTimeline(
-      records.map((record) => ({
-        assessmentId: record.entry.id,
-        masterRecordId: record.entry.masterRecordId,
-        patientId: record.entry.masterRecord.patientId,
-        attendanceId: record.entry.attendanceId ?? undefined,
-        assessedAt: record.assessedAt.toISOString(),
-        status: record.entry.status,
-        data: {
-          ...emptyPosturalAssessment,
-          ...jsonObject<PosturalAssessmentData>(
-            record.observations,
-            emptyPosturalAssessment,
-          ),
-          notes: record.notes ?? undefined,
-        },
-        audit: {
-          professionalUserId: record.entry.updatedBy.id,
-          professionalName: record.entry.updatedBy.fullName,
-          updatedAt: record.entry.updatedAt.toISOString(),
-          version: record.entry.revision,
-        },
-      })),
+      records.map((record) => {
+        const version = latestVersionByEntry.get(record.entry.id);
+        const responsible = persistedProfessionalReference(
+          version?.responsible,
+          record.entry.updatedBy,
+        );
+        return {
+          assessmentId: record.entry.id,
+          versionId: version?.id,
+          masterRecordId: record.entry.masterRecordId,
+          patientId: record.entry.masterRecord.patientId,
+          attendanceId: record.entry.attendanceId ?? undefined,
+          assessedAt: record.assessedAt.toISOString(),
+          status: record.entry.status,
+          data: {
+            ...emptyPosturalAssessment,
+            ...jsonObject<PosturalAssessmentData>(
+              record.observations,
+              emptyPosturalAssessment,
+            ),
+            notes: record.notes ?? undefined,
+          },
+          audit: version
+            ? {
+                professionalUserId: responsible.id,
+                professionalName: responsible.fullName,
+                updatedAt: version.createdAt.toISOString(),
+                version: version.version,
+              }
+            : {
+                // Compatibilidade com registros anteriores à auditoria por etapa.
+                professionalUserId: responsible.id,
+                professionalName: responsible.fullName,
+                updatedAt: record.entry.updatedAt.toISOString(),
+                version: record.entry.revision,
+              },
+        };
+      }),
     );
   },
 
@@ -821,10 +1161,234 @@ export const clinicalCollectionRepository = {
     });
   },
 
+  async createHistoricalClinicalAssessment(
+    input: CreateHistoricalClinicalAssessmentInput,
+    professionalUserId: string,
+  ): Promise<CreateHistoricalClinicalAssessmentResult> {
+    const assessmentDate = historicalAssessmentDate(input.assessmentDate);
+    const historicalSteps = [
+      input.records.anthropometry ? "ANTHROPOMETRY" : undefined,
+      input.records.perimetry ? "PERIMETRY" : undefined,
+      input.records.bioimpedance ? "BIOIMPEDANCE" : undefined,
+    ].filter(
+      (step): step is "ANTHROPOMETRY" | "PERIMETRY" | "BIOIMPEDANCE" =>
+        step !== undefined,
+    );
+
+    if (historicalSteps.length === 0) {
+      throw new Error("HISTORICAL_ASSESSMENT_REQUIRES_RECORD");
+    }
+
+    if (input.records.anthropometry) {
+      const errors = validateAnthropometryMeasurements(
+        input.records.anthropometry,
+      );
+      const firstError = Object.values(errors)[0];
+      if (firstError) {
+        throw new Error(`INVALID_ANTHROPOMETRY:${firstError}`);
+      }
+    }
+
+    if (input.records.perimetry) {
+      const errors = validatePerimetryMeasurements(input.records.perimetry);
+      const firstError = Object.values(errors)[0];
+      if (firstError) {
+        throw new Error(`INVALID_PERIMETRY:${firstError}`);
+      }
+    }
+
+    if (input.records.bioimpedance) {
+      const errors = validateBioimpedanceMeasurements(
+        input.records.bioimpedance,
+      );
+      const firstError = Object.values(errors)[0];
+      if (firstError) {
+        throw new Error(`INVALID_BIOIMPEDANCE:${firstError}`);
+      }
+    }
+
+    const assessment = await prisma.$transaction(async (transaction) => {
+      const masterRecord = await transaction.masterRecord.findFirst({
+        where: {
+          patientId: input.patientId,
+          status: "ACTIVE",
+          patient: { deletedAt: null },
+        },
+        select: { id: true },
+      });
+
+      if (!masterRecord) throw new Error("MASTER_RECORD_NOT_FOUND");
+
+      const moduleKeys = [
+        "MASTER_RECORD",
+        ...historicalSteps.map((step) => assessmentModuleByStep[step]),
+      ] as const;
+      const modules = await transaction.systemModule.findMany({
+        where: { key: { in: [...moduleKeys] } },
+        select: { id: true, key: true },
+      });
+      const moduleIdByKey = new Map(
+        modules.map((module) => [module.key, module.id]),
+      );
+      const masterRecordModuleId = moduleIdByKey.get("MASTER_RECORD");
+
+      if (!masterRecordModuleId) throw new Error("MODULE_NOT_FOUND");
+
+      const entry = await transaction.masterRecordEntry.create({
+        data: {
+          masterRecordId: masterRecord.id,
+          moduleId: masterRecordModuleId,
+          authorUserId: professionalUserId,
+          updatedByUserId: professionalUserId,
+          aggregateId: randomUUID(),
+          type: ASSESSMENT_ENTRY_TYPE,
+          status: "FINALIZED",
+          occurredAt: assessmentDate,
+          payload: toJson({
+            stage: "ASSESSMENT",
+            historical: true,
+            assessmentDate: input.assessmentDate,
+            modalities: historicalSteps,
+          }),
+        },
+        select: {
+          id: true,
+          masterRecordId: true,
+          revision: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      });
+
+      if (input.records.anthropometry) {
+        const { notes, ...measurements } = input.records.anthropometry;
+        const bmi = calculateBmi(
+          measurements.weightKg,
+          measurements.heightCm
+            ? measurements.heightCm / 100
+            : undefined,
+        );
+        await transaction.physicalAssessmentRecord.create({
+          data: {
+            entryId: entry.id,
+            assessedAt: assessmentDate,
+            observations: toJson({ ...measurements, bmi }),
+            notes: safeClinicalText(notes),
+          },
+        });
+      }
+
+      if (input.records.perimetry) {
+        const { notes } = input.records.perimetry;
+        await transaction.perimetryRecord.create({
+          data: {
+            entryId: entry.id,
+            measuredAt: assessmentDate,
+            measurements: perimetryJson(input.records.perimetry),
+            notes: safeClinicalText(notes),
+          },
+        });
+      }
+
+      if (input.records.bioimpedance) {
+        const measurements = Object.fromEntries(
+          bioimpedanceFieldKeys.map((key) => [
+            key,
+            finiteNumber(input.records.bioimpedance?.[key]) ?? null,
+          ]),
+        ) as Prisma.InputJsonValue;
+        await transaction.bioimpedanceRecord.create({
+          data: {
+            entryId: entry.id,
+            measuredAt: assessmentDate,
+            measurements,
+          },
+        });
+      }
+
+      for (const step of historicalSteps) {
+        const moduleId = moduleIdByKey.get(assessmentModuleByStep[step]);
+        if (!moduleId) throw new Error("MODULE_NOT_FOUND");
+
+        const data =
+          step === "ANTHROPOMETRY"
+            ? input.records.anthropometry!
+            : step === "PERIMETRY"
+              ? input.records.perimetry!
+              : input.records.bioimpedance!;
+        await transaction.recordVersion.create({
+          data: {
+            entityType: `${ASSESSMENT_ENTRY_TYPE}_${step}`,
+            entityId: entry.id,
+            moduleId,
+            responsibleUserId: professionalUserId,
+            version: 1,
+            status: "COMPLETED",
+            snapshot: toJson({
+              ...data,
+              assessmentDate: input.assessmentDate,
+            }),
+            reason: `${step} histórica registrada pelo usuário autenticado.`,
+          },
+        });
+      }
+
+      return {
+        id: entry.id,
+        patientId: input.patientId,
+        masterRecordId: entry.masterRecordId,
+        assessmentDate: input.assessmentDate,
+        records: input.records,
+        createdAt: entry.createdAt.toISOString(),
+        updatedAt: entry.updatedAt.toISOString(),
+        version: entry.revision,
+      };
+    });
+
+    return { assessment, persisted: true };
+  },
+
   async saveStep(
     input: SaveClinicalStepInput,
     professionalUserId: string,
   ) {
+    if (input.step === "ANTHROPOMETRY") {
+      const errors = validateAnthropometryMeasurements(
+        input.data as AnthropometryData,
+      );
+      const firstError = Object.values(errors)[0];
+
+      if (firstError) {
+        throw new Error(`INVALID_ANTHROPOMETRY:${firstError}`);
+      }
+    }
+
+    if (input.step === "PERIMETRY") {
+      const errors = validatePerimetryMeasurements(
+        input.data as PerimetryData,
+      );
+      const firstError = Object.values(errors)[0];
+
+      if (firstError) {
+        throw new Error(`INVALID_PERIMETRY:${firstError}`);
+      }
+    }
+
+    if (input.step === "BIOIMPEDANCE") {
+      const errors = validateBioimpedanceMeasurements(
+        input.data as BioimpedanceAvanutriData,
+      );
+      const firstError = Object.values(errors)[0];
+
+      if (firstError) {
+        throw new Error(`INVALID_BIOIMPEDANCE:${firstError}`);
+      }
+    }
+
+    if (input.step === "POSTURAL_ASSESSMENT") {
+      assertValidPosturalAssessmentData(input.data);
+    }
+
     await prisma.$transaction(async (transaction) => {
       await transaction.$executeRaw`
         SELECT pg_advisory_xact_lock(hashtext(${input.attendanceId}))
@@ -833,7 +1397,9 @@ export const clinicalCollectionRepository = {
       const attendance = await transaction.attendance.findFirst({
         where: {
           id: input.attendanceId,
-          status: "IN_PROGRESS",
+          ...(input.step === "POSTURAL_ASSESSMENT"
+            ? {}
+            : { status: { in: ["DRAFT", "IN_PROGRESS"] } }),
           deletedAt: null,
           masterRecord: {
             patientId: input.patientId,
@@ -841,10 +1407,16 @@ export const clinicalCollectionRepository = {
             patient: { deletedAt: null },
           },
         },
-        select: { id: true, masterRecordId: true },
+        select: { id: true, masterRecordId: true, createdAt: true, status: true },
       });
 
       if (!attendance) throw new Error("ASSESSMENT_NOT_FOUND");
+      if (
+        input.step === "POSTURAL_ASSESSMENT" &&
+        attendance.status !== "IN_PROGRESS"
+      ) {
+        throw new ClinicalCollectionWriteError();
+      }
 
       const [masterRecordModule, executedModule] = await Promise.all([
         transaction.systemModule.findUniqueOrThrow({
@@ -897,6 +1469,7 @@ export const clinicalCollectionRepository = {
       if (input.step === "ANTHROPOMETRY") {
         const data = input.data as AnthropometryData;
         const { notes, ...measurements } = data;
+        const safeNotes = safeClinicalText(notes);
         const bmi = calculateBmi(
           measurements.weightKg,
           measurements.heightCm
@@ -909,13 +1482,13 @@ export const clinicalCollectionRepository = {
           update: {
             assessedAt: now,
             observations: toJson({ ...measurements, bmi }),
-            notes,
+            notes: safeNotes,
           },
           create: {
             entryId: entry.id,
             assessedAt: now,
             observations: toJson({ ...measurements, bmi }),
-            notes,
+            notes: safeNotes,
           },
         });
       }
@@ -930,7 +1503,9 @@ export const clinicalCollectionRepository = {
             }),
             transaction.physicalAssessmentRecord.findMany({
               where: {
+                assessedAt: { lt: attendance.createdAt },
                 entry: {
+                  attendanceId: { not: attendance.id },
                   masterRecordId: attendance.masterRecordId,
                   deletedAt: null,
                 },
@@ -964,7 +1539,7 @@ export const clinicalCollectionRepository = {
 
         await transaction.bioimpedanceRecord.upsert({
           where: { entryId: entry.id },
-          update: { measuredAt: now, measurements },
+          update: { measurements },
           create: {
             entryId: entry.id,
             measuredAt: now,
@@ -976,15 +1551,16 @@ export const clinicalCollectionRepository = {
       if (input.step === "PERIMETRY") {
         const data = input.data as PerimetryData;
         const { notes } = data;
+        const safeNotes = safeClinicalText(notes);
         const measurements = perimetryJson(data);
         await transaction.perimetryRecord.upsert({
           where: { entryId: entry.id },
-          update: { measuredAt: now, measurements, notes },
+          update: { measurements, notes: safeNotes },
           create: {
             entryId: entry.id,
             measuredAt: now,
             measurements,
-            notes,
+            notes: safeNotes,
           },
         });
       }
@@ -992,40 +1568,43 @@ export const clinicalCollectionRepository = {
       if (input.step === "POSTURAL_ASSESSMENT") {
         const data = input.data as PosturalAssessmentData;
         const { notes, ...observations } = data;
+        const safeNotes = safeClinicalText(notes);
         await transaction.posturalAssessmentRecord.upsert({
           where: { entryId: entry.id },
-          update: { assessedAt: now, observations: toJson(observations), notes },
+          update: { observations: toJson(observations), notes: safeNotes },
           create: {
             entryId: entry.id,
             assessedAt: now,
             observations: toJson(observations),
-            notes,
+            notes: safeNotes,
           },
         });
       }
 
-      const entityType = `${ASSESSMENT_ENTRY_TYPE}_${input.step}`;
-      const previousVersion = await transaction.recordVersion.aggregate({
-        where: { entityType, entityId: entry.id },
-        _max: { version: true },
-      });
-      await transaction.recordVersion.create({
-        data: {
-          entityType,
-          entityId: entry.id,
-          moduleId: executedModule.id,
-          responsibleUserId: professionalUserId,
-          version: (previousVersion._max.version ?? 0) + 1,
-          status:
-            input.step === "POSTURAL_ASSESSMENT" &&
-            (input.data as PosturalAssessmentData).completionStatus !==
-              "COMPLETED"
-              ? "DRAFT"
-              : "COMPLETED",
-          snapshot: toJson(input.data),
-          reason: `${input.step} registrada pelo usuário autenticado.`,
-        },
-      });
+      if (shouldCreateClinicalStepVersion(input.saveMode)) {
+        const entityType = `${ASSESSMENT_ENTRY_TYPE}_${input.step}`;
+        const previousVersion = await transaction.recordVersion.aggregate({
+          where: { entityType, entityId: entry.id },
+          _max: { version: true },
+        });
+        await transaction.recordVersion.create({
+          data: {
+            entityType,
+            entityId: entry.id,
+            moduleId: executedModule.id,
+            responsibleUserId: professionalUserId,
+            version: (previousVersion._max.version ?? 0) + 1,
+            status:
+              input.step === "POSTURAL_ASSESSMENT" &&
+              (input.data as PosturalAssessmentData).completionStatus !==
+                "COMPLETED"
+                ? "DRAFT"
+                : "COMPLETED",
+            snapshot: toJson(input.data),
+            reason: `${input.step} registrada pelo usuário autenticado.`,
+          },
+        });
+      }
 
       await transaction.masterRecordContinuity.update({
         where: { masterRecordId: attendance.masterRecordId },
@@ -1081,6 +1660,16 @@ export const clinicalCollectionRepository = {
     const current = await loadCollection(patientId, attendanceId);
 
     if (!current) throw new Error("ASSESSMENT_NOT_FOUND");
+    if (current.summaryLoadIssue) {
+      throw new Error("SUMMARY_DATA_UNAVAILABLE");
+    }
+    if (current.completed) {
+      return {
+        collection: current,
+        persisted: true,
+        nextAttendanceStep: "Estratégia Nutricional",
+      } as const;
+    }
     if (!current.nutritionFlowReady) {
       throw new Error("MANDATORY_STEPS_PENDING");
     }
@@ -1093,7 +1682,7 @@ export const clinicalCollectionRepository = {
       const attendance = await transaction.attendance.findFirst({
         where: {
           id: attendanceId,
-          status: "IN_PROGRESS",
+          status: { in: ["DRAFT", "IN_PROGRESS"] },
           deletedAt: null,
           masterRecord: {
             patientId,
@@ -1170,7 +1759,7 @@ export const clinicalCollectionRepository = {
     return {
       collection,
       persisted: true,
-      nextAttendanceStep: "Painel Clínico Integrado",
+      nextAttendanceStep: "Estratégia Nutricional",
     } as const;
   },
 };

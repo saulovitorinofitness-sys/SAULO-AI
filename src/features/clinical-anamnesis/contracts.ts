@@ -1,9 +1,11 @@
 import type { ClinicalCollectionScenarioKey, ProfessionalAudit } from "@/features/clinical-collection";
+import type { PatientSex } from "@/modules/patients";
 import type { EntityId, ISODateTime } from "@/modules/shared";
 
 export type AnamnesisObjective = "WEIGHT_LOSS" | "HYPERTROPHY" | "REHABILITATION" | "HEALTH" | "PERFORMANCE" | "CONDITIONING" | "OTHER";
 export type ClinicalHistoryItem = "HYPERTENSION" | "DIABETES" | "DYSLIPIDEMIA" | "HEART_DISEASE" | "THYROID" | "OSTEOPOROSIS" | "HERNIA" | "ARTHROSIS" | "ARTHRITIS" | "ASTHMA" | "COPD" | "ANXIETY" | "DEPRESSION" | "OTHER";
 export type FamilyHistoryItem = "DIABETES" | "HYPERTENSION" | "OBESITY" | "HEART_ATTACK" | "STROKE" | "CANCER" | "OSTEOPOROSIS" | "OTHER";
+export type FoodAllergyStatus = "CONFIRMED" | "DENIED" | "NOT_INFORMED";
 
 export interface AnamnesisSurgery { readonly id: string; readonly procedure: string; readonly date: string; readonly notes: string; }
 export interface AnamnesisInjury { readonly id: string; readonly region: string; readonly date: string; readonly situation: string; readonly notes: string; }
@@ -22,6 +24,7 @@ export interface ClinicalAnamnesisData {
   readonly injuries: readonly AnamnesisInjury[];
   readonly medications: readonly AnamnesisMedication[];
   readonly supplements: readonly AnamnesisSupplement[];
+  readonly allergyStatus: FoodAllergyStatus;
   readonly allergies: readonly string[];
   readonly sleep: { readonly hours: string; readonly quality: string; readonly awakenings: string };
   readonly stressLevel: number;
@@ -48,6 +51,7 @@ export interface ClinicalAnamnesisView {
   readonly attendanceId?: EntityId;
   readonly patientName: string;
   readonly patientCode: string;
+  readonly patientSex: PatientSex;
   readonly scenario: ClinicalCollectionScenarioKey;
   readonly status: "DRAFT" | "COMPLETED";
   readonly version: number;
@@ -60,5 +64,14 @@ export interface ClinicalAnamnesisView {
   readonly canViewNutrition: boolean;
 }
 
-export interface GetClinicalAnamnesisInput { readonly patientId: EntityId; readonly scenario: ClinicalCollectionScenarioKey; }
-export interface SaveClinicalAnamnesisInput extends GetClinicalAnamnesisInput { readonly data: ClinicalAnamnesisData; }
+export interface GetClinicalAnamnesisInput { readonly patientId: EntityId; readonly attendanceId?: EntityId; readonly scenario: ClinicalCollectionScenarioKey; }
+export interface SaveClinicalAnamnesisInput extends GetClinicalAnamnesisInput {
+  readonly data: ClinicalAnamnesisData;
+  readonly saveMode: "AUTOSAVE" | "DRAFT" | "COMPLETE";
+}
+
+export function shouldCreateClinicalAnamnesisHistory(
+  saveMode: SaveClinicalAnamnesisInput["saveMode"],
+) {
+  return saveMode === "COMPLETE";
+}

@@ -1,12 +1,19 @@
 import type { SessionUser } from "@/features/mvp";
 import { clinicalCollectionRepository } from "@/features/clinical-collection/repository";
-import { BUILT_IN_IDS } from "@/modules/permissions";
+import { canOperatePerformance } from "@/features/professional-responsibility";
 
+import { proposeAssistedWorkoutStructure } from "./assisted-workout";
 import { performanceWorkoutRepository } from "./workout-repository";
+
+export { proposeAssistedWorkoutStructure };
+export type {
+  AssistedWorkoutProposal,
+  AssistedWorkoutProposalInput,
+} from "./assisted-workout";
 
 export const performanceEnduranceService = {
   canAccess(user: SessionUser) {
-    return user.id === BUILT_IN_IDS.users.sauloXavierVitorino;
+    return canOperatePerformance(user.id);
   },
 
   async getWorkout(user: SessionUser, patientId: string) {
@@ -14,6 +21,6 @@ export const performanceEnduranceService = {
     const attendanceId =
       await clinicalCollectionRepository.findOpenAttendanceId(patientId);
     if (!attendanceId) return null;
-    return performanceWorkoutRepository.get(patientId, attendanceId);
+    return performanceWorkoutRepository.get(patientId, attendanceId, user.id);
   },
 };

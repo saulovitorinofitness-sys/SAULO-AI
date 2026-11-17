@@ -1,3 +1,5 @@
+import { InstitutionalDocumentIdentity } from "@/components/documents/institutional-document-identity";
+
 export function DocumentHeader({
   issuedAt,
   patient,
@@ -18,21 +20,7 @@ export function DocumentHeader({
   return (
     <header className="border-b-2 border-[#17644c] pb-6">
       <div className="flex items-start justify-between gap-5">
-        <div className="flex min-w-0 items-center gap-3">
-          <div
-            aria-label="Símbolo da Clínica SV"
-            className="grid size-12 shrink-0 place-items-center rounded-xl bg-[#17644c] text-sm font-black tracking-[0.08em] text-[#e2c675]"
-          >
-            SV
-          </div>
-
-          <div className="min-w-0">
-            <p className="text-base font-black text-[#173c30]">Clínica SV</p>
-            <p className="mt-0.5 text-[10px] font-bold uppercase tracking-[0.15em] text-[#60746d]">
-              Sistema Integrado SV
-            </p>
-          </div>
-        </div>
+        <InstitutionalDocumentIdentity />
 
         <p className="max-w-[42%] text-right text-[10px] font-medium leading-4 text-[#60746d]">
           Emitido em {formattedDate}

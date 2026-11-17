@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="820" viewBox="0 0 1200 820" role="img" aria-labelledby="title desc">
+  <title id="title">Proposta sem referências suficientes</title>
+  <desc id="desc">Captura documental da sinalização de limitações sem inventar desempenho.</desc>
+  <rect width="1200" height="820" fill="#f4f8f6"/>
+  <rect x="40" y="36" width="1120" height="748" rx="24" fill="#ffffff" stroke="#c8d6d0" stroke-width="2"/>
+  <rect x="40" y="36" width="1120" height="126" rx="24" fill="#173c30"/>
+  <rect x="40" y="132" width="1120" height="30" fill="#173c30"/>
+  <text x="82" y="82" fill="#d8bd78" font-family="Arial, sans-serif" font-size="18" font-weight="700">DEMONSTRAÇÃO — DADOS FICTÍCIOS</text>
+  <text x="82" y="124" fill="#ffffff" font-family="Arial, sans-serif" font-size="32" font-weight="700">Corrida assistida · referências insuficientes</text>
+  <rect x="82" y="202" width="1036" height="112" rx="16" fill="#fff8e8" stroke="#e2c675"/>
+  <text x="108" y="244" fill="#6f5317" font-family="Arial, sans-serif" font-size="21" font-weight="700">Nenhum desempenho foi presumido</text>
+  <text x="108" y="280" fill="#6f5317" font-family="Arial, sans-serif" font-size="18">Referências selecionadas: 0 · ritmo: não disponível · velocidade: não disponível</text>
+  <rect x="82" y="350" width="498" height="194" rx="16" fill="#eef8f3" stroke="#9cc9b6"/>
+  <text x="108" y="392" fill="#173c30" font-family="Arial, sans-serif" font-size="22" font-weight="700">Geração semanal</text>
+  <text x="108" y="430" fill="#40584f" font-family="Arial, sans-serif" font-size="18">3 sessões provisórias: 40 · 40 · 40 min</text>
+  <text x="108" y="464" fill="#40584f" font-family="Arial, sans-serif" font-size="18">Origem: nível informado; 60 min é apenas teto</text>
+  <text x="108" y="498" fill="#40584f" font-family="Arial, sans-serif" font-size="18">Intensidade: orientação livre</text>
+  <text x="108" y="526" fill="#7b3028" font-family="Arial, sans-serif" font-size="16">Aviso: referência individual insuficiente</text>
+  <rect x="620" y="350" width="498" height="194" rx="16" fill="#fff3f1" stroke="#d79b92"/>
+  <text x="646" y="392" fill="#173c30" font-family="Arial, sans-serif" font-size="22" font-weight="700">Geração do período</text>
+  <text x="646" y="430" fill="#7b3028" font-family="Arial, sans-serif" font-size="18" font-weight="700">REVIEW_REQUIRED · também na semana</text>
+  <text x="646" y="464" fill="#40584f" font-family="Arial, sans-serif" font-size="17">Falta histórico recente da Corrida</text>
+  <text x="646" y="494" fill="#40584f" font-family="Arial, sans-serif" font-size="17">Falta volume semanal atual</text>
+  <text x="646" y="524" fill="#40584f" font-family="Arial, sans-serif" font-size="17">Falta desempenho ou capacidade contínua atual</text>
+  <rect x="82" y="584" width="1036" height="144" rx="16" fill="#eef5fb" stroke="#9ebed9"/>
+  <text x="108" y="626" fill="#173c30" font-family="Arial, sans-serif" font-size="20" font-weight="700">Prévia permitida para revisão; aplicação bloqueada</text>
+  <text x="108" y="660" fill="#40584f" font-family="Arial, sans-serif" font-size="18">A proposta qualitativa pode ser conferida, mas o período não pode ser aplicado enquanto faltarem dados.</text>
+  <text x="108" y="694" fill="#40584f" font-family="Arial, sans-serif" font-size="18">Meta TAF futura preservada · nenhuma zona, ritmo-alvo ou marca atual criada.</text>
+  <text x="82" y="760" fill="#6b7d75" font-family="Arial, sans-serif" font-size="14">Captura documental gerada a partir da saída do teste isolado · sem cadastro real, banco ou navegador</text>
+</svg>

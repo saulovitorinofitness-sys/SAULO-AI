@@ -20,6 +20,24 @@ import {
   type PatientListItem,
   type PatientWorkflowStatus,
 } from "@/features/mvp";
+import {
+  nutritionClinicalFlowHref,
+  type NutritionClinicalFlowStepStatus,
+} from "@/features/nutrition-clinical-flow";
+import { nutritionClinicalFlowRepository } from "@/features/nutrition-clinical-flow/repository";
+import { prisma } from "@/lib/database/prisma";
+import {
+  Badge,
+  ButtonLink,
+  PageHeading,
+  PageState,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeaderCell,
+  TableRegion,
+} from "@/components/ui";
 
 export const metadata: Metadata = {
   title: "Clínica SV",
@@ -81,6 +99,495 @@ const workflowLabels: Readonly<Record<PatientWorkflowStatus, string>> = {
   PENDING_REVIEW: "Aguardando revisão",
   COMPLETED: "Concluído",
 };
+
+type NutritionCentralFilter =
+  | "all"
+  | "attendance"
+  | "strategy"
+  | "meal-plan"
+  | "deliverable"
+  | "completed";
+
+const nutritionCentralFilters: ReadonlyArray<{
+  value: NutritionCentralFilter;
+  label: string;
+}> = [
+  { value: "all", label: "Todos" },
+  { value: "attendance", label: "Em atendimento" },
+  { value: "strategy", label: "Estratégia" },
+  { value: "meal-plan", label: "Plano alimentar" },
+  { value: "deliverable", label: "Entregável" },
+  { value: "completed", label: "Concluídos" },
+];
+
+const nutritionDateFormatter = new Intl.DateTimeFormat("pt-BR", {
+  day: "2-digit",
+  month: "short",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+  timeZone: "America/Sao_Paulo",
+});
+
+function resolveCentralText(value?: string | string[]) {
+  if (typeof value !== "string") return undefined;
+  const text = value.trim();
+  return text ? text.slice(0, 120) : undefined;
+}
+
+function resolveCentralFilter(
+  value?: string | string[],
+): NutritionCentralFilter {
+  return value === "attendance" ||
+    value === "strategy" ||
+    value === "meal-plan" ||
+    value === "deliverable" ||
+    value === "completed"
+    ? value
+    : "all";
+}
+
+function nutritionCentralHref(
+  filter: NutritionCentralFilter,
+  search?: string,
+) {
+  const params = new URLSearchParams();
+  if (filter !== "all") params.set("filter", filter);
+  if (search) params.set("query", search);
+  const query = params.toString();
+  return query ? `/clinica?${query}` : "/clinica";
+}
+
+function nutritionReportHref(href: string) {
+  const url = new URL(href, "https://clinica-sv.internal");
+  url.searchParams.set("view", "nutrition");
+  return `${url.pathname}${url.search}`;
+}
+
+function NutritionStatusBadge({
+  status,
+}: {
+  status?: NutritionClinicalFlowStepStatus;
+}) {
+  if (status === "COMPLETED") return <Badge tone="success">Concluído</Badge>;
+  if (status === "IN_PROGRESS") return <Badge tone="info">Em andamento</Badge>;
+  if (status === "SKIPPED") return <Badge tone="warning">Não realizada</Badge>;
+  if (status === "BLOCKED") return <Badge tone="warning">Bloqueado</Badge>;
+  if (status === "NOT_STARTED" || status === undefined) {
+    return <Badge tone="neutral">Não iniciado</Badge>;
+  }
+
+  return <Badge tone="neutral">Estado indisponível</Badge>;
+}
+
+async function NutritionCentral({
+  filter,
+  search,
+}: {
+  filter: NutritionCentralFilter;
+  search?: string;
+}) {
+  await mvpService.getSession();
+
+  const patients = await prisma.patient.findMany({
+    where: {
+      deletedAt: null,
+      ...(search
+        ? {
+            OR: [
+              { fullName: { contains: search, mode: "insensitive" as const } },
+              {
+                clinicalCode: {
+                  contains: search,
+                  mode: "insensitive" as const,
+                },
+              },
+            ],
+          }
+        : {}),
+    },
+    orderBy: { fullName: "asc" },
+    select: {
+      id: true,
+      fullName: true,
+      clinicalCode: true,
+      masterRecord: {
+        select: {
+          status: true,
+          attendances: {
+            where: { deletedAt: null },
+            orderBy: { createdAt: "desc" },
+            take: 1,
+            select: {
+              id: true,
+              status: true,
+              updatedAt: true,
+              professional: { select: { fullName: true } },
+            },
+          },
+          entries: {
+            where: {
+              type: { in: ["NUTRITION_STRATEGY", "MEAL_PLAN"] },
+              status: { not: "VOIDED" },
+              deletedAt: null,
+            },
+            orderBy: { updatedAt: "desc" },
+            take: 1,
+            select: {
+              updatedAt: true,
+              updatedBy: { select: { fullName: true } },
+            },
+          },
+          continuity: {
+            select: {
+              lastActivityAt: true,
+              responsible: { select: { fullName: true } },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  const rows = await Promise.all(
+    patients.map(async (patient) => {
+      const masterRecord = patient.masterRecord;
+      const attendance =
+        masterRecord?.status === "ACTIVE"
+          ? masterRecord.attendances[0]
+          : undefined;
+      const flow = attendance
+        ? await nutritionClinicalFlowRepository.getFlow({
+            patientId: patient.id,
+            attendanceId: attendance.id,
+          })
+        : null;
+      const strategy = flow?.flow.find(
+        (step) => step.id === "NUTRITION_STRATEGY",
+      );
+      const mealPlan = flow?.flow.find((step) => step.id === "MEAL_PLAN");
+      const deliverable = flow?.flow.find(
+        (step) => step.id === "DELIVERABLES",
+      );
+      const persistedUpdates = [
+        masterRecord?.entries[0]
+          ? {
+              at: masterRecord.entries[0].updatedAt,
+              professionalName:
+                masterRecord.entries[0].updatedBy.fullName,
+            }
+          : undefined,
+        masterRecord?.continuity?.lastActivityAt
+          ? {
+              at: masterRecord.continuity.lastActivityAt,
+              professionalName:
+                masterRecord.continuity.responsible?.fullName,
+            }
+          : undefined,
+        attendance
+          ? {
+              at: attendance.updatedAt,
+              professionalName: attendance.professional.fullName,
+            }
+          : undefined,
+      ]
+        .filter(
+          (
+            update,
+          ): update is {
+            at: Date;
+            professionalName: string | undefined;
+          } => Boolean(update),
+        )
+        .sort((left, right) => right.at.getTime() - left.at.getTime());
+      const latestUpdate = persistedUpdates[0];
+
+      return {
+        patientId: patient.id,
+        patientName: patient.fullName,
+        code: patient.clinicalCode,
+        attendanceId: attendance?.id,
+        attendanceStatus: attendance?.status,
+        currentStep: flow?.resumeStep,
+        strategy,
+        mealPlan,
+        deliverable,
+        updatedAt: latestUpdate?.at,
+        responsibleName:
+          latestUpdate?.professionalName ?? attendance?.professional.fullName,
+      };
+    }),
+  );
+
+  const filteredRows = rows
+    .filter((row) => {
+      if (filter === "attendance") {
+        return (
+          row.attendanceStatus === "DRAFT" ||
+          row.attendanceStatus === "IN_PROGRESS"
+        );
+      }
+      if (filter === "strategy") {
+        return row.currentStep?.id === "NUTRITION_STRATEGY";
+      }
+      if (filter === "meal-plan") {
+        return row.currentStep?.id === "MEAL_PLAN";
+      }
+      if (filter === "deliverable") {
+        return row.currentStep?.id === "DELIVERABLES";
+      }
+      if (filter === "completed") {
+        return (
+          row.attendanceStatus === "COMPLETED" ||
+          row.currentStep?.id === "FINALIZE_ATTENDANCE"
+        );
+      }
+      return true;
+    })
+    .sort((left, right) => {
+      const byUpdate =
+        (right.updatedAt?.getTime() ?? 0) -
+        (left.updatedAt?.getTime() ?? 0);
+      return (
+        byUpdate ||
+        left.patientName.localeCompare(right.patientName, "pt-BR")
+      );
+    });
+
+  const noPatients = patients.length === 0 && !search && filter === "all";
+  const noResults = filteredRows.length === 0 && !noPatients;
+
+  function SecondaryActions({
+    row,
+  }: {
+    row: (typeof filteredRows)[number];
+  }) {
+    if (!row.attendanceId || !row.currentStep) return null;
+
+    const strategyHref = nutritionClinicalFlowHref("NUTRITION_STRATEGY", {
+      patientId: row.patientId,
+      attendanceId: row.attendanceId,
+    });
+    const mealPlanHref = nutritionClinicalFlowHref("MEAL_PLAN", {
+      patientId: row.patientId,
+      attendanceId: row.attendanceId,
+    });
+    const deliverableHref = nutritionClinicalFlowHref("DELIVERABLES", {
+      patientId: row.patientId,
+      attendanceId: row.attendanceId,
+    });
+    const reportAvailable =
+      row.deliverable?.status === "IN_PROGRESS" ||
+      row.deliverable?.status === "COMPLETED";
+
+    return (
+      <details className="relative w-full">
+        <summary className="cursor-pointer list-none rounded-lg px-2 py-1 text-center text-xs font-bold text-[#1f6a4d] hover:bg-emerald-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1f6a4d]">
+          Outras etapas
+        </summary>
+        <div className="mt-2 grid gap-1.5 text-center text-xs font-bold">
+          <Link className="text-[#1f6a4d] underline-offset-4 hover:underline" href={strategyHref}>
+            Estratégia
+          </Link>
+          <Link className="text-[#1f6a4d] underline-offset-4 hover:underline" href={mealPlanHref}>
+            Plano alimentar
+          </Link>
+          <Link className="text-[#1f6a4d] underline-offset-4 hover:underline" href={deliverableHref}>
+            Entregáveis
+          </Link>
+          {reportAvailable ? (
+            <Link
+              className="text-[#1f6a4d] underline-offset-4 hover:underline"
+              href={nutritionReportHref(deliverableHref)}
+            >
+              Relatório nutricional
+            </Link>
+          ) : null}
+        </div>
+      </details>
+    );
+  }
+
+  return (
+    <div className="min-w-0">
+      <PageHeading
+        description="Estratégia nutricional, plano alimentar e entregáveis dos pacientes."
+        title="Nutrição"
+      />
+
+      <section aria-label="Localizar pacientes" className="mb-5 space-y-3">
+        <form className="flex flex-col gap-2 sm:flex-row" method="get">
+          {filter !== "all" ? (
+            <input name="filter" type="hidden" value={filter} />
+          ) : null}
+          <label className="sr-only" htmlFor="nutrition-search">
+            Pesquisar por nome ou código do paciente
+          </label>
+          <input
+            className="min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#1f6a4d] focus:ring-2 focus:ring-emerald-100"
+            defaultValue={search}
+            id="nutrition-search"
+            name="query"
+            placeholder="Pesquisar por nome ou código do paciente"
+            type="search"
+          />
+          <button
+            className="min-h-11 shrink-0 rounded-xl bg-[#1f6a4d] px-5 text-sm font-black text-white transition hover:bg-[#174f3a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
+            type="submit"
+          >
+            Pesquisar
+          </button>
+        </form>
+
+        <nav aria-label="Filtrar fluxo nutricional" className="flex gap-2 overflow-x-auto pb-1">
+          {nutritionCentralFilters.map((option) => {
+            const active = filter === option.value;
+            return (
+              <Link
+                aria-current={active ? "page" : undefined}
+                className={`inline-flex min-h-9 shrink-0 items-center rounded-full border px-3 text-xs font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 ${
+                  active
+                    ? "border-emerald-700 bg-emerald-700 text-white"
+                    : "border-slate-200 bg-white text-slate-600 hover:border-emerald-300 hover:text-emerald-800"
+                }`}
+                href={nutritionCentralHref(option.value, search)}
+                key={option.value}
+              >
+                {option.label}
+              </Link>
+            );
+          })}
+        </nav>
+      </section>
+
+      {noPatients ? (
+        <PageState
+          action={<ButtonLink href="/pacientes">Abrir pacientes</ButtonLink>}
+          description="Não há pacientes cadastrados disponíveis para o fluxo nutricional."
+          title="Nenhum paciente encontrado"
+        />
+      ) : noResults ? (
+        <PageState
+          action={<ButtonLink href="/clinica">Limpar filtros</ButtonLink>}
+          description="Nenhum paciente corresponde à pesquisa ou ao filtro selecionado."
+          title="Nenhum paciente encontrado"
+        />
+      ) : (
+        <>
+          <TableRegion className="hidden w-full max-w-full overflow-x-hidden xl:block" label="Fluxo nutricional dos pacientes">
+            <Table className="table-fixed">
+              <colgroup>
+                <col className="w-[19%]" />
+                <col className="w-[14%]" />
+                <col className="w-[10%]" />
+                <col className="w-[11%]" />
+                <col className="w-[10%]" />
+                <col className="w-[18%]" />
+                <col className="w-[18%]" />
+              </colgroup>
+              <TableHead>
+                <tr>
+                  <TableHeaderCell>Paciente</TableHeaderCell>
+                  <TableHeaderCell>Etapa atual</TableHeaderCell>
+                  <TableHeaderCell className="px-2">Estratégia</TableHeaderCell>
+                  <TableHeaderCell className="px-2">Plano alimentar</TableHeaderCell>
+                  <TableHeaderCell className="px-2">Entregável</TableHeaderCell>
+                  <TableHeaderCell>Atualização</TableHeaderCell>
+                  <TableHeaderCell className="text-right">Ação</TableHeaderCell>
+                </tr>
+              </TableHead>
+              <TableBody>
+                {filteredRows.map((row) => (
+                  <tr key={row.patientId}>
+                    <TableCell>
+                      <p className="line-clamp-2 font-bold leading-5 text-slate-900">
+                        {row.patientName}
+                      </p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        Código {row.code}
+                      </p>
+                    </TableCell>
+                    <TableCell className="break-words text-slate-700">
+                      {row.currentStep?.title ?? "—"}
+                    </TableCell>
+                    <TableCell className="px-2"><NutritionStatusBadge status={row.strategy?.status} /></TableCell>
+                    <TableCell className="px-2"><NutritionStatusBadge status={row.mealPlan?.status} /></TableCell>
+                    <TableCell className="px-2"><NutritionStatusBadge status={row.deliverable?.status} /></TableCell>
+                    <TableCell>
+                      <p className="text-sm leading-5 text-slate-700">
+                        {row.updatedAt ? nutritionDateFormatter.format(row.updatedAt) : "—"}
+                      </p>
+                      <p className="mt-1 line-clamp-2 text-xs leading-4 text-slate-500">
+                        {row.responsibleName ?? "—"}
+                      </p>
+                    </TableCell>
+                    <TableCell className="pl-2">
+                      <div className="ml-auto flex w-full max-w-44 flex-col items-stretch gap-1">
+                        {row.currentStep ? (
+                          <ButtonLink fullWidth href={row.currentStep.href} size="small" variant="outline">
+                            Continuar atendimento
+                          </ButtonLink>
+                        ) : (
+                          <ButtonLink fullWidth href={`/pacientes/${encodeURIComponent(row.patientId)}`} size="small" variant="outline">
+                            Abrir prontuário
+                          </ButtonLink>
+                        )}
+                        <SecondaryActions row={row} />
+                      </div>
+                    </TableCell>
+                  </tr>
+                ))}
+              </TableBody>
+            </Table>
+          </TableRegion>
+
+          <div className="space-y-3 xl:hidden">
+            {filteredRows.map((row) => (
+              <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm" key={row.patientId}>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <h2 className="line-clamp-2 text-sm font-black leading-5 text-slate-900">{row.patientName}</h2>
+                    <p className="mt-0.5 text-xs text-slate-500">Código {row.code}</p>
+                  </div>
+                  <span className="max-w-36 text-right text-xs font-bold text-[#1f6a4d]">
+                    {row.currentStep?.title ?? "Sem atendimento"}
+                  </span>
+                </div>
+                <dl className="mt-3 grid gap-2 border-y border-slate-100 py-3 text-xs min-[430px]:grid-cols-3">
+                  <div><dt className="mb-1 font-bold text-slate-500">Estratégia</dt><dd><NutritionStatusBadge status={row.strategy?.status} /></dd></div>
+                  <div><dt className="mb-1 font-bold text-slate-500">Plano</dt><dd><NutritionStatusBadge status={row.mealPlan?.status} /></dd></div>
+                  <div><dt className="mb-1 font-bold text-slate-500">Entregável</dt><dd><NutritionStatusBadge status={row.deliverable?.status} /></dd></div>
+                </dl>
+                <dl className="mt-3 grid grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <dt className="font-bold text-slate-500">Atualização</dt>
+                    <dd className="mt-1 text-slate-700">{row.updatedAt ? nutritionDateFormatter.format(row.updatedAt) : "—"}</dd>
+                  </div>
+                  <div>
+                    <dt className="font-bold text-slate-500">Responsável</dt>
+                    <dd className="mt-1 text-slate-700">{row.responsibleName ?? "—"}</dd>
+                  </div>
+                </dl>
+                <div className="mt-4 space-y-2">
+                  {row.currentStep ? (
+                    <ButtonLink fullWidth href={row.currentStep.href} size="small" variant="outline">
+                      Continuar atendimento
+                    </ButtonLink>
+                  ) : (
+                    <ButtonLink fullWidth href={`/pacientes/${encodeURIComponent(row.patientId)}`} size="small" variant="outline">
+                      Abrir prontuário
+                    </ButtonLink>
+                  )}
+                  <SecondaryActions row={row} />
+                </div>
+              </article>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
 
 function criarEtapasClinicas(
   paciente?: PatientListItem,
@@ -213,10 +720,25 @@ function EtapaCard({
 export default async function ClinicaPage({
   searchParams,
 }: {
-  searchParams: Promise<{ patientId?: string }>;
+  searchParams: Promise<{
+    attendanceId?: string | string[];
+    filter?: string | string[];
+    patientId?: string | string[];
+    query?: string | string[];
+  }>;
 }) {
   const query = await searchParams;
-  const requestedPatientId = query.patientId?.trim();
+  const requestedPatientId = resolveCentralText(query.patientId);
+
+  if (!requestedPatientId) {
+    return (
+      <NutritionCentral
+        filter={resolveCentralFilter(query.filter)}
+        search={resolveCentralText(query.query)}
+      />
+    );
+  }
+
   const masterRecord = requestedPatientId
     ? await mvpService.getPatientMasterRecord(requestedPatientId)
     : null;

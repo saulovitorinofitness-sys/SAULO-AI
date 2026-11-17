@@ -19,7 +19,7 @@ export function ProfessionalAuditInfo({
         <strong className="text-slate-700">
           {audit ? "Autor:" : "Responsável:"}
         </strong>{" "}
-        {professional?.professionalName ?? "Não informado"}
+        {professional?.professionalName?.trim() || "Não informado"}
       </span>
       <span>
         <strong className="text-slate-700">Atualizado:</strong>{" "}

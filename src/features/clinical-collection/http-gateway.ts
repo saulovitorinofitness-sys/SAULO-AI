@@ -12,7 +12,15 @@ async function requestJson<T>(url: string, init?: RequestInit): Promise<T> {
   });
 
   if (!response.ok) {
-    throw new Error(`ASSESSMENT_REQUEST_FAILED:${response.status}`);
+    const errorBody = (await response.json().catch(() => null)) as {
+      message?: unknown;
+    } | null;
+    const message =
+      typeof errorBody?.message === "string" && errorBody.message.trim()
+        ? errorBody.message
+        : `Falha na avaliação (${response.status}).`;
+
+    throw new Error(message);
   }
 
   return (await response.json()) as T;
@@ -48,7 +56,10 @@ export const httpClinicalCollectionGateway: ClinicalCollectionGateway = {
       `/api/patients/${input.patientId}/attendances/${input.attendanceId}/clinical-collection/${input.step}`,
       {
         method: "PUT",
-        body: JSON.stringify({ data: input.data }),
+        body: JSON.stringify({
+          data: input.data,
+          autosave: input.saveMode === "AUTOSAVE",
+        }),
       },
     );
   },

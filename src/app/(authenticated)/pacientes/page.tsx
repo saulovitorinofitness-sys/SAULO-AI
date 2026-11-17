@@ -7,6 +7,7 @@ import { PageHeading } from "@/components/ui/page-heading";
 import { PageState } from "@/components/ui/page-state";
 import { canAccess, mvpService } from "@/features/mvp";
 import { patientRegistrationRepository } from "@/features/patient-registration";
+import type { PatientStatus } from "@/modules/patients";
 
 export const metadata: Metadata = { title: "Pacientes" };
 
@@ -34,21 +35,55 @@ function resolveInternalReturnTo(value?: string | string[]) {
   }
 }
 
+function resolveText(value?: string | string[]) {
+  if (typeof value !== "string") return undefined;
+
+  const text = value.trim();
+  return text ? text.slice(0, 180) : undefined;
+}
+
+function resolvePage(value?: string | string[]) {
+  if (typeof value !== "string" || !/^\d+$/.test(value)) return 1;
+
+  const page = Number(value);
+  return Number.isSafeInteger(page) && page > 0 ? page : 1;
+}
+
+function resolvePatientStatus(
+  value?: string | string[],
+): PatientStatus | undefined {
+  return value === "ACTIVE" ||
+    value === "INACTIVE" ||
+    value === "ARCHIVED"
+    ? value
+    : undefined;
+}
+
 export default async function PatientsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ returnTo?: string | string[] }>;
+  searchParams: Promise<{
+    page?: string | string[];
+    query?: string | string[];
+    returnTo?: string | string[];
+    status?: string | string[];
+  }>;
 }) {
-  const query = await searchParams;
-  const returnTo = resolveInternalReturnTo(query.returnTo);
-  const [access, patients] = await Promise.all([
-    mvpService.getSession(),
-    patientRegistrationRepository.list(),
-  ]);
+  const params = await searchParams;
+  const returnTo = resolveInternalReturnTo(params.returnTo);
+  const query = resolveText(params.query);
+  const status = resolvePatientStatus(params.status);
+  const access = await mvpService.getSession();
 
   if (!canAccess(access, "PATIENTS", "READ")) {
     return <PageState description="Seu perfil não possui acesso à lista de pacientes. Solicite a revisão das permissões ao administrador." title="Acesso não permitido" tone="blocked" />;
   }
+
+  const patients = await patientRegistrationRepository.listPage({
+    page: resolvePage(params.page),
+    query,
+    status,
+  });
 
   return (
     <>
@@ -81,7 +116,7 @@ export default async function PatientsPage({
         eyebrow="Cadastro compartilhado"
         title="Pacientes"
       />
-      {patients.length === 0 ? <PageState description="Quando o primeiro cadastro for integrado, ele aparecerá aqui." title="Nenhum paciente cadastrado" /> : <PatientList patients={patients} returnTo={returnTo} />}
+      {patients.total === 0 && !query && !status ? <PageState description="Quando o primeiro cadastro for integrado, ele aparecerá aqui." title="Nenhum paciente cadastrado" /> : <PatientList pagination={patients} query={query} returnTo={returnTo} status={status} />}
     </>
   );
 }

@@ -1,45 +1,71 @@
 import { NextResponse } from "next/server";
-import { z } from "zod";
 
-import { canAccess, mvpService } from "@/features/mvp";
+import { resolveDevelopmentAccess } from "@/features/development-session";
+import {
+  EXERCISE_CATEGORY_OPTIONS,
+  type ExerciseCategory,
+} from "@/features/performance-endurance";
+import { exerciseCatalogRepository } from "@/features/performance-endurance/exercise-catalog-repository";
 import { performanceEnduranceService } from "@/features/performance-endurance";
-import { performanceWorkoutRepository } from "@/features/performance-endurance/workout-repository";
+import { canAccess, mvpService } from "@/features/mvp";
 
-const exerciseSchema = z.object({
-  name: z.string().trim().min(1).max(500),
-});
+async function accessFor(request: Request, action: "READ" | "UPDATE") {
+  const access = resolveDevelopmentAccess(
+    request,
+    await mvpService.getSession(),
+  );
+  return performanceEnduranceService.canAccess(access.user) &&
+    canAccess(access, "WORKOUT_PLAN", action)
+    ? access
+    : null;
+}
+
+export async function GET(request: Request) {
+  const access = await accessFor(request, "READ");
+  if (!access) {
+    return NextResponse.json(
+      { message: "Seu perfil não permite consultar a biblioteca de exercícios." },
+      { status: 403 },
+    );
+  }
+  const url = new URL(request.url);
+  const categoryValue = url.searchParams.get("category");
+  const category = EXERCISE_CATEGORY_OPTIONS.includes(
+    categoryValue as ExerciseCategory,
+  )
+    ? (categoryValue as ExerciseCategory)
+    : undefined;
+  const status = url.searchParams.get("status");
+  try {
+    const result = await exerciseCatalogRepository.search({
+      professionalUserId: access.user.id,
+      query: url.searchParams.get("query") ?? undefined,
+      category,
+      active: status === "ACTIVE" ? true : status === "INACTIVE" ? false : undefined,
+    });
+    return NextResponse.json(result);
+  } catch (error) {
+    console.error("Falha ao consultar a biblioteca de exercícios.", error);
+    return NextResponse.json(
+      { message: "Não foi possível consultar a biblioteca de exercícios." },
+      { status: 503 },
+    );
+  }
+}
 
 export async function POST(request: Request) {
-  const access = await mvpService.getSession();
-  if (
-    !performanceEnduranceService.canAccess(access.user) ||
-    !canAccess(access, "WORKOUT_PLAN", "UPDATE")
-  ) {
+  const access = await accessFor(request, "UPDATE");
+  if (!access) {
     return NextResponse.json(
       { message: "Seu perfil não permite alterar a biblioteca de exercícios." },
       { status: 403 },
     );
   }
-  const input = exerciseSchema.safeParse(
-    await request.json().catch(() => null),
+  return NextResponse.json(
+    {
+      message:
+        "Cadastre novos exercícios na Biblioteca Científica, fonte mestre do catálogo profissional.",
+    },
+    { status: 405, headers: { Allow: "GET" } },
   );
-  if (!input.success) {
-    return NextResponse.json(
-      { message: "Informe o nome do exercício." },
-      { status: 400 },
-    );
-  }
-  try {
-    const exercise = await performanceWorkoutRepository.createExercise({
-      name: input.data.name,
-      professionalUserId: access.user.id,
-    });
-    return NextResponse.json({ exercise });
-  } catch (error) {
-    console.error("Falha ao salvar exercício na biblioteca.", error);
-    return NextResponse.json(
-      { message: "Não foi possível salvar o exercício na biblioteca." },
-      { status: 503 },
-    );
-  }
 }

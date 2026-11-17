@@ -3,6 +3,7 @@ export * from "./assessment-summary";
 export * from "./field-definitions";
 export * from "./gateway";
 export * from "./postural-media";
+export * from "./postural-validation";
 export * from "./postural-history";
 export * from "./postural-evolution";
 export * from "./postural-segments";

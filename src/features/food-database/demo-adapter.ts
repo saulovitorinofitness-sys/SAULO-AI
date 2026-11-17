@@ -49,6 +49,7 @@ function nutrientsFor(name: string): FoodNutrientsPer100g | null {
     sugarsGrams: null,
     cholesterolMg: null,
     saturatedFatsGrams: null,
+    transFatsGrams: null,
     monounsaturatedFatsGrams: null,
     polyunsaturatedFatsGrams: null,
     sodiumMg: nullable(nutrition.micronutrients.sodiumMg),

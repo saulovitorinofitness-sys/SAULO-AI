@@ -20,7 +20,7 @@ const sizes: Readonly<Record<ButtonSize, string>> = {
 };
 
 export function buttonStyles({ variant = "primary", size = "medium", fullWidth = false }: { variant?: ButtonVariant; size?: ButtonSize; fullWidth?: boolean } = {}) {
-  return `inline-flex items-center justify-center gap-2 rounded-[var(--radius-medium)] border font-black transition duration-[var(--transition-fast)] focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-55 aria-disabled:pointer-events-none aria-disabled:opacity-55 ${variants[variant]} ${sizes[size]} ${fullWidth ? "w-full" : ""}`;
+  return `inline-flex cursor-pointer items-center justify-center gap-2 rounded-[var(--radius-medium)] border font-black transition duration-[var(--transition-fast)] focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-55 aria-disabled:pointer-events-none aria-disabled:opacity-55 ${variants[variant]} ${sizes[size]} ${fullWidth ? "w-full" : ""}`;
 }
 
 export function Button({ variant, size, loading = false, className = "", children, disabled, ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: ButtonVariant; size?: ButtonSize; loading?: boolean }) {

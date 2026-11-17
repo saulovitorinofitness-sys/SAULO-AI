@@ -77,3 +77,31 @@ test("detecta todas as ações clínicas auditáveis entre duas prescrições", 
   );
 });
 
+test("histórico registra quantidade e unidade prescritas sem rotular ml como gramas", () => {
+  const previousMilk = {
+    ...food("food-milk", "milk", "Leite integral", 140, "100 ml"),
+    prescribedAmount: 140,
+    prescribedUnit: "g" as const,
+  };
+  const currentMilk = {
+    ...previousMilk,
+    grams: 250,
+    prescribedAmount: 250,
+    prescribedUnit: "ml" as const,
+  };
+  const changes = detectPrescriptionChanges(
+    {
+      meals: [meal("meal-1", "Café da manhã", "07:00", [previousMilk])],
+      supplements: [],
+    },
+    {
+      meals: [meal("meal-1", "Café da manhã", "07:00", [currentMilk])],
+      supplements: [],
+    },
+  );
+  const quantityChange = changes.find(
+    (change) => change.type === "GRAMS_CHANGED",
+  );
+  assert.equal(quantityChange?.previousValue, "Leite integral · 140 g · Café da manhã");
+  assert.equal(quantityChange?.currentValue, "Leite integral · 250 ml · Café da manhã");
+});

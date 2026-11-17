@@ -21,32 +21,118 @@ model WorkoutPlanRecord {
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
 
-  entry MasterRecordEntry @relation(fields: [entryId], references: [id], onDelete: Restrict)
+  entry             MasterRecordEntry         @relation(fields: [entryId], references: [id], onDelete: Restrict)
+  scheduledSessions WorkoutScheduledSession[] @relation("WorkoutPlanScheduledSessions")
+  executions        WorkoutExecution[]        @relation("WorkoutPlanExecutions")
+}
+
+model WorkoutScheduledSession {
+  id                     String                @id @default(uuid()) @db.Uuid
+  workoutPlanEntryId     String                @db.Uuid
+  workoutPlanVersionId   String                @db.Uuid
+  sessionId              String?               @db.Uuid
+  masterRecordId         String                @db.Uuid
+  title                  String
+  modality               PerformanceModality
+  scheduledStartAt       DateTime
+  plannedDurationSeconds Int?
+  timeZone               String
+  status                 WorkoutScheduleStatus @default(SCHEDULED)
+  responsibleUserId      String?               @db.Uuid
+  notes                  String?
+  revision               Int                   @default(1)
+  createdAt              DateTime              @default(now())
+  updatedAt              DateTime              @updatedAt
+
+  workoutPlan WorkoutPlanRecord  @relation("WorkoutPlanScheduledSessions", fields: [workoutPlanEntryId], references: [entryId], onDelete: Restrict)
+  executions  WorkoutExecution[]
+
+  @@index([masterRecordId, scheduledStartAt])
+  @@index([workoutPlanEntryId, workoutPlanVersionId])
+  @@index([workoutPlanVersionId])
+  @@index([sessionId])
+  @@index([responsibleUserId, scheduledStartAt])
+  @@index([status, scheduledStartAt])
+}
+
+model WorkoutExecution {
+  id                       String                 @id @default(uuid()) @db.Uuid
+  scheduledSessionId       String?                @db.Uuid
+  masterRecordId           String                 @db.Uuid
+  workoutPlanEntryId       String?                @db.Uuid
+  workoutPlanVersionId     String?                @db.Uuid
+  sessionId                String?                @db.Uuid
+  modality                 PerformanceModality
+  source                   WorkoutExecutionSource
+  actualStartAt            DateTime
+  actualEndAt              DateTime?
+  executedDurationSeconds  Int?
+  status                   WorkoutExecutionStatus @default(IN_PROGRESS)
+  executedRpe              Decimal?               @db.Decimal(3, 1)
+  notes                    String?
+  executorUserId           String?                @db.Uuid
+  importArtifactId         String?                @db.Uuid
+  importProvider           String?
+  importExternalIdentifier String?
+  distanceMeters           Float?
+  deviceConnectionId       String?                @db.Uuid
+  createdAt                DateTime               @default(now())
+  updatedAt                DateTime               @updatedAt
+
+  scheduledSession WorkoutScheduledSession? @relation(fields: [scheduledSessionId], references: [id], onDelete: SetNull)
+  workoutPlan      WorkoutPlanRecord?       @relation("WorkoutPlanExecutions", fields: [workoutPlanEntryId], references: [entryId], onDelete: Restrict)
+  masterRecord     MasterRecord             @relation(fields: [masterRecordId], references: [id], onDelete: Restrict)
+
+  @@index([scheduledSessionId])
+  @@index([masterRecordId, actualStartAt])
+  @@index([workoutPlanEntryId, workoutPlanVersionId])
+  @@index([workoutPlanVersionId])
+  @@index([sessionId])
+  @@index([executorUserId, actualStartAt])
+  @@index([importArtifactId])
+  @@index([deviceConnectionId])
+  @@index([source, actualStartAt])
+  @@index([status, actualStartAt])
+  @@unique([masterRecordId, importProvider, importExternalIdentifier], map: "WorkoutExecution_import_identity_key")
+}
+
+enum ExerciseCategory {
+  STRENGTH
+  RUNNING
+  CYCLING
+  MOBILITY
+  STRETCHING
+  CORRECTIVE
+  OTHER
 }
 
 model ExerciseLibraryItem {
-  id                    String   @id @default(uuid()) @db.Uuid
-  moduleId              String   @db.Uuid
-  createdByUserId       String   @db.Uuid
-  updatedByUserId       String   @db.Uuid
+  id                    String           @id @default(uuid()) @db.Uuid
+  moduleId              String           @db.Uuid
+  createdByUserId       String           @db.Uuid
+  updatedByUserId       String           @db.Uuid
   name                  String
-  normalizedName        String   @unique
+  normalizedName        String
+  category              ExerciseCategory @default(OTHER)
   muscleGroup           String?
   equipment             String?
   description           String?
   mediaUrl              String?
   valences              Json?
   executionInstructions String?
-  active                Boolean  @default(true)
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+  professionalNotes     String?
+  active                Boolean          @default(true)
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
 
   module    SystemModule @relation(fields: [moduleId], references: [id], onDelete: Restrict)
   createdBy User         @relation("ExerciseLibraryCreator", fields: [createdByUserId], references: [id], onDelete: Restrict)
   updatedBy User         @relation("ExerciseLibraryUpdater", fields: [updatedByUserId], references: [id], onDelete: Restrict)
 
+  @@unique([createdByUserId, normalizedName])
   @@index([name])
   @@index([moduleId, active])
+  @@index([createdByUserId, active, category])
   @@index([createdByUserId])
   @@index([updatedByUserId])
 }

@@ -9,22 +9,15 @@ import {
   CardTitle,
   StatusBadge,
 } from "@/components/ui";
-import {
-  mockAssistedPreviewAdapter,
-  previewNutrition,
-  temporaryMealPlanDraftAdapter,
-} from "@/features/meal-plan";
 import type {
   ClinicalEngineSection,
   ClinicalEngineView,
   NutritionCompatibilityStatus,
   NutritionDecisionPriority,
-} from "@/features/clinical-engine";
-import { analyzeNutritionDecision } from "@/features/clinical-engine";
-import {
-  mockNutritionStrategySelectionAdapter,
-  nutritionMethodOptions,
-} from "@/features/nutrition-strategy";
+} from "@/features/clinical-engine/contracts";
+import { analyzeNutritionDecision } from "@/features/clinical-engine/decision-rules";
+import { nutritionMethodOptions } from "@/features/nutrition-strategy/mock-data";
+import { mockNutritionStrategySelectionAdapter } from "@/features/nutrition-strategy/mock-selection-adapter";
 
 const dateTime = new Intl.DateTimeFormat("pt-BR", {
   dateStyle: "medium",
@@ -83,6 +76,79 @@ function numericValue(input: string | undefined) {
   return match ? Number(match[0]) : undefined;
 }
 
+type LegacyPreviewState = "NONE" | "DISCARDED" | "IGNORED";
+
+function objectValue(value: unknown): Record<string, unknown> | undefined {
+  return typeof value === "object" && value !== null
+    ? (value as Record<string, unknown>)
+    : undefined;
+}
+
+function isIncompatibleLocalPreview(raw: string) {
+  try {
+    const preview = objectValue(JSON.parse(raw));
+    if (!preview) return true;
+    if (preview.nutritionDataVersion === 1 || preview.demonstrative === true) {
+      return true;
+    }
+    if (
+      typeof preview.nutritionDataVersion !== "number" ||
+      preview.nutritionDataVersion < 2 ||
+      !Array.isArray(preview.meals)
+    ) {
+      return true;
+    }
+
+    const foods = preview.meals.flatMap((meal) => {
+      const candidate = objectValue(meal);
+      return candidate && Array.isArray(candidate.foods) ? candidate.foods : [];
+    });
+    if (!foods.length) return true;
+
+    return foods.some((food) => {
+      const candidate = objectValue(food);
+      return (
+        !candidate ||
+        typeof candidate.catalogFoodId !== "string" ||
+        !candidate.catalogFoodId.trim() ||
+        "scientificLibraryItemId" in candidate
+      );
+    });
+  } catch {
+    return true;
+  }
+}
+
+function discardIncompatibleLocalPreview(
+  view: ClinicalEngineView,
+): LegacyPreviewState {
+  const entries = [
+    {
+      storage: window.localStorage,
+      key: `saulo-ai:meal-plan-draft:v2:${view.patientId}:${view.masterRecordId}:${view.scenario}`,
+    },
+    {
+      storage: window.sessionStorage,
+      key: `saulo-ai:assisted-meal-preview:${view.patientId}:${view.scenario}`,
+    },
+  ] as const;
+  let state: LegacyPreviewState = "NONE";
+
+  for (const { storage, key } of entries) {
+    try {
+      const raw = storage.getItem(key);
+      if (!raw || !isIncompatibleLocalPreview(raw)) continue;
+      state = "IGNORED";
+      storage.removeItem(key);
+      state = "DISCARDED";
+    } catch {
+      state = "IGNORED";
+    }
+  }
+
+  return state;
+}
+
 function localDecisionView(view: ClinicalEngineView): ClinicalEngineView {
   const context = view.runtimeContext;
   const initialStrategy = context.initialStrategy;
@@ -95,27 +161,15 @@ function localDecisionView(view: ClinicalEngineView): ClinicalEngineView {
         view.scenario,
       ) ?? initialStrategy)
     : undefined;
-  const savedPlan = initialPlan
-    ? temporaryMealPlanDraftAdapter.read(initialPlan)
-    : undefined;
-  const savedPreview = savedStrategy
-    ? mockAssistedPreviewAdapter.read(savedStrategy)
-    : null;
-  const totals = savedPreview ? previewNutrition(savedPreview) : undefined;
-  const planStatus = savedPreview?.status ?? savedPlan?.status;
-  const planMeals = savedPreview
-    ? savedPreview.meals.map((meal) => ({
+  const savedPlan = initialPlan;
+  const planStatus = savedPlan?.status;
+  const planMeals =
+    savedPlan?.meals.map((meal) => ({
         id: meal.id,
         name: meal.name,
         time: meal.time,
         foodCount: meal.foods.length,
-      }))
-    : (savedPlan?.meals.map((meal) => ({
-        id: meal.id,
-        name: meal.name,
-        time: meal.time,
-        foodCount: meal.foods.length,
-      })) ?? []);
+      })) ?? [];
   const analyzedAt = new Date().toISOString();
   const analysis = analyzeNutritionDecision({
     objective: context.objective,
@@ -135,18 +189,10 @@ function localDecisionView(view: ClinicalEngineView): ClinicalEngineView {
           objective:
             savedStrategy?.objectiveMain ??
             savedPlan.summary.primaryObjective,
-          calories:
-            totals?.calories ??
-            numericValue(savedPlan.summary.plannedCalories),
-          proteinGrams:
-            totals?.proteinGrams ??
-            numericValue(savedPlan.summary.protein),
-          carbohydratesGrams:
-            totals?.carbohydratesGrams ??
-            numericValue(savedPlan.summary.carbohydrates),
-          fatsGrams:
-            totals?.fatsGrams ?? numericValue(savedPlan.summary.fats),
-          fiberGrams: totals?.fiberGrams,
+          calories: numericValue(savedPlan.summary.plannedCalories),
+          proteinGrams: numericValue(savedPlan.summary.protein),
+          carbohydratesGrams: numericValue(savedPlan.summary.carbohydrates),
+          fatsGrams: numericValue(savedPlan.summary.fats),
           meals: planMeals,
         }
       : undefined,
@@ -203,31 +249,19 @@ function localDecisionView(view: ClinicalEngineView): ClinicalEngineView {
           { label: "Refeições", value: String(planMeals.length) },
           {
             label: "Energia",
-            value:
-              totals !== undefined
-                ? `${number.format(totals.calories)} kcal`
-                : savedPlan.summary.plannedCalories,
+            value: savedPlan.summary.plannedCalories,
           },
           {
             label: "Proteína",
-            value:
-              totals !== undefined
-                ? `${number.format(totals.proteinGrams)} g`
-                : savedPlan.summary.protein,
+            value: savedPlan.summary.protein,
           },
           {
             label: "Carboidratos",
-            value:
-              totals !== undefined
-                ? `${number.format(totals.carbohydratesGrams)} g`
-                : savedPlan.summary.carbohydrates,
+            value: savedPlan.summary.carbohydrates,
           },
           {
             label: "Lipídios",
-            value:
-              totals !== undefined
-                ? `${number.format(totals.fatsGrams)} g`
-                : savedPlan.summary.fats,
+            value: savedPlan.summary.fats,
           },
         ],
         items: planMeals.map(
@@ -281,21 +315,6 @@ function localDecisionView(view: ClinicalEngineView): ClinicalEngineView {
     }
     return section;
   });
-  const approvalEvent =
-    savedPreview?.approvedAt && savedPreview.approvedBy
-      ? [
-          {
-            id: `local-plan-approval-${savedPreview.id}-${savedPreview.revision}`,
-            occurredAt: savedPreview.approvedAt,
-            title: "Plano Alimentar aprovado",
-            description:
-              "Aprovação profissional registrada no suporte demonstrativo local.",
-            professionalName: savedPreview.approvedBy,
-            source: "Plano Alimentar",
-          },
-        ]
-      : [];
-
   return {
     ...view,
     sections,
@@ -303,14 +322,7 @@ function localDecisionView(view: ClinicalEngineView): ClinicalEngineView {
     alerts: analysis.alerts,
     priorities: analysis.priorities,
     suggestions: analysis.suggestions,
-    timeline: [...approvalEvent, ...view.timeline]
-      .filter(
-        (event, index, all) =>
-          all.findIndex((candidate) => candidate.id === event.id) === index,
-      )
-      .sort((left, right) =>
-        right.occurredAt.localeCompare(left.occurredAt),
-      ),
+    timeline: view.timeline,
     analysisAudit: {
       analyzedAt,
       engineVersion: view.analysisAudit.engineVersion,
@@ -318,7 +330,7 @@ function localDecisionView(view: ClinicalEngineView): ClinicalEngineView {
         ? `${savedStrategy.masterRecordId}:${savedStrategy.updatedAt}`
         : undefined,
       mealPlanReference: savedPlan
-        ? `${savedPlan.id}:${savedPreview?.revision ?? savedPlan.updatedAt}`
+        ? `${savedPlan.id}:${savedPlan.updatedAt}`
         : undefined,
     },
   };
@@ -650,14 +662,16 @@ function AnalysisAudit({ view }: { view: ClinicalEngineView }) {
               {view.analysisAudit.mealPlanReference ?? "Não disponível"}
             </dd>
           </div>
-          <div className="border-t border-[var(--line)] pt-4">
-            <dt className="text-xs font-bold text-[var(--muted)]">
-              Prontuário Mestre
-            </dt>
-            <dd className="mt-1 break-all text-xs font-bold text-[var(--text-secondary)]">
-              {view.masterRecordId} · versão {view.masterRecordVersion}
-            </dd>
-          </div>
+          {view.hub.header.code.trim() ? (
+            <div className="border-t border-[var(--line)] pt-4">
+              <dt className="text-xs font-bold text-[var(--muted)]">
+                Código clínico
+              </dt>
+              <dd className="mt-1 text-xs font-bold text-[var(--text-secondary)]">
+                {view.hub.header.code} · versão {view.masterRecordVersion}
+              </dd>
+            </div>
+          ) : null}
         </dl>
       </Card>
     </aside>
@@ -670,9 +684,12 @@ export function ClinicalEngineWorkspace({
   view: ClinicalEngineView;
 }) {
   const [effectiveView, setEffectiveView] = useState(view);
+  const [legacyPreviewState, setLegacyPreviewState] =
+    useState<LegacyPreviewState>("NONE");
 
   useEffect(() => {
     const hydrationTimer = window.setTimeout(() => {
+      setLegacyPreviewState(discardIncompatibleLocalPreview(view));
       setEffectiveView(localDecisionView(view));
     }, 0);
     return () => window.clearTimeout(hydrationTimer);
@@ -685,6 +702,22 @@ export function ClinicalEngineWorkspace({
   return (
     <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
       <div className="min-w-0 space-y-5">
+        {legacyPreviewState !== "NONE" ? (
+          <div
+            className="rounded-[var(--radius-medium)] border border-amber-300 bg-amber-50 p-4 text-sm leading-6 text-amber-950"
+            role="alert"
+          >
+            <strong>Prévia antiga incompatível.</strong> A sugestão local do
+            fluxo demonstrativo não é compatível com o catálogo alimentar
+            profissional e não será utilizada.
+            {legacyPreviewState === "DISCARDED"
+              ? " Ela foi removida somente do armazenamento local deste navegador."
+              : " O navegador impediu sua remoção, mas ela permanece ignorada."}
+            <br />
+            Nenhum plano profissional salvo foi perdido. Gere uma nova sugestão
+            no Plano Alimentar para continuar.
+          </div>
+        ) : null}
         {effectiveView.demonstrative ? (
           <div
             className="rounded-[var(--radius-medium)] border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-950"

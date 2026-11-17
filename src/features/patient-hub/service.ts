@@ -299,10 +299,10 @@ export const patientHubService = {
       },
       {
         id: "evolution",
-        name: "Evolução",
-        description: "Domínio preparado; interface ainda não implementada.",
+        name: "Evolução e comparativos",
+        description: "Comparação cronológica dos registros persistidos no prontuário.",
         status: "UNAVAILABLE",
-        blockedReason: "Interface ainda não implementada.",
+        blockedReason: "Disponível para prontuários persistidos; este cenário é demonstrativo.",
         ...moduleBase,
       },
       {

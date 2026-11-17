@@ -17,7 +17,7 @@ export const BRAND_IDENTITIES = {
   platform: {
     id: "platform",
     internalName: "SAULO AI",
-    displayName: "SAULO AI",
+    displayName: "Clínica SV",
     shortName: "SA",
     subtitle: "Plataforma integrada",
     isProvisional: false,

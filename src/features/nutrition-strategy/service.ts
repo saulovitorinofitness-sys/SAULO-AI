@@ -34,7 +34,11 @@ function numericMockValue(value: string) {
 
 export const nutritionStrategyService = {
   canAccess(user: SessionUser) {
-    return user.id === BUILT_IN_IDS.users.sauloXavierVitorino;
+    return (
+      user?.status === "ACTIVE" &&
+      (user.id === BUILT_IN_IDS.users.sauloXavierVitorino ||
+        user.id === BUILT_IN_IDS.users.mariaDeLourdesGomes)
+    );
   },
 
   async get(input: GetNutritionStrategyInput): Promise<NutritionStrategyView | null> {

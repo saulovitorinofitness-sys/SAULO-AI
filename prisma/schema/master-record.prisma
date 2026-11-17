@@ -11,21 +11,26 @@ model MasterRecord {
   updatedAt         DateTime           @updatedAt
   archivedAt        DateTime?
 
-  patient                   Patient                     @relation(fields: [patientId], references: [id], onDelete: Restrict)
-  module                    SystemModule                @relation(fields: [moduleId], references: [id], onDelete: Restrict)
-  responsible               User                        @relation("MasterRecordResponsible", fields: [responsibleUserId], references: [id], onDelete: Restrict)
-  createdBy                 User                        @relation("MasterRecordCreator", fields: [createdByUserId], references: [id], onDelete: Restrict)
-  updatedBy                 User                        @relation("MasterRecordUpdater", fields: [updatedByUserId], references: [id], onDelete: Restrict)
-  entries                   MasterRecordEntry[]
-  dataReferences            MasterRecordDataReference[]
-  continuity                MasterRecordContinuity?
-  attendances               Attendance[]
-  appointments              Appointment[]
-  reports                   Report[]
-  deliverables              Deliverable[]
-  clinicalEvolutionSessions ClinicalEvolutionSession[]
-  protocolHistories         ProtocolHistory[]
-  athleteProgressProfile    AthleteProgressProfile?
+  patient                    Patient                     @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  module                     SystemModule                @relation(fields: [moduleId], references: [id], onDelete: Restrict)
+  responsible                User                        @relation("MasterRecordResponsible", fields: [responsibleUserId], references: [id], onDelete: Restrict)
+  createdBy                  User                        @relation("MasterRecordCreator", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  updatedBy                  User                        @relation("MasterRecordUpdater", fields: [updatedByUserId], references: [id], onDelete: Restrict)
+  entries                    MasterRecordEntry[]
+  dataReferences             MasterRecordDataReference[]
+  continuity                 MasterRecordContinuity?
+  attendances                Attendance[]
+  appointments               Appointment[]
+  reports                    Report[]
+  deliverables               Deliverable[]
+  clinicalEvolutionSessions  ClinicalEvolutionSession[]
+  protocolHistories          ProtocolHistory[]
+  athleteProgressProfile     AthleteProgressProfile?
+  professionalServiceCharges ProfessionalServiceCharge[] @relation("ProfessionalServiceCustomer")
+  studentPortalLink          StudentPortalLink?           @relation("StudentPortalMasterRecord")
+  studentPortalInvitations   StudentPortalInvitation[]    @relation("StudentPortalInvitationMasterRecord")
+  studentPortalReleases      StudentPortalRelease[]       @relation("StudentPortalReleaseMasterRecord")
+  workoutExecutions          WorkoutExecution[]
 
   @@index([moduleId])
   @@index([responsibleUserId])
@@ -74,6 +79,7 @@ model MasterRecordEntry {
   athleteProgressReferences    AthleteProgressReference[]      @relation("AthleteProgressSourceEntry")
   previousPosturalComparisons  PosturalEvolutionComparison[]   @relation("PosturalEvolutionPreviousEntry")
   currentPosturalComparisons   PosturalEvolutionComparison[]   @relation("PosturalEvolutionCurrentEntry")
+  professionalServiceItems     ProfessionalServiceChargeItem[] @relation("ProfessionalServiceSourceEntry")
 
   @@unique([aggregateId, revision])
   @@index([masterRecordId, occurredAt])

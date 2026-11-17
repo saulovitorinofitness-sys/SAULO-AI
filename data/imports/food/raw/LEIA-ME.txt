@@ -1,0 +1,19 @@
+PACOTE DE FONTES ALIMENTARES - SAULO AI
+
+Arquivos incluídos:
+- Taco-4a-Edicao.xlsx (fonte principal para primeira importação)
+- TabelaIBGE.pdf (fonte complementar; PDF escaneado, exige extração específica)
+- Tabelas complementares de Vitamina A e Carotenoides
+- Tabelas complementares de Flavonoides
+- Tabelas complementares de Resposta Glicêmica
+- Tabelas complementares de Perfil de Carboidratos
+
+Destino sugerido no projeto:
+C:\Users\Saulo\SAULO-AI\data\imports\food\raw\
+
+Primeira etapa recomendada:
+1. Importar apenas Taco-4a-Edicao.xlsx para o PostgreSQL local.
+2. Validar busca e inclusão de alimentos no Plano Alimentar.
+3. Depois tratar IBGE e tabelas complementares como fontes adicionais.
+
+Não alterar os arquivos brutos. Manter fonte, versão e nome original registrados.

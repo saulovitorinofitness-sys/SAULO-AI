@@ -222,13 +222,13 @@ export const MASTER_RECORD_MODULES: readonly MasterRecordModuleDefinition[] = [
   {
     id: "EVOLUTION",
     cardId: "evolution",
-    label: "Evolução",
-    description: "Domínio preparado; interface ainda não implementada.",
+    label: "Evolução das avaliações",
+    description: "Evolução cronológica das avaliações registradas no prontuário.",
     order: 17,
     category: "GENERAL",
-    route: "NONE",
+    route: "EVALUATION_EVOLUTION",
     audience: "AUTHORIZED_CLINICAL",
-    future: true,
+    future: false,
     hiddenWhenUnauthorized: true,
   },
   {
@@ -311,6 +311,8 @@ function routeFor(
       context.showNutrition && context.nutritionStrategyActive
         ? `${patient}/plano-alimentar?${scenarioQuery}`
         : undefined,
+
+    EVALUATION_EVOLUTION: `${patient}/evolucao-avaliacoes?${scenarioQuery}`,
 
     PERFORMANCE_ENDURANCE:
       context.showPerformance && attendanceId

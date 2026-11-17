@@ -1,24 +1,17 @@
 "use client";
 
 import {
-  useCallback,
   createContext,
   useContext,
-  useEffect,
   useMemo,
-  useSyncExternalStore,
   type ReactNode,
 } from "react";
-import { usePathname, useRouter } from "next/navigation";
 
 import type { SessionUser } from "@/features/mvp";
+import { BUILT_IN_IDS } from "@/modules/permissions";
 
 import {
-  DEVELOPMENT_PROFESSIONALS,
-  DEVELOPMENT_USER_QUERY_KEY,
-  DEVELOPMENT_USER_STORAGE_KEY,
   developmentProfessionalFromUserId,
-  isDevelopmentUserKey,
   type DevelopmentProfessional,
   type DevelopmentUserKey,
 } from "./config";
@@ -30,40 +23,19 @@ interface DevelopmentSessionValue {
 
 const DevelopmentSessionContext =
   createContext<DevelopmentSessionValue | null>(null);
-const developmentUserChangedEvent =
-  "saulo-ai:development-user-changed";
 
-function subscribeToDevelopmentUser(onStoreChange: () => void) {
-  window.addEventListener("storage", onStoreChange);
-  window.addEventListener(
-    developmentUserChangedEvent,
-    onStoreChange,
-  );
-  return () => {
-    window.removeEventListener("storage", onStoreChange);
-    window.removeEventListener(
-      developmentUserChangedEvent,
-      onStoreChange,
-    );
+function neutralProfessional(user: SessionUser): DevelopmentProfessional {
+  return {
+    key: "maria",
+    user,
+    functionName: user.roleName,
+    access: {
+      user,
+      grantsAllModules: false,
+      allowsNutritionModules: false,
+      overrides: [],
+    },
   };
-}
-
-function readDevelopmentUser() {
-  const query = new URLSearchParams(window.location.search);
-  const queryKey = query.get(DEVELOPMENT_USER_QUERY_KEY);
-  const storedKey = window.localStorage.getItem(
-    DEVELOPMENT_USER_STORAGE_KEY,
-  );
-
-  if (isDevelopmentUserKey(storedKey)) return storedKey;
-  if (isDevelopmentUserKey(queryKey)) return queryKey;
-  if (
-    query.get("scenario") === "maria-continuity" ||
-    query.get("scenario") === "previous-comparison"
-  ) {
-    return "maria";
-  }
-  return "saulo";
 }
 
 export function DevelopmentSessionProvider({
@@ -73,54 +45,32 @@ export function DevelopmentSessionProvider({
   readonly children: ReactNode;
   readonly initialUser: SessionUser;
 }) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const initialKey =
-    developmentProfessionalFromUserId(initialUser.id).key;
-  const selectedKey = useSyncExternalStore(
-    subscribeToDevelopmentUser,
-    readDevelopmentUser,
-    () => initialKey,
-  );
-
-  useEffect(() => {
-    if (process.env.NODE_ENV !== "development") return;
-
-    window.localStorage.setItem(
-      DEVELOPMENT_USER_STORAGE_KEY,
-      selectedKey,
-    );
-
-    const query = new URLSearchParams(window.location.search);
-    if (query.get(DEVELOPMENT_USER_QUERY_KEY) !== selectedKey) {
-      query.set(DEVELOPMENT_USER_QUERY_KEY, selectedKey);
-      router.replace(`${pathname}?${query.toString()}`, {
-        scroll: false,
-      });
-    }
-  }, [pathname, router, selectedKey]);
-
-  const selectUser = useCallback((key: DevelopmentUserKey) => {
-    window.localStorage.setItem(
-      DEVELOPMENT_USER_STORAGE_KEY,
-      key,
-    );
-    const query = new URLSearchParams(window.location.search);
-    query.set(DEVELOPMENT_USER_QUERY_KEY, key);
-    router.replace(`${pathname}?${query.toString()}`, {
-      scroll: false,
-    });
-    window.dispatchEvent(
-      new Event(developmentUserChangedEvent),
-    );
-  }, [pathname, router]);
-
   const value = useMemo(
-    () => ({
-      professional: DEVELOPMENT_PROFESSIONALS[selectedKey],
-      selectUser,
-    }),
-    [selectUser, selectedKey],
+    () => {
+      const knownUser =
+        initialUser.id === BUILT_IN_IDS.users.sauloXavierVitorino ||
+        initialUser.id === BUILT_IN_IDS.users.mariaDeLourdesGomes;
+      const template = knownUser
+        ? developmentProfessionalFromUserId(initialUser.id)
+        : neutralProfessional(initialUser);
+      const professional = {
+        ...template,
+        user: initialUser,
+        functionName: initialUser.roleName,
+        access: {
+          ...template.access,
+          user: initialUser,
+        },
+      } satisfies DevelopmentProfessional;
+
+      return {
+        professional,
+        selectUser: (key: DevelopmentUserKey) => {
+          void key;
+        },
+      };
+    },
+    [initialUser],
   );
 
   return (

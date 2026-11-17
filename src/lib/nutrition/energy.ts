@@ -6,8 +6,6 @@ import {
   type EnergyProtocolName,
 } from "./protocols";
 
-export const DEFAULT_ENERGY_PROTOCOL: EnergyProtocol = "MIFFLIN_ST_JEOR";
-
 export interface BasalMetabolicRateInput extends EnergyProtocolInput {
   readonly protocol: EnergyProtocol;
 }
@@ -18,7 +16,7 @@ export interface BasalMetabolicRateResult {
 }
 
 export interface EnergyStrategyInput extends EnergyProtocolInput {
-  readonly protocol?: EnergyProtocol;
+  readonly protocol: EnergyProtocol;
   readonly activityFactor?: number;
 }
 
@@ -64,7 +62,7 @@ export function calculateEnergyStrategy(
 ): EnergyStrategyResult {
   const basalMetabolicRate = calculateBasalMetabolicRate({
     ...input,
-    protocol: input.protocol ?? DEFAULT_ENERGY_PROTOCOL,
+    protocol: input.protocol,
   });
   const totalEnergyExpenditure =
     basalMetabolicRate && input.activityFactor !== undefined
